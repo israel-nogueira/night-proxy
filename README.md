@@ -25,11 +25,9 @@ Iniciamos o **Proxy**:
 
 	<script type="text/javascript">
 		feats.initProxy({cache:true});
+	</script>
 
 E agora quando alterarmos o objeto **template.targetElement.titulo** o HTML será alterado.
-	<script type="text/javascript">
-		feats.initProxy({cache:true}); </script>
-
 
 	<script type="text/javascript">
 		template.targetElement.titulo = "Lista da feira";
