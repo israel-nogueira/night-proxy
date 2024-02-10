@@ -3,14 +3,14 @@
 Sistema template orientado a objeto do lado do cliente.
 
 # Instalação
-Inserimos os 2 arquivos no HTML 
+Inserimos o arquivos no HTML 
 
 	<script type="text/javascript" src="./proxy-update.js"></script>
 
 Montamos o **template**:
 
 	<script proxy-template="targetElement" type="x-tmpl">
-		<h1><% titulo %></h1>
+		<h1>{{ titulo }}</h1>
 	</script>
 
 Montamos o **Target** dele:
@@ -33,9 +33,9 @@ E agora quando alterarmos o objeto **template.targetElement.titulo** o HTML ser�
 Caso tiver uma lista de ítens:
 
     <script proxy-template="targetElement" type="x-tmpl">
-    	<% #lista %>
-    		<li><% titulo %></li>
-    	<% /lista %>
+    	{{ #lista }}
+    		<li>{{ titulo }}</li>
+    	{{ /lista }}
     </script>
 Poderá inserir dados setando o objeto da seguinte forma:
 
