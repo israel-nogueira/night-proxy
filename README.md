@@ -10,9 +10,14 @@ Inserimos o arquivo no HTML
 
 Montamos o **template**, que é o elemento onde está sua estrutura de layout:
 
+```html
 	<script proxy-template="targetElement" type="x-tmpl">
 		<h1>{{ titulo }}</h1>
+    	{{ #lista }}
+    		<li>{{ titulo }}</li>
+    	{{ /lista }}
 	</script>
+```
 
 Montamos o **Target**, que receberá o seu template:
 ```html
@@ -22,15 +27,24 @@ Montamos o **Target**, que receberá o seu template:
 ```
 
 Iniciamos o **Proxy**:
-```html
-	<script type="text/javascript">
-		proxy.initProxy();
-	</script>
-```
-E agora quando alterarmos o objeto **template.targetElement.titulo** o HTML será alterado.
 ```javascript
-		proxy.initProxy();
-		template.targetElement.titulo = "Lista da feira";
+
+	proxy.initProxy();
+
+```
+
+Quando alterarmos o objeto "titulo", o HTML será alterado em realtime em seu HTML.
+```javascript
+	proxy.initProxy();
+
+	// Primeiro setamos um valor
+
+	proxy.template.targetElement.titulo = "Titulo original";
+	
+	//... 
+
+	proxy.template.targetElement.titulo = "Titulo alterado";
+
 ```
 # Listas
 Caso tiver uma lista de ítens:
