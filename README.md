@@ -14,22 +14,24 @@ Montamos o **template**:
 	</script>
 
 Montamos o **Target** dele:
-``html
+```html
     <div proxy-target="targetElement">
     		carregando...
     </div>
-``
+```
+
 Iniciamos o **Proxy**:
+```html
 	<script type="text/javascript">
 		proxy.initProxy();
 	</script>
-
+```
 E agora quando alterarmos o objeto **template.targetElement.titulo** o HTML será alterado.
-
+```html
 	<script type="text/javascript">
 		template.targetElement.titulo = "Lista da feira";
 	</script>
-
+```
 # Listas
 Caso tiver uma lista de ítens:
 
