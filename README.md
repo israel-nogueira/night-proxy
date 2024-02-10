@@ -11,19 +11,21 @@ Inserimos o arquivo no HTML
 Montamos o **template**, que é o elemento onde está sua estrutura de layout:
 
 ```html
-	<script proxy-template="targetElement" type="x-tmpl">
-		<h1>{{ titulo }}</h1>
-    	{{ #lista }}
-    		<li>{{ titulo }}</li>
-    	{{ /lista }}
-	</script>
+<script proxy-template="targetElement" type="x-tmpl">
+	<h1>
+		{{ titulo }}
+	</h1>
+	{{ #lista }}
+		<li>{{ titulo }}</li>
+	{{ /lista }}
+</script>
 ```
 
 Montamos o **Target**, que receberá o seu template:
 ```html
-    <div proxy-target="targetElement">
-    		carregando...
-    </div>
+<div proxy-target="targetElement">
+	carregando...
+</div>
 ```
 
 Iniciamos o **Proxy**:
