@@ -1,66 +1,78 @@
 	<meta charset="UTF-8">
-
-
-	<div feats-target="targetElement">
-		carregando...
-	</div>
-		<button type="button" onclick="alteraConteudo()">Alterar conteúdo</button>
-	<br>
-	<br>
-	<br>
-		<button type="button" onclick="alteraForm()">Setar ítens do Formulario</button>
-	<br>
-	<br>
-	<br>
-
-	<div id="formulario">
-			<form feats-form="myForm">
-
-			            <input model type="text" class="form-control" name="input1" placeholder="input 01">
-						<select model class="form-control" name="exampleSelect">
-							<option value="1">1</option>
-							<option value="2">2</option>
-							<option value="3">3</option>
-							<option value="4">4</option>
-							<option value="5">5</option>
-						</select>
-
-						<input model type="checkbox" class="custom-control-input" id="checkmeout">
-						<label class="custom-control-label" for="checkmeout">checkBox</label>
-						<input model type="radio" id="customRadio1" name="customRadio" class="custom-control-input" value="pizza">
-						<label class="custom-control-label" for="customRadio1">Opção radio 01</label>
-						<input model type="radio" id="customRadio2" name="customRadio" class="custom-control-input" value="empadão">
-						<label class="custom-control-label" for="customRadio2">Opção radio 02</label>
-			</form>
-	</div>
-	<script feats-template="targetElement" type="x-tmpl-mustache">
-		<h1><% titulo_geral %></h1>
-		<hr>
-		<% #lista %>
-			<h4><% titulo %></h4>
-		<% /lista %>
-	</script>
-
-	<script type="text/javascript" src="./mustache.min.js?v=1"></script>
 	<script type="text/javascript" src="./proxy-update.js?v=1"></script>
+
+	<button type="button" onclick="addItem()">Adicionar ítem</button>
+	<div proxy-target="elemento_01">carregando...</div>
+	<div proxy-target="elemento_02">carregando...</div>
+
+
+
+	<script proxy-template="elemento_01" type="x-tmpl">
+		<hr>
+		<h1>{{ titulo_geral }}</h1>
+		<hr>
+		{{ #lista }}
+			<h4>{{ titulo }}</h4>
+		{{ /lista }}
+	</script>
+	<script proxy-template="elemento_02" type="x-tmpl">
+		<hr>
+		<h1>{{ titulo_geral }}</h1>
+		<hr>
+		{{ #lista }}
+			<h4>{{ titulo }}</h4>
+		{{ /lista }}
+	</script>
 
 
 	<script type="text/javascript">
-		feats.initProxy({cache:true});
+
+		proxy.initProxy();
 
 		// ALTERAMOS O OBJETO SETADO NO HTML
-		template.targetElement.titulo_geral = "Lista da feira";
-		template.targetElement.lista = [{titulo:"Tomate"},{titulo:"Alface"},{titulo:"Rúcula"},{titulo:"Beringela"},{titulo:"Cenoura"},{titulo:"Beterraba"}]
+		proxy.template.elemento_01.titulo_geral = "Titulo 01";
+		proxy.template.elemento_02.titulo_geral = "Titulo 02";
+
+		proxy.template.elemento_01.lista = []
+		proxy.template.elemento_02.lista = []
 
 		// FUNÇAO SIMPLES PARA ALTERAR CONTEUDO
-		function alteraConteudo(){
-				template.targetElement.titulo_geral = "Lista de padaria";
-				template.targetElement.lista = [{titulo:"Pão"},{titulo:"Broa"},{titulo:"Queijo"},{titulo:"Presunto"}]
+		function addItem(){
+				proxy.template.elemento_01.lista.push({titulo:'===>Novo Item'});
+				proxy.template.elemento_02.lista.push({titulo:'===>Novo Item'});
 		}
-		function alteraForm(){
-				template.myForm.exampleSelect = 3
-				template.myForm.customRadio = "pizza"
-				template.myForm.input1 = "MAIS UM INPUT"
+
+
+		/* 
+		Agora nesse exemplo, digamos que o ajax retorne um JSON nesse formato:
+		[ 
+			{ titulo:"Titulo 01" }, 
+			{ titulo:"Titulo 02" } 
+		]
+		*/
+		function exemploAjax(){
+			$.ajax({
+				url: "https://api.example.com/data",
+				method: "GET",
+				dataType: "json",
+				success: function (response) {
+
+					proxy.template.elemento_01.lista = response.json
+					
+				},
+				error: function (xhr, status, error) {
+					console.error("Erro na requisição:", error);
+				}
+			});
+
+					
+
+					
+
 
 		}
+		
+
+
+
 	</script> 
