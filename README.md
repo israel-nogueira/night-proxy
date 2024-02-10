@@ -53,25 +53,25 @@ Caso tiver uma lista de ítens, basta envelopar por uma hastag e fecha com uma b
 	{{ /lista }}
 </script>
 ```
-Poderá setar dados setando o objeto da seguinte forma:
+Para setar uma lista ao objeto, poderá ser feito da seguinte forma:
 ```javascript
-	proxy.template.targetElement.lista = [
-		{titulo:"Tomate"},
-		{titulo:"Alface"},
-		{titulo:"Rúcula"},
-		{titulo:"Beringela"},
-		{titulo:"Cenoura"},
-		{titulo:"Beterraba"}
-	]
+proxy.template.targetElement.lista = [
+	{titulo:"Tomate"},
+	{titulo:"Alface"},
+	{titulo:"Rúcula"},
+	{titulo:"Beringela"},
+	{titulo:"Cenoura"},
+	{titulo:"Beterraba"}
+]
 ```
 
 # Inserindo um item na lista
 ```javascript
-	proxy.template.targetElement.lista.push({titulo:"Pão de queijo"})
+proxy.template.targetElement.lista.push({titulo:"Pão de queijo"})
 ```
 # Alterando um item na lista
 ```javascript
-	template.targetElement.lista[2].titulo="Pão de queijo";
+template.targetElement.lista[2].titulo="Pão de queijo";
 ```
 
 Imagine agora integrar isso com ajax?
