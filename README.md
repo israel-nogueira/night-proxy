@@ -14,10 +14,11 @@ Montamos o **template**:
 	</script>
 
 Montamos o **Target** dele:
+``html
     <div proxy-target="targetElement">
     		carregando...
     </div>
-
+``
 Iniciamos o **Proxy**:
 	<script type="text/javascript">
 		proxy.initProxy();
