@@ -11,14 +11,14 @@ Inserimos o arquivo no HTML
 Montamos o **template**, que é o elemento onde está sua estrutura de layout:
 
 ```html
-<script proxy-template="targetElement" type="x-tmpl">
+<script proxy-template="coxinha" type="x-tmpl">
 	<h1>{{ titulo }}</h1>
 </script>
 ```
 
 Montamos o **Target**, que receberá o seu template:
 ```html
-<div proxy-target="targetElement">
+<div proxy-target="coxinha">
 	carregando...
 </div>
 ```
@@ -36,18 +36,18 @@ Quando alterarmos o objeto "titulo", o HTML será alterado em realtime em seu HT
 
 	// Primeiro setamos um valor
 
-	proxy.template.targetElement.titulo = "Titulo original";
+	proxy.template.coxinha.titulo = "Titulo original";
 	
 	//Depois caso queira alterar o valor:
 
-	proxy.template.targetElement.titulo = "Titulo alterado";
+	proxy.template.coxinha.titulo = "Titulo alterado";
 
 ```
 
 # Listas
 Caso tiver uma lista de ítens, basta envelopar por uma hastag e fecha com uma barra:
 ```html
-<script proxy-template="targetElement" type="x-tmpl">
+<script proxy-template="coxinha" type="x-tmpl">
 	{{ #lista }}
 		<li>{{ titulo }}</li>
 	{{ /lista }}
@@ -55,26 +55,26 @@ Caso tiver uma lista de ítens, basta envelopar por uma hastag e fecha com uma b
 ```
 Para setar uma lista ao objeto, poderá ser feito da seguinte forma:
 ```javascript
-proxy.template.targetElement.lista = [
-	{titulo:"Tomate"},
-	{titulo:"Alface"},
-	{titulo:"Rúcula"},
-	{titulo:"Beringela"},
-	{titulo:"Cenoura"},
-	{titulo:"Beterraba"}
+proxy.template.coxinha.lista = [
+	{titulo:"Com catupiry"},
+	{titulo:"Com bacon"},
+	{titulo:"Com queijo e presunto"}
 ]
 ```
 
 # Inserindo um item na lista
 ```javascript
-proxy.template.targetElement.lista.push({titulo:"Pão de queijo"})
+proxy.template.coxinha.lista.push({titulo:"Com camarão"})
 ```
 # Alterando um item na lista
 ```javascript
-template.targetElement.lista[2].titulo="Pão de queijo";
+proxy.template.coxinha.lista[2].titulo="Com costela";
 ```
 
-Imagine agora integrar isso com ajax?
+
+
+
+
 Não trabalhar mais com inserts de strings, apenas com objetos vindos do  servidor.   Legal né? 
 
 # APROVEITEM!
