@@ -12,12 +12,7 @@ Montamos o **template**, que é o elemento onde está sua estrutura de layout:
 
 ```html
 <script proxy-template="targetElement" type="x-tmpl">
-	<h1>
-		{{ titulo }}
-	</h1>
-	{{ #lista }}
-		<li>{{ titulo }}</li>
-	{{ /lista }}
+	<h1>{{ titulo }}</h1>
 </script>
 ```
 
@@ -34,7 +29,7 @@ Iniciamos o **Proxy**:
 	proxy.initProxy();
 
 ```
-
+# Setando valor em um nó simples
 Quando alterarmos o objeto "titulo", o HTML será alterado em realtime em seu HTML.
 ```javascript
 	proxy.initProxy();
@@ -43,40 +38,41 @@ Quando alterarmos o objeto "titulo", o HTML será alterado em realtime em seu HT
 
 	proxy.template.targetElement.titulo = "Titulo original";
 	
-	//... 
+	//Depois caso queira alterar o valor:
 
 	proxy.template.targetElement.titulo = "Titulo alterado";
 
 ```
+
 # Listas
-Caso tiver uma lista de ítens:
-
-    <script proxy-template="targetElement" type="x-tmpl">
-    	{{ #lista }}
-    		<li>{{ titulo }}</li>
-    	{{ /lista }}
-    </script>
-Poderá inserir dados setando o objeto da seguinte forma:
-
-    <script type="text/javascript">
-	    template.targetElement.lista = [
-		    {titulo:"Tomate"},
-		    {titulo:"Alface"},
-		    {titulo:"Rúcula"},
-		    {titulo:"Beringela"},
-		    {titulo:"Cenoura"},
-		    {titulo:"Beterraba"}
-	    ]
-    </script>
+Caso tiver uma lista de ítens, basta envelopar por uma hastag e fecha com uma barra:
+```html
+<script proxy-template="targetElement" type="x-tmpl">
+	{{ #lista }}
+		<li>{{ titulo }}</li>
+	{{ /lista }}
+</script>
+```
+Poderá setar dados setando o objeto da seguinte forma:
+```javascript
+	proxy.template.targetElement.lista = [
+		{titulo:"Tomate"},
+		{titulo:"Alface"},
+		{titulo:"Rúcula"},
+		{titulo:"Beringela"},
+		{titulo:"Cenoura"},
+		{titulo:"Beterraba"}
+	]
+```
 
 # Inserindo um item na lista
-	<script type="text/javascript">
-		template.targetElement.lista.push({titulo:"Pão de queijo"})
-	</script> 
+```javascript
+	proxy.template.targetElement.lista.push({titulo:"Pão de queijo"})
+```
 # Alterando um item na lista
-	<script type="text/javascript">
-		template.targetElement.lista[2].titulo="Pão de queijo";
-	</script> 
+```javascript
+	template.targetElement.lista[2].titulo="Pão de queijo";
+```
 
 Imagine agora integrar isso com ajax?
 Não trabalhar mais com inserts de strings, apenas com objetos vindos do  servidor.   Legal né? 
