@@ -3,17 +3,18 @@
 Sistema template orientado a objeto do lado do cliente.
 
 # Instalação
-Inserimos o arquivos no HTML 
+Inserimos o arquivo no HTML 
+```html
+<script type="text/javascript" src="./proxy-update.js"></script>
+```
 
-	<script type="text/javascript" src="./proxy-update.js"></script>
-
-Montamos o **template**:
+Montamos o **template**, que é o elemento onde está sua estrutura de layout:
 
 	<script proxy-template="targetElement" type="x-tmpl">
 		<h1>{{ titulo }}</h1>
 	</script>
 
-Montamos o **Target** dele:
+Montamos o **Target**, que receberá o seu template:
 ```html
     <div proxy-target="targetElement">
     		carregando...
@@ -27,10 +28,9 @@ Iniciamos o **Proxy**:
 	</script>
 ```
 E agora quando alterarmos o objeto **template.targetElement.titulo** o HTML será alterado.
-```html
-	<script type="text/javascript">
+```javascript
+		proxy.initProxy();
 		template.targetElement.titulo = "Lista da feira";
-	</script>
 ```
 # Listas
 Caso tiver uma lista de ítens:
