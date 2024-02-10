@@ -32,15 +32,15 @@ Iniciamos o **Proxy**:
 # Setando valor em um nó simples
 Quando alterarmos o objeto "titulo", o HTML será alterado em realtime em seu HTML.
 ```javascript
-	proxy.initProxy();
+proxy.initProxy();
 
-	// Primeiro setamos um valor
+// Primeiro setamos um valor
 
-	proxy.template.coxinha.titulo = "Titulo original";
-	
-	//Depois caso queira alterar o valor:
+proxy.template.coxinha.titulo = "Titulo original";
 
-	proxy.template.coxinha.titulo = "Titulo alterado";
+//Depois caso queira alterar o valor:
+
+proxy.template.coxinha.titulo = "Titulo alterado";
 
 ```
 
@@ -72,6 +72,30 @@ proxy.template.coxinha.lista[2].titulo="Com costela";
 ```
 
 
+# REQUISIÇÃO AJAX
+Pode-se trabalhar diretamente na requisição ajax para setar novos conteudos;
+Se por exemplo seu retorno for:
+```json
+[
+	{"titulo":"Sabor1"},
+	{"titulo":"Sabor2"},
+	{"titulo":"Sabor3"}
+]
+```
+Então você poderá inserir os novos sabores dessa forma:
+```javascript
+$.ajax({
+	url: "/api/sabores-de-coxinha",
+	method: "GET",
+	dataType: "json",
+	success: function(response) {
+		proxy.template.coxinha.lista.push(...response);
+	},
+	error: function(xhr, status, error) {
+		console.error("Erro na requisição:", error);
+	}
+});
+```
 
 
 
