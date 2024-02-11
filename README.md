@@ -107,7 +107,13 @@ $.ajax({
 	method: "GET",
 	dataType: "json",
 	success: function(response) {
-		proxy.template.coxinha.lista.push(...response);
+
+		// Caso seja dar um UPDATE geral
+		proxy.template.coxinha.lista = response;
+
+		// Ou usamos o método "add()" para inserir
+		proxy.template.coxinha.lista.add(response);
+		
 	},
 	error: function(xhr, status, error) {
 		console.error("Erro na requisição:", error);
