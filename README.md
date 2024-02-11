@@ -64,11 +64,22 @@ proxy.template.coxinha.lista = [
 
 # Inserindo um item na lista
 ```javascript
+
 proxy.template.coxinha.lista.push({titulo:"Com camarão"})
+
 ```
 # Alterando um item na lista
 ```javascript
+
 proxy.template.coxinha.lista[2].titulo="Com costela";
+
+```
+
+# Excluindo um item na lista
+```javascript
+
+proxy.template.coxinha.lista[2].delete();
+
 ```
 
 
@@ -96,9 +107,3 @@ $.ajax({
 	}
 });
 ```
-
-
-
-Não trabalhar mais com inserts de strings, apenas com objetos vindos do  servidor.   Legal né? 
-
-# APROVEITEM!

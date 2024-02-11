@@ -101,31 +101,47 @@ var proxy = {
             return target[key];
         },
         set(target, key, value, receiver) {
-            target[key] = value;
+            if (value === undefined || value === null) {
+                delete target[key];
+            } else {
+                target[key] = value;
+
+                if (typeof value == 'object' && !Array.isArray(value)){
+                    target[key].delete = function () {
+                        receiver.splice(key,1)
+                    };
+                }
+            }
             localStorage.setItem("template", JSON.stringify(proxy.template));
             proxy.applyTemplate();
             return true;
         }
     },
-
     applyTemplate: function () {
-        for (const [key, value] of Object.entries(proxy.template)) {
-            if (document.querySelectorAll('*[proxy-template="' + key + '"]').length > 0 && document.querySelectorAll('*[proxy-target="' + key + '"]').length > 0) {
-                var model = document.querySelectorAll('*[proxy-template="' + key + '"]')[0].innerHTML;
-                proxy.tags = proxy.tags || ["<%", "%>"];
-                proxy.parse(model);
-                var rendered = proxy.render(model, value);
-                var elements = document.querySelectorAll('*[proxy-target="' + key + '"]');
-                for (var i = 0; i < elements.length; i++) {
-                    elements[i].innerHTML = rendered;
+        const keys = Object.keys(proxy.template);
+        for (let i = 0; i < keys.length; i++) {
+            const key = keys[i];
+            const value = proxy.template[key];
+            if (value !== undefined) {
+                if (document.querySelectorAll('*[proxy-template="' + key + '"]').length > 0 && document.querySelectorAll('*[proxy-target="' + key + '"]').length > 0) {
+                    var model = document.querySelectorAll('*[proxy-template="' + key + '"]')[0].innerHTML;
+                    proxy.tags = proxy.tags || ["<%", "%>"];
+                    proxy.parse(model);
+                    var rendered = proxy.render(model, value);
+                    var elements = document.querySelectorAll('*[proxy-target="' + key + '"]');
+                    for (var j = 0; j < elements.length; j++) {
+                        elements[j].innerHTML = rendered;
+                    }
+                } else if (document.querySelectorAll('form[proxy-form="' + key + '"]').length > 0) {
+                    proxy.preencheInputsFormCache(false);
+                } else {
+                    console.warn('Elemento "' + key + '" não existe no HTML')
                 }
-            } else if (document.querySelectorAll('form[proxy-form="' + key + '"]').length > 0) {
-                proxy.preencheInputsFormCache(false);
-            } else {
-                console.warn('Elemento "' + key + '" não existe no HTML')
             }
         }
     }
+
+
 };
 
 
