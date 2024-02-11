@@ -15,7 +15,7 @@ Esta técnica inteligente utiliza proxies do JavaScript para aplicar templates d
 # Instalação
 Inserimos o arquivo no HTML 
 ```html
-<script type="text/javascript" src="./night-proxy.js"></script>
+<script type="text/javascript" src="./assets/js/night-proxy.js"></script>
 ```
 
 Montamos o **template**, que é o elemento onde está sua estrutura de layout:
