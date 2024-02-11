@@ -1,11 +1,12 @@
 
 # Javascript Proxy template HTML
-Sistema template orientado a objeto do lado do cliente.
+Simplifique a aplicação de templates em seus dados com o Proxy Recursivo. 
+Esta técnica inteligente utiliza proxies do JavaScript para aplicar templates de forma eficiente e flexível, garantindo controle total sobre cada operação em seus objetos de modelo. Desde a validação de dados até a execução de lógica personalizada, o Proxy Recursivo simplifica seu fluxo de trabalho e oferece resultados impressionantes. Experimente hoje e descubra uma nova maneira de lidar com templates de forma intuitiva e poderosa.
 
 # Instalação
 Inserimos o arquivo no HTML 
 ```html
-<script type="text/javascript" src="./proxy-update.js"></script>
+<script type="text/javascript" src="./night-proxy.js"></script>
 ```
 
 Montamos o **template**, que é o elemento onde está sua estrutura de layout:
