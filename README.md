@@ -103,7 +103,7 @@ proxy.template.coxinha.lista[2].delete();
 ```
 
 
-# REQUISIÇÃO AJAX
+# Requisição Ajax
 Pode-se trabalhar diretamente na requisição ajax para setar novos conteudos;
 Se por exemplo seu retorno for:
 ```json
