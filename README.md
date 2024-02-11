@@ -54,6 +54,19 @@ Caso tiver uma lista de ítens, basta envelopar por uma hastag e fecha com uma b
 </script>
 ```
 
+# TAGS de template
+Caso não queira utilizar {{  }}  e tenha que trocar, basta setar ANTES de iniciar o proxy:
+```javascript
+
+proxy.tags = ['<%', '%>']
+proxy.initProxy();
+
+//ou ainda
+proxy.tags = ['[', ']']
+proxy.initProxy();
+
+```
+
 # Setando ou inserindo um ou mais item na lista
 ```javascript
 
