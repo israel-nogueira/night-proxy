@@ -111,6 +111,21 @@ var proxy = {
                         receiver.splice(key,1)
                     };
                 }
+
+                target[key].add = function (array) {
+                    if (typeof value == 'object' && !Array.isArray(array)){
+                        target[key].push(array)
+                    }else if (typeof value == 'object' && Array.isArray(array)){
+                        array.forEach(function(a,b){
+                            target[key].push(a)
+                        })
+                    }
+
+
+                };
+
+
+
             }
             localStorage.setItem("template", JSON.stringify(proxy.template));
             proxy.applyTemplate();

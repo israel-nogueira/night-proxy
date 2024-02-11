@@ -62,10 +62,17 @@ proxy.template.coxinha.lista = [
 ]
 ```
 
-# Inserindo um item na lista
+# Inserindo um ou mais item na lista
 ```javascript
 
-proxy.template.coxinha.lista.push({titulo:"Com camarão"})
+proxy.template.coxinha.lista.add({"titulo":"Com camarão"})
+
+// ou ainda:
+proxy.template.coxinha.lista.add([
+	{"titulo":"Sabor1"},
+	{"titulo":"Sabor2"},
+	{"titulo":"Sabor3"}
+])
 
 ```
 # Alterando um item na lista
