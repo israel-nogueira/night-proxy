@@ -26,7 +26,7 @@ Montamos o **Target**, que receberá o seu template:
 Iniciamos o **Proxy**:
 ```javascript
 
-	proxy.initProxy();
+proxy.initProxy();
 
 ```
 # Setando valor em um nó simples
@@ -113,7 +113,7 @@ $.ajax({
 
 		// Ou usamos o método "add()" para inserir
 		proxy.template.coxinha.lista.add(response);
-		
+
 	},
 	error: function(xhr, status, error) {
 		console.error("Erro na requisição:", error);
