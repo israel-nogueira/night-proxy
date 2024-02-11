@@ -1,5 +1,6 @@
 <p align="center">
-    <img src="https://raw.githubusercontent.com/israel-nogueira/night-proxy/assets/avatar.png" width="650"/>
+    <!-- <img src="https://raw.githubusercontent.com/israel-nogueira/galaxy-db/main/src/topo_README.jpg" width="650"/> -->
+    <img src="https://raw.githubusercontent.com/israel-nogueira/night-proxy/main/assets/avatar.png" width="650"/>
 </p>
 
 # Javascript Proxy template HTML
