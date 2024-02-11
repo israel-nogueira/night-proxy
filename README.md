@@ -53,21 +53,21 @@ Caso tiver uma lista de ítens, basta envelopar por uma hastag e fecha com uma b
 	{{ /lista }}
 </script>
 ```
-Para setar uma lista ao objeto, poderá ser feito da seguinte forma:
+
+# Setando ou inserindo um ou mais item na lista
 ```javascript
+
+// setando um objeto inteiro, substituindo o atual caso já exista
 proxy.template.coxinha.lista = [
 	{titulo:"Com catupiry"},
 	{titulo:"Com bacon"},
 	{titulo:"Com queijo e presunto"}
 ]
-```
 
-# Inserindo um ou mais item na lista
-```javascript
-
+// adicionando um ítem
 proxy.template.coxinha.lista.add({"titulo":"Com camarão"})
 
-// ou ainda:
+// Adicionando vários itens:
 proxy.template.coxinha.lista.add([
 	{"titulo":"Sabor1"},
 	{"titulo":"Sabor2"},
