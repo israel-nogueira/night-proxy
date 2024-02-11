@@ -35,22 +35,24 @@
 
 		proxy.template.elemento_01.lista = []
 		proxy.template.elemento_02.lista = []
+	
+		proxy.template.elemento_01.lista.add([
+			{ "titulo": "===> Item 1" },
+			{ "titulo": "===> Item 2" },
+			{ "titulo": "===> Item 3" },
+			{ "titulo": "===> Item 4" }
+		])
+		proxy.template.elemento_02.lista.add([
+			{ "titulo": "===> Item 1" },
+			{ "titulo": "===> Item 2" },
+			{ "titulo": "===> Item 3" },
+			{ "titulo": "===> Item 4" }
+		])
 
-		// FUNÇAO SIMPLES PARA ALTERAR CONTEUDO
-		function addItem(){
-				proxy.template.elemento_01.lista.push({titulo:'===>Novo Item'});
-				proxy.template.elemento_02.lista.push({titulo:'===>Novo Item'});
-		}
+		proxy.template.elemento_02.lista[1].delete();
 
 
-		/* 
-		Agora nesse exemplo, digamos que o ajax retorne um JSON nesse formato:
-		[ 
-			{ titulo:"Titulo 01" }, 
-			{ titulo:"Titulo 02" } 
-		]
-		*/
-		function exemploAjax(){
+		function exemploAjax() {
 			$.ajax({
 				url: "https://api.example.com/data",
 				method: "GET",
@@ -58,24 +60,13 @@
 				success: function (response) {
 
 					proxy.template.elemento_01.lista = response.json
-					
+
 				},
 				error: function (xhr, status, error) {
 					console.error("Erro na requisição:", error);
 				}
 			});
 		}
-		
-	addItem();
-	addItem();
-	addItem();
-	addItem();
-	addItem();
 
-		console.log('Copie para testar:')
-		console.log('proxy.template.elemento_01.lista.push({titulo:" Novo sabor"});')
-		console.log('proxy.template.elemento_01.lista[2].titulo ="Novo sabor corrigido";')
-		console.log('delete proxy.template.elemento_01.lista[2]')
-
-
+	
 	</script> 
