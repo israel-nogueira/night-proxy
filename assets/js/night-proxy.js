@@ -1,35 +1,37 @@
 /*!
-* https://unpkg.com/morphdom@2.7.8/dist/morphdom-umd.min.js
-*/
-(function (global, factory) { typeof exports === "object" && typeof module !== "undefined" ? module.exports = factory() : typeof define === "function" && define.amd ? define(factory) : (global = global || self, global.morphdom = factory()) })(this, function () { "use strict"; var DOCUMENT_FRAGMENT_NODE = 11; function morphAttrs(fromNode, toNode) { var toNodeAttrs = toNode.attributes; var attr; var attrName; var attrNamespaceURI; var attrValue; var fromValue; if (toNode.nodeType === DOCUMENT_FRAGMENT_NODE || fromNode.nodeType === DOCUMENT_FRAGMENT_NODE) { return } for (var i = toNodeAttrs.length - 1; i >= 0; i--) { attr = toNodeAttrs[i]; attrName = attr.name; attrNamespaceURI = attr.namespaceURI; attrValue = attr.value; if (attrNamespaceURI) { attrName = attr.localName || attrName; fromValue = fromNode.getAttributeNS(attrNamespaceURI, attrName); if (fromValue !== attrValue) { if (attr.prefix === "xmlns") { attrName = attr.name } fromNode.setAttributeNS(attrNamespaceURI, attrName, attrValue) } } else { fromValue = fromNode.getAttribute(attrName); if (fromValue !== attrValue) { fromNode.setAttribute(attrName, attrValue) } } } var fromNodeAttrs = fromNode.attributes; for (var d = fromNodeAttrs.length - 1; d >= 0; d--) { attr = fromNodeAttrs[d]; attrName = attr.name; attrNamespaceURI = attr.namespaceURI; if (attrNamespaceURI) { attrName = attr.localName || attrName; if (!toNode.hasAttributeNS(attrNamespaceURI, attrName)) { fromNode.removeAttributeNS(attrNamespaceURI, attrName) } } else { if (!toNode.hasAttribute(attrName)) { fromNode.removeAttribute(attrName) } } } } var range; var NS_XHTML = "http://www.w3.org/1999/xhtml"; var doc = typeof document === "undefined" ? undefined : document; var HAS_TEMPLATE_SUPPORT = !!doc && "content" in doc.createElement("template"); var HAS_RANGE_SUPPORT = !!doc && doc.createRange && "createContextualFragment" in doc.createRange(); function createFragmentFromTemplate(str) { var template = doc.createElement("template"); template.innerHTML = str; return template.content.childNodes[0] } function createFragmentFromRange(str) { if (!range) { range = doc.createRange(); range.selectNode(doc.body) } var fragment = range.createContextualFragment(str); return fragment.childNodes[0] } function createFragmentFromWrap(str) { var fragment = doc.createElement("body"); fragment.innerHTML = str; return fragment.childNodes[0] } function toElement(str) { str = str.trim(); if (HAS_TEMPLATE_SUPPORT) { return createFragmentFromTemplate(str) } else if (HAS_RANGE_SUPPORT) { return createFragmentFromRange(str) } return createFragmentFromWrap(str) } function compareNodeNames(fromEl, toEl) { var fromNodeName = fromEl.nodeName; var toNodeName = toEl.nodeName; var fromCodeStart, toCodeStart; if (fromNodeName === toNodeName) { return true } fromCodeStart = fromNodeName.charCodeAt(0); toCodeStart = toNodeName.charCodeAt(0); if (fromCodeStart <= 90 && toCodeStart >= 97) { return fromNodeName === toNodeName.toUpperCase() } else if (toCodeStart <= 90 && fromCodeStart >= 97) { return toNodeName === fromNodeName.toUpperCase() } else { return false } } function createElementNS(name, namespaceURI) { return !namespaceURI || namespaceURI === NS_XHTML ? doc.createElement(name) : doc.createElementNS(namespaceURI, name) } function moveChildren(fromEl, toEl) { var curChild = fromEl.firstChild; while (curChild) { var nextChild = curChild.nextSibling; toEl.appendChild(curChild); curChild = nextChild } return toEl } function syncBooleanAttrProp(fromEl, toEl, name) { if (fromEl[name] !== toEl[name]) { fromEl[name] = toEl[name]; if (fromEl[name]) { fromEl.setAttribute(name, "") } else { fromEl.removeAttribute(name) } } } var specialElHandlers = { OPTION: function (fromEl, toEl) { var parentNode = fromEl.parentNode; if (parentNode) { var parentName = parentNode.nodeName.toUpperCase(); if (parentName === "OPTGROUP") { parentNode = parentNode.parentNode; parentName = parentNode && parentNode.nodeName.toUpperCase() } if (parentName === "SELECT" && !parentNode.hasAttribute("multiple")) { if (fromEl.hasAttribute("selected") && !toEl.selected) { fromEl.setAttribute("selected", "selected"); fromEl.removeAttribute("selected") } parentNode.selectedIndex = -1 } } syncBooleanAttrProp(fromEl, toEl, "selected") }, INPUT: function (fromEl, toEl) { syncBooleanAttrProp(fromEl, toEl, "checked"); syncBooleanAttrProp(fromEl, toEl, "disabled"); if (fromEl.value !== toEl.value) { fromEl.value = toEl.value } if (!toEl.hasAttribute("value")) { fromEl.removeAttribute("value") } }, TEXTAREA: function (fromEl, toEl) { var newValue = toEl.value; if (fromEl.value !== newValue) { fromEl.value = newValue } var firstChild = fromEl.firstChild; if (firstChild) { var oldValue = firstChild.nodeValue; if (oldValue == newValue || !newValue && oldValue == fromEl.placeholder) { return } firstChild.nodeValue = newValue } }, SELECT: function (fromEl, toEl) { if (!toEl.hasAttribute("multiple")) { var selectedIndex = -1; var i = 0; var curChild = fromEl.firstChild; var optgroup; var nodeName; while (curChild) { nodeName = curChild.nodeName && curChild.nodeName.toUpperCase(); if (nodeName === "OPTGROUP") { optgroup = curChild; curChild = optgroup.firstChild; if (!curChild) { curChild = optgroup.nextSibling; optgroup = null } } else { if (nodeName === "OPTION") { if (curChild.hasAttribute("selected")) { selectedIndex = i; break } i++ } curChild = curChild.nextSibling; if (!curChild && optgroup) { curChild = optgroup.nextSibling; optgroup = null } } } fromEl.selectedIndex = selectedIndex } } }; var ELEMENT_NODE = 1; var DOCUMENT_FRAGMENT_NODE$1 = 11; var TEXT_NODE = 3; var COMMENT_NODE = 8; function noop() { } function defaultGetNodeKey(node) { if (node) { return node.getAttribute && node.getAttribute("id") || node.id } } function morphdomFactory(morphAttrs) { return function morphdom(fromNode, toNode, options) { if (!options) { options = {} } if (typeof toNode === "string") { if (fromNode.nodeName === "#document" || fromNode.nodeName === "HTML") { var toNodeHtml = toNode; toNode = doc.createElement("html"); toNode.innerHTML = toNodeHtml } else if (fromNode.nodeName === "BODY") { var toNodeBody = toNode; toNode = doc.createElement("html"); toNode.innerHTML = toNodeBody; var bodyElement = toNode.querySelector("body"); if (bodyElement) { toNode = bodyElement } } else { toNode = toElement(toNode) } } else if (toNode.nodeType === DOCUMENT_FRAGMENT_NODE$1) { toNode = toNode.firstElementChild } var getNodeKey = options.getNodeKey || defaultGetNodeKey; var onBeforeNodeAdded = options.onBeforeNodeAdded || noop; var onNodeAdded = options.onNodeAdded || noop; var onBeforeElUpdated = options.onBeforeElUpdated || noop; var onElUpdated = options.onElUpdated || noop; var onBeforeNodeDiscarded = options.onBeforeNodeDiscarded || noop; var onNodeDiscarded = options.onNodeDiscarded || noop; var onBeforeElChildrenUpdated = options.onBeforeElChildrenUpdated || noop; var skipFromChildren = options.skipFromChildren || noop; var addChild = options.addChild || function (parent, child) { return parent.appendChild(child) }; var childrenOnly = options.childrenOnly === true; var fromNodesLookup = Object.create(null); var keyedRemovalList = []; function addKeyedRemoval(key) { keyedRemovalList.push(key) } function walkDiscardedChildNodes(node, skipKeyedNodes) { if (node.nodeType === ELEMENT_NODE) { var curChild = node.firstChild; while (curChild) { var key = undefined; if (skipKeyedNodes && (key = getNodeKey(curChild))) { addKeyedRemoval(key) } else { onNodeDiscarded(curChild); if (curChild.firstChild) { walkDiscardedChildNodes(curChild, skipKeyedNodes) } } curChild = curChild.nextSibling } } } function removeNode(node, parentNode, skipKeyedNodes) { if (onBeforeNodeDiscarded(node) === false) { return } if (parentNode) { parentNode.removeChild(node) } onNodeDiscarded(node); walkDiscardedChildNodes(node, skipKeyedNodes) } function indexTree(node) { if (node.nodeType === ELEMENT_NODE || node.nodeType === DOCUMENT_FRAGMENT_NODE$1) { var curChild = node.firstChild; while (curChild) { var key = getNodeKey(curChild); if (key) { fromNodesLookup[key] = curChild } indexTree(curChild); curChild = curChild.nextSibling } } } indexTree(fromNode); function handleNodeAdded(el) { onNodeAdded(el); var curChild = el.firstChild; while (curChild) { var nextSibling = curChild.nextSibling; var key = getNodeKey(curChild); if (key) { var unmatchedFromEl = fromNodesLookup[key]; if (unmatchedFromEl && compareNodeNames(curChild, unmatchedFromEl)) { curChild.parentNode.replaceChild(unmatchedFromEl, curChild); morphEl(unmatchedFromEl, curChild) } else { handleNodeAdded(curChild) } } else { handleNodeAdded(curChild) } curChild = nextSibling } } function cleanupFromEl(fromEl, curFromNodeChild, curFromNodeKey) { while (curFromNodeChild) { var fromNextSibling = curFromNodeChild.nextSibling; if (curFromNodeKey = getNodeKey(curFromNodeChild)) { addKeyedRemoval(curFromNodeKey) } else { removeNode(curFromNodeChild, fromEl, true) } curFromNodeChild = fromNextSibling } } function morphEl(fromEl, toEl, childrenOnly) { var toElKey = getNodeKey(toEl); if (toElKey) { delete fromNodesLookup[toElKey] } if (!childrenOnly) { var beforeUpdateResult = onBeforeElUpdated(fromEl, toEl); if (beforeUpdateResult === false) { return } else if (beforeUpdateResult instanceof HTMLElement) { fromEl = beforeUpdateResult; indexTree(fromEl) } morphAttrs(fromEl, toEl); onElUpdated(fromEl); if (onBeforeElChildrenUpdated(fromEl, toEl) === false) { return } } if (fromEl.nodeName !== "TEXTAREA") { morphChildren(fromEl, toEl) } else { specialElHandlers.TEXTAREA(fromEl, toEl) } } function morphChildren(fromEl, toEl) { var skipFrom = skipFromChildren(fromEl, toEl); var curToNodeChild = toEl.firstChild; var curFromNodeChild = fromEl.firstChild; var curToNodeKey; var curFromNodeKey; var fromNextSibling; var toNextSibling; var matchingFromEl; outer: while (curToNodeChild) { toNextSibling = curToNodeChild.nextSibling; curToNodeKey = getNodeKey(curToNodeChild); while (!skipFrom && curFromNodeChild) { fromNextSibling = curFromNodeChild.nextSibling; if (curToNodeChild.isSameNode && curToNodeChild.isSameNode(curFromNodeChild)) { curToNodeChild = toNextSibling; curFromNodeChild = fromNextSibling; continue outer } curFromNodeKey = getNodeKey(curFromNodeChild); var curFromNodeType = curFromNodeChild.nodeType; var isCompatible = undefined; if (curFromNodeType === curToNodeChild.nodeType) { if (curFromNodeType === ELEMENT_NODE) { if (curToNodeKey) { if (curToNodeKey !== curFromNodeKey) { if (matchingFromEl = fromNodesLookup[curToNodeKey]) { if (fromNextSibling === matchingFromEl) { isCompatible = false } else { fromEl.insertBefore(matchingFromEl, curFromNodeChild); if (curFromNodeKey) { addKeyedRemoval(curFromNodeKey) } else { removeNode(curFromNodeChild, fromEl, true) } curFromNodeChild = matchingFromEl; curFromNodeKey = getNodeKey(curFromNodeChild) } } else { isCompatible = false } } } else if (curFromNodeKey) { isCompatible = false } isCompatible = isCompatible !== false && compareNodeNames(curFromNodeChild, curToNodeChild); if (isCompatible) { morphEl(curFromNodeChild, curToNodeChild) } } else if (curFromNodeType === TEXT_NODE || curFromNodeType == COMMENT_NODE) { isCompatible = true; if (curFromNodeChild.nodeValue !== curToNodeChild.nodeValue) { curFromNodeChild.nodeValue = curToNodeChild.nodeValue } } } if (isCompatible) { curToNodeChild = toNextSibling; curFromNodeChild = fromNextSibling; continue outer } if (curFromNodeKey) { addKeyedRemoval(curFromNodeKey) } else { removeNode(curFromNodeChild, fromEl, true) } curFromNodeChild = fromNextSibling } if (curToNodeKey && (matchingFromEl = fromNodesLookup[curToNodeKey]) && compareNodeNames(matchingFromEl, curToNodeChild)) { if (!skipFrom) { addChild(fromEl, matchingFromEl) } morphEl(matchingFromEl, curToNodeChild) } else { var onBeforeNodeAddedResult = onBeforeNodeAdded(curToNodeChild); if (onBeforeNodeAddedResult !== false) { if (onBeforeNodeAddedResult) { curToNodeChild = onBeforeNodeAddedResult } if (curToNodeChild.actualize) { curToNodeChild = curToNodeChild.actualize(fromEl.ownerDocument || doc) } addChild(fromEl, curToNodeChild); handleNodeAdded(curToNodeChild) } } curToNodeChild = toNextSibling; curFromNodeChild = fromNextSibling } cleanupFromEl(fromEl, curFromNodeChild, curFromNodeKey); var specialElHandler = specialElHandlers[fromEl.nodeName]; if (specialElHandler) { specialElHandler(fromEl, toEl) } } var morphedNode = fromNode; var morphedNodeType = morphedNode.nodeType; var toNodeType = toNode.nodeType; if (!childrenOnly) { if (morphedNodeType === ELEMENT_NODE) { if (toNodeType === ELEMENT_NODE) { if (!compareNodeNames(fromNode, toNode)) { onNodeDiscarded(fromNode); morphedNode = moveChildren(fromNode, createElementNS(toNode.nodeName, toNode.namespaceURI)) } } else { morphedNode = toNode } } else if (morphedNodeType === TEXT_NODE || morphedNodeType === COMMENT_NODE) { if (toNodeType === morphedNodeType) { if (morphedNode.nodeValue !== toNode.nodeValue) { morphedNode.nodeValue = toNode.nodeValue } return morphedNode } else { morphedNode = toNode } } } if (morphedNode === toNode) { onNodeDiscarded(fromNode) } else { if (toNode.isSameNode && toNode.isSameNode(morphedNode)) { return } morphEl(morphedNode, toNode, childrenOnly); if (keyedRemovalList) { for (var i = 0, len = keyedRemovalList.length; i < len; i++) { var elToRemove = fromNodesLookup[keyedRemovalList[i]]; if (elToRemove) { removeNode(elToRemove, elToRemove.parentNode, false) } } } } if (!childrenOnly && morphedNode !== fromNode && fromNode.parentNode) { if (morphedNode.actualize) { morphedNode = morphedNode.actualize(fromNode.ownerDocument || doc) } fromNode.parentNode.replaceChild(morphedNode, fromNode) } return morphedNode } } var morphdom = morphdomFactory(morphAttrs); return morphdom });
-
-
-/*!
- * night-proxy.js v2.1.1
- * Reactive DOM binding via Recursive Proxy + morphdom diffing
+ * night-proxy.js v2.2.0
+ * Reactive DOM binding via Recursive Proxy
  * https://github.com/israel-nogueira/night-proxy
  *
- * Requires: https://unpkg.com/morphdom@2.7.8/dist/morphdom-umd.min.js
- *
  * Directives:
- *   x-for="item in lista"                    → reactive loop (nestable)
+ *   x-target="key"                          → component root
+ *   x-for="item in lista"                   → reactive loop (nestable)
  *   x-bind="item.titulo"                    → reactive text / interpolation with {var}
- *   x-if="item.ativo"                       → reactive conditional
+ *   x-text="item.titulo"                    → reactive text content
+ *   x-if="item.ativo"                       → removes/restores element from DOM
+ *   x-show="item.ativo"                     → toggles visibility (display)
  *   x-on:event="expr"                       → event listener with loop scope
- *   x-model="elemento_01.nome"              → two-way binding (input/checkbox/radio/select)
- *   x-model="elemento_01.lista[1].titulo"   → deep path two-way binding
- *   $i                                      → index available via scoped variable (item.$i)
+ *   x-model="key.prop"                      → two-way binding
+ *   x-ref="nome"                            → register element reference
+ *   $i                                      → loop index (item.$i)
+ *
+ * Magic properties (available in x-on expressions):
+ *   $root            → root x-target element
+ *   $ref.nome        → element with x-ref="nome"
+ *   $event           → native DOM event
+ *   $emit(name)      → dispatch CustomEvent on $root
+ *   $afterRender(fn) → run fn after next render cycle
+ *   $observe(path, fn) → watch a property path for changes
  */
 
 var proxy = (function () {
 
     'use strict';
 
-    // ─── Internal state ───────────────────────────────────────────────────────
-
     const _store = {};
     const _proxies = {};
-    const _templates = new Map();
+    const _targetTemplates = {};
+    const _observers = {};
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
 
@@ -57,14 +59,14 @@ var proxy = (function () {
     function _parsePath(path) {
         const normalized = path.replace(/\[(\d+)\]/g, '.$1');
         const parts = normalized.split('.');
-        return { key: parts[0], parts: parts };
+        return { key: parts[0], parts };
     }
 
     function _setDeep(parts, value) {
         let obj = _store;
         for (let i = 0; i < parts.length - 1; i++) {
             obj = obj[parts[i]];
-            if (obj === undefined || obj === null) return;
+            if (obj == null) return;
         }
         obj[parts[parts.length - 1]] = value;
     }
@@ -72,11 +74,127 @@ var proxy = (function () {
     function _getDeep(parts) {
         let obj = _store;
         for (let i = 0; i < parts.length; i++) {
-            if (obj === undefined || obj === null) return undefined;
+            if (obj == null) return undefined;
             obj = obj[parts[i]];
         }
         return obj;
     }
+
+    // ─── DOM diff (sem dependência externa) ───────────────────────────────────
+
+    function _patch(from, to) {
+        // patch attributes
+        const toAttrs = Array.from(to.attributes || []);
+        const fromAttrs = Array.from(from.attributes || []);
+
+        toAttrs.forEach(function (attr) {
+            if (from.getAttribute(attr.name) !== attr.value) {
+                from.setAttribute(attr.name, attr.value);
+            }
+        });
+        fromAttrs.forEach(function (attr) {
+            if (!to.hasAttribute(attr.name)) {
+                from.removeAttribute(attr.name);
+            }
+        });
+
+        // patch style if set directly
+        if (to.style && to.style.cssText !== from.style.cssText) {
+            from.style.cssText = to.style.cssText;
+        }
+
+        // patch textContent for leaf nodes (no children)
+        if (to.children.length === 0 && from.children.length === 0) {
+            if (from.textContent !== to.textContent) {
+                from.textContent = to.textContent;
+            }
+            return;
+        }
+
+        // patch children
+        const fromChildren = Array.from(from.childNodes);
+        const toChildren = Array.from(to.childNodes);
+
+        // remove extra nodes
+        for (let i = fromChildren.length - 1; i >= toChildren.length; i--) {
+            from.removeChild(fromChildren[i]);
+        }
+
+        toChildren.forEach(function (toChild, i) {
+            const fromChild = from.childNodes[i];
+
+            if (!fromChild) {
+                // usa o nó diretamente para preservar listeners
+                from.appendChild(toChild);
+                return;
+            }
+
+            // different node type or tag → replace
+            // mas nunca substituir nós que contêm x-on (perdem listeners)
+            if (fromChild.nodeType !== toChild.nodeType ||
+                fromChild.nodeName !== toChild.nodeName) {
+                const hasXOn = fromChild.querySelector && fromChild.querySelector('[x-on\:click],[x-on\:input],[x-on\:change]');
+                if (hasXOn) {
+                    _patch(fromChild, toChild);
+                } else {
+                    from.replaceChild(toChild, fromChild);
+                }
+                return;
+            }
+
+            // text node
+            if (toChild.nodeType === Node.TEXT_NODE) {
+                if (fromChild.textContent !== toChild.textContent) {
+                    fromChild.textContent = toChild.textContent;
+                }
+                return;
+            }
+
+            // preserve focused element
+            if (fromChild === document.activeElement) return;
+
+            // nós gerados por x-for: substituir direto para preservar listeners
+            if (toChild.__nightForNode) {
+                from.replaceChild(toChild, fromChild);
+                return;
+            }
+
+            // recurse
+            _patch(fromChild, toChild);
+        });
+    }
+
+    // ─── $ref helper ──────────────────────────────────────────────────────────
+
+    function _buildRefProxy(root) {
+        return new Proxy({}, {
+            get(_, name) {
+                return root.querySelector('[x-ref="' + name + '"]') || undefined;
+            }
+        });
+    }
+
+    // ─── Magic scope ──────────────────────────────────────────────────────────
+
+    function _buildMagics(key, rootEl) {
+        return {
+            $root: rootEl,
+            $ref: _buildRefProxy(rootEl),
+            $emit: function (name, detail) {
+                rootEl.dispatchEvent(new CustomEvent(name, { bubbles: true, detail: detail || {} }));
+            },
+            $afterRender: function (fn) {
+                Promise.resolve().then(fn);
+            },
+            $observe: function (path, fn) {
+                const fullPath = key + '.' + path;
+                if (!_observers[fullPath]) _observers[fullPath] = [];
+                _observers[fullPath].push(fn);
+            }
+        };
+    }
+
+    // ─── Models ───────────────────────────────────────────────────────────────
 
     function _syncModelsForKey(key) {
         document.querySelectorAll('[x-model]').forEach(function (el) {
@@ -100,8 +218,8 @@ var proxy = (function () {
             el.__nightModel = true;
 
             const { key, parts } = _parsePath(el.getAttribute('x-model'));
-
             const val = _getDeep(parts);
+
             if (el.type === 'checkbox') {
                 el.checked = !!val;
             } else if (el.type === 'radio') {
@@ -129,13 +247,26 @@ var proxy = (function () {
 
         const xFor = node.getAttribute && node.getAttribute('x-for');
         const xIf = node.getAttribute && node.getAttribute('x-if');
+        const xShow = node.getAttribute && node.getAttribute('x-show');
         const xBind = node.getAttribute && node.getAttribute('x-bind');
+        const xText = node.getAttribute && node.getAttribute('x-text');
 
         // x-if
         if (xIf !== null && xIf !== undefined) {
             const show = _isTruthy(xIf, scope);
             node.style.display = show ? '' : 'none';
             if (!show) return;
+        }
+
+        // x-show
+        if (xShow !== null && xShow !== undefined) {
+            node.style.display = _isTruthy(xShow, scope) ? '' : 'none';
+        }
+
+        // x-text
+        if (xText !== null && xText !== undefined) {
+            const val = _evalExpr(xText, scope);
+            node.textContent = val != null ? val : '';
         }
 
         // x-bind
@@ -148,7 +279,7 @@ var proxy = (function () {
             }
         }
 
-        // x-on:* — attach once via flag
+        // x-on:*
         if (node.attributes) {
             for (let attr of node.attributes) {
                 if (attr.name.startsWith('x-on:')) {
@@ -158,11 +289,11 @@ var proxy = (function () {
                     if (!node.__nightListeners[event]) {
                         node.__nightListeners[event] = true;
                         node.addEventListener(event, function (e) {
-                            const currentScope = node.__nightScope || scope;
+                            const s = Object.assign({}, node.__nightScope || scope, { $event: e });
                             try {
-                                const keys = Object.keys(currentScope);
-                                const values = Object.values(currentScope);
-                                new Function(...keys, 'event', expr).call(null, ...values, e);
+                                const keys = Object.keys(s);
+                                const values = Object.values(s);
+                                new Function(...keys, expr).call(null, ...values);
                             } catch (err) {
                                 console.error('[night-proxy] x-on error:', err);
                             }
@@ -179,82 +310,17 @@ var proxy = (function () {
             return;
         }
 
-        // recurse children
         for (let child of node.children) {
             _renderNode(child, scope);
         }
     }
 
-    // ─── Save original templates before first render ──────────────────────────
-
-    function _saveTemplates(root) {
-        const allForNodes = Array.from(root.querySelectorAll('[x-for]'));
-        // Salva de dentro pra fora para garantir que o nested seja salvo antes do pai o substituir
-        allForNodes.reverse().forEach(function (node) {
-            const expr = node.getAttribute('x-for');
-            if (!_templates.has(expr)) {
-                _templates.set(expr, node.innerHTML);
-            }
-        });
-    }
-
-    // ─── Build rendered HTML for x-for using saved template ───────────────────
-
-    function _buildForHTML(node, parentScope, expr) {
+    function _renderFor(node, parentScope, expr) {
         const match = expr.match(/^\s*(\w+)\s+in\s+(.+)\s*$/);
         if (!match) {
             console.error('[night-proxy] x-for syntax error:', expr);
-            return '';
+            return;
         }
-
-        const alias = match[1];
-        const listExp = match[2].trim();
-        const list = _evalExpr(listExp, parentScope);
-
-        if (!Array.isArray(list)) return '';
-
-        const template = _templates.get(expr) || node.innerHTML;
-
-        let html = '';
-
-        list.forEach(function (item, index) {
-            const itemWithIndex = Object.assign({}, item, { $i: index });
-            const scope = Object.assign({}, parentScope, { [alias]: itemWithIndex });
-
-            const wrapper = document.createElement('div');
-            wrapper.innerHTML = template;
-
-            Array.from(wrapper.children).forEach(function (child) {
-                _renderNode(child, scope);
-            });
-
-            html += wrapper.innerHTML;
-        });
-
-        return html;
-    }
-
-    function _renderFor(node, parentScope, expr) {
-        const newHTML = _buildForHTML(node, parentScope, expr);
-
-        const clone = node.cloneNode(false);
-        clone.innerHTML = newHTML;
-
-        morphdom(node, clone, {
-            onBeforeElUpdated: function (fromEl, toEl) {
-                if (fromEl.isEqualNode(toEl)) return false;
-                return true;
-            },
-            childrenOnly: true
-        });
-
-        _reattachListeners(node, parentScope, expr);
-    }
-
-    // Re-attach x-on listeners after morphdom (new nodes won't have them)
-    function _reattachListeners(node, parentScope, expr) {
-        const match = expr.match(/^\s*(\w+)\s+in\s+(.+)\s*$/);
-        if (!match) return;
 
         const alias = match[1];
         const listExp = match[2].trim();
@@ -262,113 +328,87 @@ var proxy = (function () {
 
         if (!Array.isArray(list)) return;
 
-        // Descobre quantos filhos-raiz existem por item no template
-        const template = _templates.get(expr) || '';
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = template;
-        const rootsPerItem = wrapper.children.length || 1;
+        const template = node.__nightTemplate || '';
+        node.innerHTML = '';
 
-        const allChildren = Array.from(node.children);
+        // parser do template para restaurar __nightTemplate nos x-for internos
+        const tplParser = document.createElement('div');
+        tplParser.innerHTML = template;
 
         list.forEach(function (item, index) {
             const itemWithIndex = Object.assign({}, item, { $i: index });
             const scope = Object.assign({}, parentScope, { [alias]: itemWithIndex });
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = template;
 
-            // Pega o grupo de filhos correspondente a este item
-            const group = allChildren.slice(index * rootsPerItem, (index + 1) * rootsPerItem);
-
-            group.forEach(function (child) {
-                if (child.hasAttribute('x-for')) {
-                    _reattachListeners(child, scope, child.getAttribute('x-for'));
-                } else {
-                    _attachListeners(child, scope);
-                    child.querySelectorAll('[x-for]').forEach(function (nestedFor) {
-                        if (nestedFor.parentElement.closest('[x-for]') !== child) return;
-                        const nestedExpr = nestedFor.getAttribute('x-for');
-                        _reattachListeners(nestedFor, scope, nestedExpr);
-                    });
-                }
+            // restaurar __nightTemplate nos x-for filhos a partir do template limpo
+            wrapper.querySelectorAll('[x-for]').forEach(function (el) {
+                const expr = el.getAttribute('x-for');
+                const tplEl = tplParser.querySelector('[x-for="' + expr + '"]');
+                if (tplEl) el.__nightTemplate = tplEl.innerHTML;
             });
+
+            const children = Array.from(wrapper.children);
+            for (let child of children) {
+                _renderNode(child, scope);
+                child.__nightForNode = true;
+                node.appendChild(child);
+            }
         });
     }
 
-    function _attachListeners(node, scope) {
-        if (!node.attributes) return;
-
-        for (let attr of node.attributes) {
-            if (attr.name.startsWith('x-on:')) {
-                const event = attr.name.slice(5);
-                const expr = attr.value;
-
-                if (node.__nightListeners && node.__nightListeners[event]) {
-                    node.removeEventListener(event, node.__nightListeners[event]);
-                }
-
-                if (!node.__nightListeners) node.__nightListeners = {};
-
-                const capturedScope = scope;
-                const handler = function (e) {
-                    try {
-                        const keys = Object.keys(capturedScope);
-                        const values = Object.values(capturedScope);
-                        new Function(...keys, 'event', expr).call(null, ...values, e);
-                    } catch (err) {
-                        console.error('[night-proxy] x-on error:', err);
-                    }
-                };
-
-                node.__nightListeners[event] = handler;
-                node.addEventListener(event, handler);
-            }
-        }
-
-        for (let child of node.children) {
-            // Para aqui — x-for é responsabilidade do _reattachListeners
-            if (child.hasAttribute('x-for')) continue;
-            _attachListeners(child, scope);
-        }
-    }
-
-    // ─── Apply all targets for a key ──────────────────────────────────────────
+    // ─── Apply target ─────────────────────────────────────────────────────────
 
     function _applyTarget(key) {
-        const targets = document.querySelectorAll('[x-target="' + key + '"]');
+        const targets = document.querySelectorAll('[x-target="' + key + '"], [x-data="' + key + '"]');
         if (!targets.length) {
-            console.warn('[night-proxy] No x-target found for "' + key + '"');
+            console.warn('[night-proxy] No x-target/x-data found for "' + key + '"');
             return;
         }
 
         const data = _store[key];
+        const cleanHTML = _targetTemplates[key];
 
         targets.forEach(function (target) {
-            const clone = target.cloneNode(true);
+            const isXData = target.hasAttribute('x-data');
+            const magics = _buildMagics(key, target);
+            const virtual = document.createElement(target.tagName);
 
-            _renderNode(clone, { [key]: data });
+            Array.from(target.attributes).forEach(function (attr) {
+                virtual.setAttribute(attr.name, attr.value);
+            });
+            virtual.innerHTML = cleanHTML;
 
-            morphdom(target, clone, {
-                onBeforeElUpdated: function (fromEl, toEl) {
-                    if (fromEl.isEqualNode(toEl)) return false;
-                    return true;
-                },
-                childrenOnly: true
+            // restaurar __nightTemplate nos x-for do virtual a partir do cleanHTML
+            const tplContainer = document.createElement('div');
+            tplContainer.innerHTML = cleanHTML;
+            virtual.querySelectorAll('[x-for]').forEach(function (el) {
+                const tplEl = tplContainer.querySelector('[x-for="' + el.getAttribute('x-for') + '"]');
+                if (tplEl) el.__nightTemplate = tplEl.innerHTML;
             });
 
-            // Re-attach listeners para todos os x-for do target
-            target.querySelectorAll('[x-for]').forEach(function (forNode) {
-                // Apenas os x-for diretos do target (não aninhados — o _reattachListeners cuida deles)
-                if (forNode.parentElement.closest('[x-target]') !== target) return;
-                if (forNode.parentElement.closest('[x-for]')) return;
-                const expr = forNode.getAttribute('x-for');
-                _reattachListeners(forNode, { [key]: data }, expr);
+            // extrair funções do store para o scope
+            const fns = {};
+            Object.keys(data).forEach(function (k) {
+                if (typeof data[k] === 'function') fns[k] = data[k];
             });
+
+            // x-data: scope direto sem prefixo
+            // x-target: scope com prefixo { key: data }
+            const scope = isXData
+                ? Object.assign({}, data, fns, magics)
+                : Object.assign({ [key]: data }, fns, magics);
+
+            _renderNode(virtual, scope);
+            _patch(target, virtual);
         });
 
         _syncModelsForKey(key);
     }
 
-    // ─── Recursive Proxy factory ───────────────────────────────────────────────
+    // ─── Proxy factory ────────────────────────────────────────────────────────
 
-    function _makeProxy(data, onChange) {
+    function _makeProxy(data, key, path) {
         return new Proxy(data, {
             get(target, prop, receiver) {
                 if (prop === '__isProxy') return true;
@@ -377,21 +417,32 @@ var proxy = (function () {
                 const val = Reflect.get(target, prop, receiver);
 
                 if (val !== null && typeof val === 'object' && !val.__isProxy) {
-                    return _makeProxy(val, onChange);
+                    return _makeProxy(val, key, path ? path + '.' + prop : prop);
                 }
 
                 return val;
             },
-            set(target, prop, value, receiver) {
+            set(target, prop, value) {
                 const old = target[prop];
                 if (old === value) return true;
                 target[prop] = value;
-                onChange();
+
+                // funções não trigam re-render
+                if (typeof value === 'function') return true;
+
+                const fullPath = path ? path + '.' + prop : String(prop);
+                const obsKey = key + '.' + fullPath;
+                if (_observers[obsKey]) {
+                    _observers[obsKey].forEach(fn => fn(value, old));
+                }
+
+                _applyTarget(key);
+                _syncModelsForKey(key);
                 return true;
             },
             deleteProperty(target, prop) {
                 delete target[prop];
-                onChange();
+                _applyTarget(key);
                 return true;
             }
         });
@@ -402,41 +453,29 @@ var proxy = (function () {
     return {
 
         name: 'night-proxy.js',
-        version: '2.1.1',
+        version: '2.2.0',
         template: {},
 
         initProxy: function () {
             const self = this;
 
-            document.querySelectorAll('[x-target]').forEach(function (el) {
-                const key = el.getAttribute('x-target');
-                if (!_store[key]) {
-                    _store[key] = {};
-                }
-                _saveTemplates(el);
+            document.querySelectorAll('[x-target], [x-data]').forEach(function (el) {
+                const key = el.getAttribute('x-target') || el.getAttribute('x-data');
+                if (!_store[key]) _store[key] = {};
+                _targetTemplates[key] = el.innerHTML;
             });
 
             self.template = new Proxy(_store, {
                 get(target, key) {
                     if (!target[key]) target[key] = {};
-
                     if (!_proxies[key]) {
-                        _proxies[key] = _makeProxy(target[key], function () {
-                            _applyTarget(key);
-                            _syncModelsForKey(key);
-                        });
+                        _proxies[key] = _makeProxy(target[key], key, '');
                     }
-
                     return _proxies[key];
                 },
                 set(target, key, value) {
                     target[key] = value;
-
-                    _proxies[key] = _makeProxy(target[key], function () {
-                        _applyTarget(key);
-                        _syncModelsForKey(key);
-                    });
-
+                    _proxies[key] = _makeProxy(target[key], key, '');
                     _applyTarget(key);
                     _syncModelsForKey(key);
                     return true;

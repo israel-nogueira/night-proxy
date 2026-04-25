@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -9,7 +8,7 @@
 	<link
 		href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap"
 		rel="stylesheet">
-<script src="./assets/js/night-proxy.js"></script>
+	<script src="./assets/js/night-proxy.js"></script>
 
 	<style>
 		*,
@@ -695,28 +694,28 @@
 					<span class="card-key">x-target="info"</span>
 				</div>
 				<div class="card-body">
-					<div x-target="info">
+					<div x-data="info">
 						<div class="info-grid">
 							<div class="info-field">
 								<div class="info-field-label">Título</div>
-								<div class="info-field-value" x-bind="info.titulo"></div>
+								<div class="info-field-value" x-bind="titulo"></div>
 							</div>
 							<div class="info-field">
 								<div class="info-field-label">Categoria</div>
-								<div class="info-field-value" x-bind="info.categoria"></div>
+								<div class="info-field-value" x-bind="categoria"></div>
 							</div>
 							<div class="info-field" style="grid-column: 1 / -1">
 								<div class="info-field-label">Descrição</div>
-								<div class="info-field-value" x-bind="info.descricao"></div>
+								<div class="info-field-value" x-bind="descricao"></div>
 							</div>
 							<div class="info-field">
 								<div class="info-field-label">Prioridade</div>
-								<div class="info-field-value" x-bind="info.prioridade"></div>
+								<div class="info-field-value" x-bind="prioridade"></div>
 							</div>
 							<div class="info-field">
 								<div class="info-field-label">Status</div>
-								<div x-if="info.ativo" class="produto-status status-ativo">● Ativo</div>
-								<div x-if="!info.ativo" class="produto-status status-inativo">● Inativo</div>
+								<div x-if="ativo" class="produto-status status-ativo">● Ativo</div>
+								<div x-if="!ativo" class="produto-status status-inativo">● Inativo</div>
 							</div>
 						</div>
 					</div>
@@ -730,8 +729,8 @@
 					<span class="card-key">x-target="produtos"</span>
 				</div>
 				<div class="card-body">
-					<div x-target="produtos">
-						<div x-for="item in produtos.lista">
+					<div x-data="produtos">
+						<div x-for="item in lista">
 							<div class="produto-item">
 								<div>
 									<div class="produto-nome" x-bind="{item.nome}"></div>
@@ -747,7 +746,7 @@
 								</div>
 							</div>
 						</div>
-						<div x-if="!produtos.lista || produtos.lista.length === 0" class="empty">
+						<div x-if="!lista || lista.length === 0" class="empty">
 							Nenhum produto. Adicione um na sidebar.
 						</div>
 					</div>
@@ -761,8 +760,8 @@
 					<span class="card-key">x-target="categorias" · x-for aninhado</span>
 				</div>
 				<div class="card-body">
-					<div x-target="categorias">
-						<div x-for="cat in categorias.lista" style="margin-bottom:16px">
+					<div x-data="categorias">
+						<div x-for="cat in lista" style="margin-bottom:16px">
 							<div style="font-size:0.8rem; font-weight:600; color: var(--accent2); margin-bottom:6px"
 								x-bind="{cat.nome}"></div>
 							<div class="tag-list">
@@ -949,6 +948,11 @@
 			log(`salvo[${_editIdx}]: "${nome}"`, 'success');
 			closeModal();
 		}
+
+		// registrar funções no escopo do componente produtos
+		proxy.template.produtos.editarItem = editarItem;
+		proxy.template.produtos.toggleItem = toggleItem;
+		proxy.template.produtos.removerItem = removerItem;
 
 		document.getElementById('modal').addEventListener('click', function (e) {
 			if (e.target === this) closeModal();
