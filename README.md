@@ -5,7 +5,7 @@
 # night-proxy.js
 
 Reatividade declarativa no HTML puro — sem frameworks, sem build tools.  
-Usa **Proxy Recursivo** para atualizar o DOM de forma eficiente e granular.
+Usa **Proxy Recursivo** para atualizar o DOM de forma granular e eficiente.
 
 ---
 
@@ -23,17 +23,19 @@ Nenhuma dependência externa necessária.
 
 ## Conceito básico
 
-Você define um **target** no HTML e inicializa o proxy.  
+Você define um container reativo no HTML com `x-data` e inicializa o proxy.  
 Qualquer alteração em `proxy.template` atualiza o DOM automaticamente.
 
 ```html
-<div x-target="meu_bloco">
-    <h1 x-bind="meu_bloco.titulo"></h1>
+<div x-data="produto">
+    <h1 x-bind="nome"></h1>
+    <p x-bind="Preço: R$ {preco}"></p>
 </div>
 
 <script>
     proxy.initProxy();
-    proxy.template.meu_bloco.titulo = "Olá, mundo!";
+    proxy.template.produto.nome  = "Coxinha Supreme";
+    proxy.template.produto.preco = 9.90;
 </script>
 ```
 
@@ -41,88 +43,74 @@ Qualquer alteração em `proxy.template` atualiza o DOM automaticamente.
 
 ## Diretivas
 
-### `x-target="chave"`
-Define o container reativo. As expressões internas usam o prefixo da chave.
-
-```html
-<div x-target="produto">
-    <h1 x-bind="produto.nome"></h1>
-</div>
-```
-
----
-
 ### `x-data="chave"`
-Igual ao `x-target`, mas sem prefixo nas expressões internas. Mais limpo para componentes isolados.
+
+Define o container reativo. As expressões internas não precisam de prefixo.
 
 ```html
 <div x-data="produto">
     <h1 x-bind="nome"></h1>
-    <p x-bind="Preço: R$ {preco}"></p>
-    <div x-for="item in lista">
-        <span x-bind="{item.titulo}"></span>
-    </div>
 </div>
 ```
 
 ---
 
 ### `x-bind="expr"`
+
 Renderiza um valor reativo como texto. Suporta expressão direta ou interpolação com `{}`.
 
 ```html
-<h1 x-bind="produto.nome"></h1>
-<p x-bind="Preço: R$ {produto.preco} — Qtd: {produto.qty}"></p>
-```
-
----
-
-### `x-text="expr"`
-Renderiza texto via expressão JavaScript pura — sem interpolação.
-
-```html
-<span x-text="produto.ativo ? 'Disponível' : 'Esgotado'"></span>
+<h1 x-bind="nome"></h1>
+<p x-bind="Preço: R$ {preco} — Qtd: {qty}"></p>
 ```
 
 ---
 
 ### `x-if="expr"`
+
 Oculta o elemento via `display: none` quando a expressão for falsa. O elemento permanece no DOM.
 
 ```html
-<p x-if="produto.ativo">Produto disponível</p>
-<p x-if="!produto.ativo">Fora de estoque</p>
+<p x-if="ativo">Produto disponível</p>
+<p x-if="!ativo">Fora de estoque</p>
 ```
 
 ---
 
-### `x-show="expr"`
-Igual ao `x-if` — alterna a visibilidade sem remover o elemento do DOM.
+### `x-for="alias in lista"`
+
+Loop reativo. Suporta aninhamento e expõe `$i` como índice do item atual.
 
 ```html
-<div x-show="carregando">Carregando...</div>
-```
+<div x-data="pedido">
+    <div x-for="item in itens">
+        <strong x-bind="{item.nome}"></strong>
+        <span x-bind="Item {item.$i}"></span>
 
----
-
-### `x-for="item in lista"`
-Loop reativo. Suporta aninhamento e expõe `$i` como índice do item.
-
-```html
-<div x-for="item in produto.lista">
-    <h4 x-bind="{item.titulo}"></h4>
-
-    <div x-for="sub in item.subitems">
-        <p x-bind="{sub.nome}"></p>
-        <small x-bind="Item {item.$i} › Sub {sub.$i}"></small>
+        <div x-for="sub in item.subitens">
+            <span x-bind="{sub.label}"></span>
+        </div>
     </div>
 </div>
 ```
 
 ---
 
+### `x-key="expr"`
+
+Chave única para otimização do `x-for`. Quando definida, o proxy reutiliza nós DOM existentes ao reordenar ou atualizar a lista. Sem `x-key`, um id interno (`__nid`) é gerado automaticamente.
+
+```html
+<div x-for="item in lista" x-key="item.id">
+    <span x-bind="{item.nome}"></span>
+</div>
+```
+
+---
+
 ### `x-model="caminho"`
-Two-way binding com inputs. Suporta text, checkbox, radio, select e caminhos profundos.
+
+Two-way binding com inputs. Suporta `text`, `checkbox`, `radio`, `select` e caminhos profundos.
 
 ```html
 <input type="text"     x-model="produto.nome">
@@ -141,57 +129,65 @@ Two-way binding com inputs. Suporta text, checkbox, radio, select e caminhos pro
 ---
 
 ### `x-on:evento="expr"`
-Event listener declarativo com acesso ao escopo do loop e às magic properties.
+
+Event listener declarativo com acesso ao escopo do loop. O evento DOM nativo é exposto como `event`.
 
 ```html
-<button x-on:click="console.log(item.$i)">Log índice</button>
-<button x-on:click="remover(item.$i)">Remover</button>
-<button x-on:click="$emit('item-selecionado', { id: item.$i })">Selecionar</button>
-```
-
----
-
-### `x-ref="nome"`
-Registra uma referência ao elemento, acessível via `$ref.nome` nos eventos.
-
-```html
-<input x-ref="campoBusca" type="text">
-<button x-on:click="console.log($ref.campoBusca.value)">Buscar</button>
-```
-
----
-
-## Magic Properties
-
-Disponíveis dentro de qualquer expressão `x-on`.
-
-| Magic | Descrição |
-|---|---|
-| `$root` | Elemento raiz do componente (`x-target` ou `x-data`) |
-| `$ref.nome` | Elemento marcado com `x-ref="nome"` |
-| `$event` | Evento DOM nativo |
-| `$emit(nome, detalhe)` | Dispara um `CustomEvent` no `$root` |
-| `$afterRender(fn)` | Executa `fn` após o próximo ciclo de render |
-| `$observe(path, fn)` | Observa uma propriedade e executa `fn` quando ela muda |
-
-```html
-<div x-data="painel">
-    <input x-ref="campo" type="text">
-    <button x-on:click="$emit('busca', { termo: $ref.campo.value })">Buscar</button>
-    <button x-on:click="console.log($event.target)">Log evento</button>
+<div x-data="lista">
+    <div x-for="item in itens">
+        <span x-bind="{item.nome}"></span>
+        <button x-on:click="remover(item.$i)">✕</button>
+        <button x-on:click="console.log(event.target)">Log</button>
+    </div>
 </div>
-
-<script>
-    proxy.initProxy();
-    document.querySelector('[x-data="painel"]').addEventListener('busca', e => {
-        console.log(e.detail.termo);
-    });
-</script>
 ```
 
 ---
 
-## Funções no escopo do componente
+## Inicialização
+
+```javascript
+proxy.initProxy();
+```
+
+Chame após o DOM estar pronto. Em seguida, popule os dados via `proxy.template`:
+
+```javascript
+proxy.initProxy();
+
+proxy.template.produto.nome  = "Coxinha Supreme";
+proxy.template.produto.ativo = true;
+proxy.template.produto.preco = 9.90;
+proxy.template.produto.lista = [
+    { titulo: "Com catupiry", subitens: [{ label: "P" }, { label: "G" }] },
+    { titulo: "Com bacon",    subitens: [{ label: "Único" }] },
+];
+```
+
+---
+
+## Atualizações reativas
+
+```javascript
+// Valor simples — síncrono, atualiza o DOM na hora
+proxy.template.produto.nome = "Novo nome";
+
+// Item específico da lista — cirúrgico, toca só o nó do item
+proxy.template.produto.lista[0].titulo = "Titulo atualizado";
+
+// Substituir lista inteira
+proxy.template.produto.lista = [{ titulo: "Item novo", subitens: [] }];
+
+// Adicionar item
+proxy.template.produto.lista.push({ titulo: "Mais um", subitens: [] });
+
+// Remover item
+proxy.template.produto.lista.splice(2, 1);
+```
+
+---
+
+## Funções no escopo
 
 Registre funções diretamente no `proxy.template` para usá-las nos eventos sem depender de globais.
 
@@ -219,59 +215,15 @@ Registre funções diretamente no `proxy.template` para usá-las nos eventos sem
 
 ---
 
-## Inicialização
-
-```javascript
-proxy.initProxy();
-```
-
-Chame após o DOM estar pronto. Em seguida, popule os dados:
-
-```javascript
-proxy.initProxy();
-
-proxy.template.produto.nome   = "Coxinha Supreme";
-proxy.template.produto.ativo  = true;
-proxy.template.produto.preco  = 9.90;
-proxy.template.produto.lista  = [
-    { titulo: "Com catupiry", subitems: [{ nome: "P" }, { nome: "G" }] },
-    { titulo: "Com bacon",    subitems: [{ nome: "Único" }] },
-];
-```
-
----
-
-## Atualizações reativas
-
-```javascript
-// Valor simples
-proxy.template.produto.nome = "Novo nome";
-
-// Item de lista
-proxy.template.produto.lista[0].titulo = "Titulo atualizado";
-
-// Substituir lista inteira
-proxy.template.produto.lista = [{ titulo: "Item novo", subitems: [] }];
-
-// Adicionar item
-proxy.template.produto.lista.push({ titulo: "Mais um", subitems: [] });
-
-// Remover item
-proxy.template.produto.lista.splice(2, 1);
-```
-
----
-
 ## Exemplo completo
 
 ```html
-<input type="text" x-model="pedido.cliente" placeholder="Nome do cliente">
+<input type="text"     x-model="pedido.cliente" placeholder="Nome do cliente">
 <input type="checkbox" x-model="pedido.confirmado"> Confirmado
 
 <div x-data="pedido">
     <h2 x-bind="cliente"></h2>
     <p x-if="confirmado">✅ Pedido confirmado</p>
-    <p x-text="'Total: ' + itens.length + ' itens'"></p>
 
     <div x-for="item in itens">
         <strong x-bind="{item.nome}"></strong>
@@ -303,14 +255,24 @@ proxy.template.produto.lista.splice(2, 1);
 
 | Diretiva | Descrição |
 |---|---|
-| `x-target="chave"` | Container reativo com prefixo nas expressões |
-| `x-data="chave"` | Container reativo sem prefixo nas expressões |
-| `x-bind="expr"` | Renderiza valor ou interpolação `{var}` |
-| `x-text="expr"` | Renderiza expressão JS como texto |
+| `x-data="chave"` | Container reativo — escopo sem prefixo nas expressões |
+| `x-bind="expr"` | Renderiza valor ou interpolação `{var}` como texto |
 | `x-if="expr"` | Condicional — oculta via `display: none` |
-| `x-show="expr"` | Igual ao `x-if` |
-| `x-for="item in lista"` | Loop reativo (aninhável) |
+| `x-for="alias in lista"` | Loop reativo (aninhável) |
+| `x-key="expr"` | Chave única para reuso de nós no `x-for` |
 | `x-model="caminho"` | Two-way binding com inputs |
 | `x-on:evento="expr"` | Event listener com escopo do loop |
-| `x-ref="nome"` | Referência ao elemento via `$ref.nome` |
 | `item.$i` | Índice do item no loop |
+| `event` | Evento DOM nativo (disponível em `x-on`) |
+
+---
+
+## Como funciona internamente
+
+O proxy usa **dependency tracking** granular: durante o render de cada nó, qualquer leitura de propriedade registra uma dependência. Quando um valor muda:
+
+- **1 dependente** → render síncrono imediato, sem microtask
+- **Múltiplos dependentes** → batching via microtask (`Promise.resolve`)
+- **Mudanças estruturais** (push/splice/substituição de lista) → re-render do `x-for` via microtask
+
+Isso garante que `lista[250].nome = 'x'` toque **apenas o nó do item 250**, independente do tamanho da lista.

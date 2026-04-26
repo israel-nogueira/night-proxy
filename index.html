@@ -746,9 +746,6 @@
 								</div>
 							</div>
 						</div>
-						<div x-if="!lista || lista.length === 0" class="empty">
-							Nenhum produto. Adicione um na sidebar.
-						</div>
 					</div>
 				</div>
 			</div>
@@ -761,15 +758,17 @@
 				</div>
 				<div class="card-body">
 					<div x-data="categorias">
-						<div x-for="cat in lista" style="margin-bottom:16px">
-							<div style="font-size:0.8rem; font-weight:600; color: var(--accent2); margin-bottom:6px"
-								x-bind="{cat.nome}"></div>
-							<div class="tag-list">
-								<div x-for="tag in cat.tags">
-									<span class="tag" x-bind="{tag.label}"></span>
+						<div x-for="cat in lista">
+							<div style="margin-bottom:16px">
+								<div style="font-size:0.8rem; font-weight:600; color: var(--accent2); margin-bottom:6px"
+									x-bind="{cat.nome}"></div>
+								<div class="tag-list">
+									<div x-for="tag in cat.tags">
+										<span class="tag" x-bind="{tag.label}"></span>
+									</div>
 								</div>
+								<div class="divider" style="margin-top:12px"></div>
 							</div>
-							<div class="divider" style="margin-top:12px"></div>
 						</div>
 					</div>
 				</div>

@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+	<meta charset="UTF-8">
+	<title>night-proxy.js — Test Suite</title>
+	<link
+		href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap"
+		rel="stylesheet">
+	<script src="./assets/js/night-proxy.js"></script>
+	<style>
+		*,
+		*::before,
+		*::after {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+
+		:root {
+			--bg: #0a0a0f;
+			--bg2: #111118;
+			--bg3: #1a1a24;
+			--border: #2a2a3a;
+			--accent: #7c3aed;
+			--accent2: #06b6d4;
+			--danger: #ef4444;
+			--success: #22c55e;
+			--warn: #f59e0b;
+			--text: #e2e8f0;
+			--text2: #94a3b8;
+			--text3: #475569;
+			--font-mono: 'JetBrains Mono', monospace;
+			--font-display: 'Syne', sans-serif;
+		}
+
+		body {
+			background: var(--bg);
+			color: var(--text);
+			font-family: var(--font-mono);
+			padding: 32px;
+		}
+
+		h1 {
+			font-family: var(--font-display);
+			font-size: 1.5rem;
+			margin-bottom: 8px;
+		}
+
+		h1 span {
+			color: var(--accent);
+		}
+
+		.subtitle {
+			color: var(--text2);
+			font-size: 0.75rem;
+			margin-bottom: 32px;
+		}
+
+		.controls {
+			display: flex;
+			gap: 12px;
+			margin-bottom: 32px;
+			flex-wrap: wrap;
+		}
+
+		button {
+			background: var(--accent);
+			color: #fff;
+			border: none;
+			padding: 10px 20px;
+			border-radius: 6px;
+			font-family: var(--font-mono);
+			font-size: 0.8rem;
+			font-weight: 600;
+			cursor: pointer;
+			transition: filter 0.15s;
+		}
+
+		button:hover {
+			filter: brightness(1.2);
+		}
+
+		button.secondary {
+			background: var(--bg3);
+			border: 1px solid var(--border);
+			color: var(--text);
+		}
+
+		.summary {
+			display: flex;
+			gap: 24px;
+			margin-bottom: 24px;
+			padding: 16px 20px;
+			background: var(--bg2);
+			border: 1px solid var(--border);
+			border-radius: 10px;
+		}
+
+		.summary-item {
+			display: flex;
+			flex-direction: column;
+			gap: 4px;
+		}
+
+		.summary-label {
+			font-size: 0.65rem;
+			color: var(--text3);
+			text-transform: uppercase;
+			letter-spacing: 0.1em;
+		}
+
+		.summary-value {
+			font-size: 1.5rem;
+			font-weight: 700;
+			font-family: var(--font-display);
+		}
+
+		.summary-value.pass {
+			color: var(--success);
+		}
+
+		.summary-value.fail {
+			color: var(--danger);
+		}
+
+		.summary-value.total {
+			color: var(--text);
+		}
+
+		.progress-bar {
+			height: 4px;
+			background: var(--bg3);
+			border-radius: 2px;
+			margin-bottom: 24px;
+			overflow: hidden;
+		}
+
+		.progress-fill {
+			height: 100%;
+			background: var(--success);
+			transition: width 0.3s;
+		}
+
+		.groups {
+			display: flex;
+			flex-direction: column;
+			gap: 16px;
+		}
+
+		.group {
+			background: var(--bg2);
+			border: 1px solid var(--border);
+			border-radius: 10px;
+			overflow: hidden;
+		}
+
+		.group-header {
+			padding: 12px 20px;
+			background: var(--bg3);
+			border-bottom: 1px solid var(--border);
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			font-family: var(--font-display);
+			font-size: 0.85rem;
+			font-weight: 600;
+		}
+
+		.group-badge {
+			margin-left: auto;
+			font-size: 0.7rem;
+			font-family: var(--font-mono);
+			color: var(--text2);
+		}
+
+		.test-list {
+			padding: 8px 0;
+		}
+
+		.test-item {
+			display: flex;
+			align-items: flex-start;
+			gap: 12px;
+			padding: 10px 20px;
+			border-bottom: 1px solid var(--border);
+			font-size: 0.78rem;
+		}
+
+		.test-item:last-child {
+			border-bottom: none;
+		}
+
+		.test-icon {
+			font-size: 0.9rem;
+			margin-top: 1px;
+			flex-shrink: 0;
+		}
+
+		.test-name {
+			flex: 1;
+			color: var(--text);
+		}
+
+		.test-detail {
+			font-size: 0.7rem;
+			color: var(--text2);
+			margin-top: 3px;
+		}
+
+		.test-time {
+			font-size: 0.65rem;
+			color: var(--text3);
+			flex-shrink: 0;
+			margin-top: 2px;
+		}
+
+		.status-pass .test-icon::before {
+			content: '✓';
+			color: var(--success);
+		}
+
+		.status-fail .test-icon::before {
+			content: '✕';
+			color: var(--danger);
+		}
+
+		.status-pending .test-icon::before {
+			content: '○';
+			color: var(--text3);
+		}
+
+		.status-running .test-icon::before {
+			content: '◌';
+			color: var(--warn);
+		}
+
+		.test-error {
+			font-size: 0.7rem;
+			color: var(--danger);
+			margin-top: 4px;
+			font-family: var(--font-mono);
+		}
+
+		/* Hidden DOM targets for tests */
+		#test-targets {
+			position: absolute;
+			left: -9999px;
+			top: 0;
+			width: 1px;
+			overflow: hidden;
+		}
+	</style>
+</head>
+
+<body>
+
+	<!-- Hidden DOM targets -->
+	<div id="test-targets">
+		<div x-data="t_lista">
+			<div x-for="item in lista">
+				<div class="item" x-bind="{item.nome}"></div>
+			</div>
+		</div>
+		<div x-data="t_nested">
+			<div x-for="cat in lista">
+				<div>
+					<span class="cat-nome" x-bind="{cat.nome}"></span>
+					<div x-for="tag in cat.tags">
+						<span class="tag" x-bind="{tag.label}"></span>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div x-data="t_if">
+			<div x-for="item in lista">
+				<div>
+					<span class="nome" x-bind="{item.nome}"></span>
+					<span class="ativo" x-if="item.ativo">sim</span>
+					<span class="inativo" x-if="!item.ativo">não</span>
+				</div>
+			</div>
+		</div>
+		<div x-data="t_bind">
+			<span class="titulo" x-bind="titulo"></span>
+			<span class="count" x-bind="count"></span>
+		</div>
+		<div x-data="t_model">
+			<input type="text" x-model="t_model.nome">
+			<input type="checkbox" x-model="t_model.ativo">
+		</div>
+		<div x-data="t_stress">
+			<div x-for="item in lista">
+				<div class="stress-item" x-bind="{item.nome}"></div>
+			</div>
+		</div>
+		<div x-data="t_stress1k">
+			<div x-for="item in lista">
+				<div class="stress1k-item" x-bind="{item.nome}"></div>
+			</div>
+		</div>
+		<div x-data="t_stress5k">
+			<div x-for="item in lista">
+				<div class="stress5k-item" x-bind="{item.nome}"></div>
+			</div>
+		</div>
+		<div x-data="t_multi_a">
+			<div x-for="item in lista">
+				<div class="multi-a-item" x-bind="{item.nome}"></div>
+			</div>
+		</div>
+		<div x-data="t_multi_b">
+			<div x-for="item in lista">
+				<div class="multi-b-item" x-bind="{item.nome}"></div>
+			</div>
+		</div>
+		<div x-data="t_multi_c">
+			<div x-for="item in lista">
+				<div class="multi-c-item" x-bind="{item.nome}"></div>
+			</div>
+		</div>
+	</div>
+
+	<h1>night-proxy<span>.js</span> — Test Suite</h1>
+	<p class="subtitle">v2.3.1 · testes automatizados de reatividade</p>
+
+	<div class="controls">
+		<button onclick="runAll()">▶ Rodar todos</button>
+		<button class="secondary" onclick="resetAll()">↺ Resetar</button>
+	</div>
+
+	<div class="summary">
+		<div class="summary-item">
+			<span class="summary-label">Total</span>
+			<span class="summary-value total" id="s-total">0</span>
+		</div>
+		<div class="summary-item">
+			<span class="summary-label">Pass</span>
+			<span class="summary-value pass" id="s-pass">0</span>
+		</div>
+		<div class="summary-item">
+			<span class="summary-label">Fail</span>
+			<span class="summary-value fail" id="s-fail">0</span>
+		</div>
+		<div class="summary-item">
+			<span class="summary-label">Tempo</span>
+			<span class="summary-value total" id="s-time">—</span>
+		</div>
+	</div>
+
+	<div class="progress-bar">
+		<div class="progress-fill" id="progress" style="width:0%"></div>
+	</div>
+	<div class="groups" id="groups"></div>
+
+	<script>
+		// ── Test engine ──────────────────────────────────────────────────────────────
+
+		const _results = { pass: 0, fail: 0, total: 0 };
+		const _groups = [];
+
+		function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+		function assert(condition, msg) {
+			if (!condition) throw new Error(msg || 'assertion failed');
+		}
+
+		function getText(selector) {
+			return document.querySelector(selector)?.textContent?.trim() ?? '';
+		}
+
+		function getAll(selector) {
+			return [...document.querySelectorAll(selector)];
+		}
+
+		function group(name, tests) {
+			_groups.push({ name, tests });
+		}
+
+		// ── DOM builder ──────────────────────────────────────────────────────────────
+
+		function buildUI() {
+			const container = document.getElementById('groups');
+			container.innerHTML = '';
+			_groups.forEach((g, gi) => {
+				const el = document.createElement('div');
+				el.className = 'group';
+				el.innerHTML = `
+            <div class="group-header">
+                ${g.name}
+                <span class="group-badge" id="gbadge-${gi}">— / ${g.tests.length}</span>
+            </div>
+            <div class="test-list" id="glist-${gi}">
+                ${g.tests.map((t, ti) => `
+                    <div class="test-item status-pending" id="t-${gi}-${ti}">
+                        <span class="test-icon"></span>
+                        <div style="flex:1">
+                            <div class="test-name">${t.name}</div>
+                            <div class="test-detail" id="td-${gi}-${ti}"></div>
+                        </div>
+                        <span class="test-time" id="tt-${gi}-${ti}"></span>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+				container.appendChild(el);
+			});
+			updateSummary();
+		}
+
+		function setTestStatus(gi, ti, status, detail, time) {
+			const el = document.getElementById(`t-${gi}-${ti}`);
+			el.className = `test-item status-${status}`;
+			if (detail) document.getElementById(`td-${gi}-${ti}`).innerHTML = `<span class="${status === 'fail' ? 'test-error' : ''}">${detail}</span>`;
+			if (time != null) document.getElementById(`tt-${gi}-${ti}`).textContent = `${time}ms`;
+		}
+
+		function updateSummary() {
+			document.getElementById('s-total').textContent = _results.total;
+			document.getElementById('s-pass').textContent = _results.pass;
+			document.getElementById('s-fail').textContent = _results.fail;
+			const pct = _results.total > 0 ? (_results.pass / _results.total * 100) : 0;
+			document.getElementById('progress').style.width = pct + '%';
+		}
+
+		// ── Runner ────────────────────────────────────────────────────────────────────
+
+		async function runAll() {
+			_results.pass = 0; _results.fail = 0; _results.total = 0;
+			buildUI();
+			const start = performance.now();
+
+			for (let gi = 0; gi < _groups.length; gi++) {
+				const g = _groups[gi];
+				let gPass = 0;
+
+				for (let ti = 0; ti < g.tests.length; ti++) {
+					const t = g.tests[ti];
+					setTestStatus(gi, ti, 'running', '');
+					await wait(30);
+
+					const t0 = performance.now();
+					try {
+						await t.fn();
+						const ms = Math.round(performance.now() - t0);
+						setTestStatus(gi, ti, 'pass', 'ok', ms);
+						_results.pass++;
+						gPass++;
+					} catch (e) {
+						const ms = Math.round(performance.now() - t0);
+						setTestStatus(gi, ti, 'fail', e.message, ms);
+						_results.fail++;
+					}
+					_results.total++;
+					updateSummary();
+				}
+
+				document.getElementById(`gbadge-${gi}`).textContent = `${gPass} / ${g.tests.length}`;
+			}
+
+			const total = Math.round(performance.now() - start);
+			document.getElementById('s-time').textContent = total + 'ms';
+		}
+
+		function resetAll() {
+			_results.pass = 0; _results.fail = 0; _results.total = 0;
+			buildUI();
+			document.getElementById('s-time').textContent = '—';
+		}
+
+		// ── Init proxy ────────────────────────────────────────────────────────────────
+
+		proxy.initProxy();
+
+		// ── Helpers de acesso ao DOM de teste ────────────────────────────────────────
+
+		function listItems() { return getAll('#test-targets [x-data="t_lista"] .item'); }
+		function nestedCats() { return getAll('#test-targets [x-data="t_nested"] .cat-nome'); }
+		function nestedTags() { return getAll('#test-targets [x-data="t_nested"] .tag'); }
+		function ifAtivos() { return getAll('#test-targets [x-data="t_if"] .ativo'); }
+		function ifInativos() { return getAll('#test-targets [x-data="t_if"] .inativo'); }
+		function stressItems() { return getAll('#test-targets [x-data="t_stress"] .stress-item'); }
+		function stress1kItems() { return getAll('#test-targets [x-data="t_stress1k"] .stress1k-item'); }
+		function stress5kItems() { return getAll('#test-targets [x-data="t_stress5k"] .stress5k-item'); }
+		function multiAItems() { return getAll('#test-targets [x-data="t_multi_a"] .multi-a-item'); }
+		function multiBItems() { return getAll('#test-targets [x-data="t_multi_b"] .multi-b-item'); }
+		function multiCItems() { return getAll('#test-targets [x-data="t_multi_c"] .multi-c-item'); }
+
+		// ── GRUPOS DE TESTES ─────────────────────────────────────────────────────────
+
+		group('📋 x-bind — binding básico', [
+			{
+				name: 'Texto simples',
+				fn: async () => {
+					proxy.template.t_bind.titulo = 'hello';
+					await wait(10);
+					assert(getText('[x-data="t_bind"] .titulo') === 'hello', 'esperado "hello"');
+				}
+			},
+			{
+				name: 'Número',
+				fn: async () => {
+					proxy.template.t_bind.count = 42;
+					await wait(10);
+					assert(getText('[x-data="t_bind"] .count') === '42', 'esperado "42"');
+				}
+			},
+			{
+				name: 'Atualização reativa',
+				fn: async () => {
+					proxy.template.t_bind.titulo = 'antes';
+					await wait(10);
+					proxy.template.t_bind.titulo = 'depois';
+					await wait(10);
+					assert(getText('[x-data="t_bind"] .titulo') === 'depois', 'esperado "depois"');
+				}
+			},
+		]);
+
+		group('🔁 x-for — lista básica', [
+			{
+				name: 'Render inicial',
+				fn: async () => {
+					proxy.template.t_lista.lista = [
+						{ nome: 'Alpha' }, { nome: 'Beta' }, { nome: 'Gamma' }
+					];
+					await wait(20);
+					assert(listItems().length === 3, `esperado 3, got ${listItems().length}`);
+					assert(listItems()[0].textContent.trim() === 'Alpha', 'item[0] errado');
+					assert(listItems()[2].textContent.trim() === 'Gamma', 'item[2] errado');
+				}
+			},
+			{
+				name: 'push — adiciona no fim',
+				fn: async () => {
+					proxy.template.t_lista.lista = [{ nome: 'A' }, { nome: 'B' }];
+					await wait(20);
+					proxy.template.t_lista.lista.push({ nome: 'C' });
+					await wait(20);
+					assert(listItems().length === 3, `esperado 3`);
+					assert(listItems()[2].textContent.trim() === 'C', 'item[2] errado');
+				}
+			},
+			{
+				name: 'splice — remove do início',
+				fn: async () => {
+					proxy.template.t_lista.lista = [{ nome: 'X' }, { nome: 'Y' }, { nome: 'Z' }];
+					await wait(20);
+					proxy.template.t_lista.lista.splice(0, 1);
+					await wait(20);
+					assert(listItems().length === 2, `esperado 2, got ${listItems().length}`);
+					assert(listItems()[0].textContent.trim() === 'Y', 'item[0] deveria ser Y');
+				}
+			},
+			{
+				name: 'splice — remove do meio',
+				fn: async () => {
+					proxy.template.t_lista.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }];
+					await wait(20);
+					proxy.template.t_lista.lista.splice(1, 1);
+					await wait(20);
+					assert(listItems().length === 2, `esperado 2`);
+					assert(listItems()[1].textContent.trim() === 'C', 'item[1] deveria ser C');
+				}
+			},
+			{
+				name: 'lista = [] — limpa tudo',
+				fn: async () => {
+					proxy.template.t_lista.lista = [{ nome: 'A' }, { nome: 'B' }];
+					await wait(20);
+					proxy.template.t_lista.lista = [];
+					await wait(20);
+					assert(listItems().length === 0, `esperado 0, got ${listItems().length}`);
+				}
+			},
+			{
+				name: 'lista = novaLista — substitui tudo',
+				fn: async () => {
+					proxy.template.t_lista.lista = [{ nome: 'Old1' }, { nome: 'Old2' }];
+					await wait(20);
+					proxy.template.t_lista.lista = [{ nome: 'New1' }, { nome: 'New2' }, { nome: 'New3' }];
+					await wait(20);
+					assert(listItems().length === 3, `esperado 3`);
+					assert(listItems()[0].textContent.trim() === 'New1', 'item[0] errado');
+				}
+			},
+			{
+				name: 'Shuffle — reordena corretamente',
+				fn: async () => {
+					proxy.template.t_lista.lista = [
+						{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }, { nome: 'D' }
+					];
+					await wait(20);
+					const shuffled = [{ nome: 'C' }, { nome: 'A' }, { nome: 'D' }, { nome: 'B' }];
+					proxy.template.t_lista.lista = shuffled;
+					await wait(20);
+					assert(listItems()[0].textContent.trim() === 'C', 'item[0] deveria ser C');
+					assert(listItems()[3].textContent.trim() === 'B', 'item[3] deveria ser B');
+				}
+			},
+			{
+				name: 'Atualiza item específico (lista[1].nome)',
+				fn: async () => {
+					proxy.template.t_lista.lista = [{ nome: 'Antes' }, { nome: 'Meio' }, { nome: 'Fim' }];
+					await wait(20);
+					proxy.template.t_lista.lista[1].nome = 'Mudou';
+					await wait(20);
+					assert(listItems()[1].textContent.trim() === 'Mudou', 'item[1] não atualizou');
+				}
+			},
+		]);
+
+		group('🔀 x-for aninhado', [
+			{
+				name: 'Render inicial com subitens',
+				fn: async () => {
+					proxy.template.t_nested.lista = [
+						{ nome: 'Cat A', tags: [{ label: 'tag1' }, { label: 'tag2' }] },
+						{ nome: 'Cat B', tags: [{ label: 'tag3' }] },
+					];
+					await wait(30);
+					assert(nestedCats().length === 2, `esperado 2 cats, got ${nestedCats().length}`);
+					assert(nestedTags().length === 3, `esperado 3 tags, got ${nestedTags().length}`);
+				}
+			},
+			{
+				name: 'Nomes das categorias corretos',
+				fn: async () => {
+					proxy.template.t_nested.lista = [
+						{ nome: 'Frutas', tags: [{ label: 'maçã' }] },
+						{ nome: 'Verduras', tags: [{ label: 'alface' }, { label: 'couve' }] },
+					];
+					await wait(30);
+					assert(nestedCats()[0].textContent.trim() === 'Frutas', 'cat[0] errado');
+					assert(nestedCats()[1].textContent.trim() === 'Verduras', 'cat[1] errado');
+				}
+			},
+			{
+				name: 'Tags corretas por categoria',
+				fn: async () => {
+					proxy.template.t_nested.lista = [
+						{ nome: 'X', tags: [{ label: 'alpha' }, { label: 'beta' }] },
+						{ nome: 'Y', tags: [{ label: 'gamma' }] },
+					];
+					await wait(30);
+					const tags = nestedTags().map(t => t.textContent.trim());
+					assert(tags[0] === 'alpha', `tag[0] errado: ${tags[0]}`);
+					assert(tags[1] === 'beta', `tag[1] errado: ${tags[1]}`);
+					assert(tags[2] === 'gamma', `tag[2] errado: ${tags[2]}`);
+				}
+			},
+			{
+				name: 'Adicionar tag em cat existente',
+				fn: async () => {
+					proxy.template.t_nested.lista = [
+						{ nome: 'Cat', tags: [{ label: 'A' }] }
+					];
+					await wait(30);
+					proxy.template.t_nested.lista[0].tags.push({ label: 'B' });
+					await wait(30);
+					assert(nestedTags().length === 2, `esperado 2 tags, got ${nestedTags().length}`);
+					assert(nestedTags()[1].textContent.trim() === 'B', 'tag[1] errado');
+				}
+			},
+			{
+				name: 'Remover categoria',
+				fn: async () => {
+					proxy.template.t_nested.lista = [
+						{ nome: 'A', tags: [{ label: 'x' }] },
+						{ nome: 'B', tags: [{ label: 'y' }] },
+					];
+					await wait(30);
+					proxy.template.t_nested.lista.splice(0, 1);
+					await wait(30);
+					assert(nestedCats().length === 1, `esperado 1 cat, got ${nestedCats().length}`);
+					assert(nestedCats()[0].textContent.trim() === 'B', 'cat restante errado');
+				}
+			},
+		]);
+
+		group('👁 x-if — condicional', [
+			{
+				name: 'Mostra ativo / oculta inativo',
+				fn: async () => {
+					proxy.template.t_if.lista = [
+						{ nome: 'A', ativo: true },
+						{ nome: 'B', ativo: false },
+					];
+					await wait(20);
+					const ativos = ifAtivos().filter(e => e.style.display !== 'none');
+					const inativos = ifInativos().filter(e => e.style.display !== 'none');
+					assert(ativos.length === 1, `esperado 1 ativo visível, got ${ativos.length}`);
+					assert(inativos.length === 1, `esperado 1 inativo visível, got ${inativos.length}`);
+				}
+			},
+			{
+				name: 'Toggle reativo',
+				fn: async () => {
+					proxy.template.t_if.lista = [{ nome: 'X', ativo: true }];
+					await wait(20);
+					proxy.template.t_if.lista[0].ativo = false;
+					await wait(20);
+					const ativo = ifAtivos()[0];
+					const inativo = ifInativos()[0];
+					assert(ativo.style.display === 'none', 'ativo deveria estar oculto');
+					assert(inativo.style.display !== 'none', 'inativo deveria estar visível');
+				}
+			},
+		]);
+
+		group('📝 x-model — two-way binding', [
+			{
+				name: 'Input text → proxy',
+				fn: async () => {
+					proxy.template.t_model.nome = '';
+					await wait(10);
+					const input = document.querySelector('[x-data="t_model"] input[type="text"]');
+					input.value = 'digitado';
+					input.dispatchEvent(new Event('input'));
+					await wait(10);
+					assert(proxy.template.t_model.nome === 'digitado', `esperado "digitado", got "${proxy.template.t_model.nome}"`);
+				}
+			},
+			{
+				name: 'Proxy → input text',
+				fn: async () => {
+					proxy.template.t_model.nome = 'do proxy';
+					await wait(10);
+					const input = document.querySelector('[x-data="t_model"] input[type="text"]');
+					assert(input.value === 'do proxy', `esperado "do proxy", got "${input.value}"`);
+				}
+			},
+			{
+				name: 'Checkbox → proxy',
+				fn: async () => {
+					proxy.template.t_model.ativo = false;
+					await wait(10);
+					const cb = document.querySelector('[x-data="t_model"] input[type="checkbox"]');
+					cb.checked = true;
+					cb.dispatchEvent(new Event('change'));
+					await wait(10);
+					assert(proxy.template.t_model.ativo === true, 'esperado true');
+				}
+			},
+			{
+				name: 'Proxy → checkbox',
+				fn: async () => {
+					proxy.template.t_model.ativo = true;
+					await wait(10);
+					const cb = document.querySelector('[x-data="t_model"] input[type="checkbox"]');
+					assert(cb.checked === true, 'checkbox deveria estar marcado');
+				}
+			},
+		]);
+
+		group('⚡ Stress — performance (500 itens)', [
+			{
+				name: '500 itens — render inicial < 300ms',
+				fn: async () => {
+					const lista = Array.from({ length: 500 }, (_, i) => ({ nome: `Item ${i}` }));
+					const t0 = performance.now();
+					proxy.template.t_stress.lista = lista;
+					await wait(50);
+					const ms = performance.now() - t0;
+					assert(stressItems().length === 500, `esperado 500, got ${stressItems().length}`);
+					assert(ms < 300, `lento demais: ${Math.round(ms)}ms`);
+				}
+			},
+			{
+				name: '500 itens — update único < 100ms',
+				fn: async () => {
+					const t0 = performance.now();
+					proxy.template.t_stress.lista[250].nome = 'Atualizado';
+					await wait(50);
+					const ms = performance.now() - t0;
+					assert(ms < 100, `lento demais: ${Math.round(ms)}ms`);
+				}
+			},
+			{
+				name: '10 updates sequenciais < 200ms',
+				fn: async () => {
+					const t0 = performance.now();
+					for (let i = 0; i < 10; i++) {
+						proxy.template.t_stress.lista[i].nome = `Updated ${i}`;
+					}
+					await wait(100);
+					const ms = performance.now() - t0;
+					assert(ms < 200, `lento demais: ${Math.round(ms)}ms`);
+				}
+			},
+			{
+				name: 'Lista grande — limpa para 0',
+				fn: async () => {
+					proxy.template.t_stress.lista = Array.from({ length: 200 }, (_, i) => ({ nome: `X${i}` }));
+					await wait(50);
+					proxy.template.t_stress.lista = [];
+					await wait(30);
+					assert(stressItems().length === 0, `esperado 0, got ${stressItems().length}`);
+				}
+			},
+		]);
+
+		group('🔬 Granularidade — prova do render cirúrgico', [
+			{
+				name: 'Update pontual toca apenas 1 nó (de 500)',
+				fn: async () => {
+					// Instrumenta: conta quantos nós tiveram textContent escrito
+					proxy.template.t_stress.lista = Array.from({ length: 500 }, (_, i) => ({ nome: `G${i}` }));
+					await wait(50);
+
+					let renderCount = 0;
+					stressItems().forEach(el => {
+						const orig = Object.getOwnPropertyDescriptor(el, 'textContent');
+						Object.defineProperty(el, 'textContent', {
+							set(v) {
+								renderCount++;
+								// Restaura descritor original antes de setar
+								Object.defineProperty(el, 'textContent', orig || {
+									writable: true, configurable: true, enumerable: true
+								});
+								el.textContent = v;
+							},
+							configurable: true
+						});
+					});
+
+					proxy.template.t_stress.lista[100].nome = 'Cirúrgico';
+					await wait(20);
+
+					assert(renderCount === 1, `esperado 1 nó renderizado, got ${renderCount}`);
+					assert(stressItems()[100].textContent.trim() === 'Cirúrgico', 'conteúdo errado');
+				}
+			},
+			{
+				name: '10 updates aleatórios tocam exatamente 10 nós',
+				fn: async () => {
+					proxy.template.t_stress.lista = Array.from({ length: 500 }, (_, i) => ({ nome: `H${i}` }));
+					await wait(50);
+
+					let renderCount = 0;
+					stressItems().forEach(el => {
+						Object.defineProperty(el, 'textContent', {
+							set(v) {
+								renderCount++;
+								Object.defineProperty(el, 'textContent', { writable: true, configurable: true, enumerable: true });
+								el.textContent = v;
+							},
+							configurable: true
+						});
+					});
+
+					const indices = [10, 50, 100, 150, 200, 250, 300, 350, 400, 450];
+					indices.forEach(i => { proxy.template.t_stress.lista[i].nome = `U${i}`; });
+					await wait(20);
+
+					assert(renderCount === 10, `esperado 10 nós renderizados, got ${renderCount}`);
+				}
+			},
+		]);
+
+		group('🚀 Stress — 1k itens', [
+			{
+				name: '1k itens — render inicial < 500ms',
+				fn: async () => {
+					const lista = Array.from({ length: 1000 }, (_, i) => ({ nome: `K${i}` }));
+					const t0 = performance.now();
+					proxy.template.t_stress1k.lista = lista;
+					await wait(100);
+					const ms = performance.now() - t0;
+					assert(stress1kItems().length === 1000, `esperado 1000, got ${stress1kItems().length}`);
+					assert(ms < 500, `lento demais: ${Math.round(ms)}ms`);
+				}
+			},
+			{
+				name: '1k itens — update pontual < 16ms (1 frame)',
+				fn: async () => {
+					await wait(20);
+					const t0 = performance.now();
+					proxy.template.t_stress1k.lista[500].nome = 'Frame';
+					const ms = performance.now() - t0;
+					assert(ms < 16, `lento demais: ${Math.round(ms)}ms`);
+				}
+			},
+			{
+				name: '1k itens — rajada 100 updates aleatórios < 100ms',
+				fn: async () => {
+					const t0 = performance.now();
+					for (let i = 0; i < 100; i++) {
+						const idx = Math.floor(Math.random() * 1000);
+						proxy.template.t_stress1k.lista[idx].nome = `R${i}`;
+					}
+					await wait(50);
+					const ms = performance.now() - t0;
+					assert(ms < 100, `lento demais: ${Math.round(ms)}ms`);
+				}
+			},
+		]);
+
+		group('💥 Stress — 5k itens', [
+			{
+				name: '5k itens — render inicial < 1500ms',
+				fn: async () => {
+					const lista = Array.from({ length: 5000 }, (_, i) => ({ nome: `Big${i}` }));
+					const t0 = performance.now();
+					proxy.template.t_stress5k.lista = lista;
+					await wait(300);
+					const ms = performance.now() - t0;
+					assert(stress5kItems().length === 5000, `esperado 5000, got ${stress5kItems().length}`);
+					assert(ms < 1500, `lento demais: ${Math.round(ms)}ms`);
+				}
+			},
+			{
+				name: '5k itens — update pontual < 16ms',
+				fn: async () => {
+					await wait(20);
+					const t0 = performance.now();
+					proxy.template.t_stress5k.lista[2500].nome = 'Ponto';
+					const ms = performance.now() - t0;
+					assert(ms < 16, `lento demais: ${Math.round(ms)}ms`);
+				}
+			},
+			{
+				name: '5k itens — limpa para 0 < 500ms',
+				fn: async () => {
+					const t0 = performance.now();
+					proxy.template.t_stress5k.lista = [];
+					await wait(200);
+					const ms = performance.now() - t0;
+					assert(stress5kItems().length === 0, `esperado 0, got ${stress5kItems().length}`);
+					assert(ms < 500, `lento demais: ${Math.round(ms)}ms`);
+				}
+			},
+		]);
+
+		group('🔀 Stress — listas simultâneas', [
+			{
+				name: '3 listas × 200 itens — render simultâneo < 300ms',
+				fn: async () => {
+					const make = (prefix, n) => Array.from({ length: n }, (_, i) => ({ nome: `${prefix}${i}` }));
+					const t0 = performance.now();
+					proxy.template.t_multi_a.lista = make('A', 200);
+					proxy.template.t_multi_b.lista = make('B', 200);
+					proxy.template.t_multi_c.lista = make('C', 200);
+					await wait(100);
+					const ms = performance.now() - t0;
+					assert(multiAItems().length === 200, `A: esperado 200, got ${multiAItems().length}`);
+					assert(multiBItems().length === 200, `B: esperado 200, got ${multiBItems().length}`);
+					assert(multiCItems().length === 200, `C: esperado 200, got ${multiCItems().length}`);
+					assert(ms < 300, `lento demais: ${Math.round(ms)}ms`);
+				}
+			},
+			{
+				name: '3 listas — updates simultâneos em cada < 50ms',
+				fn: async () => {
+					const t0 = performance.now();
+					proxy.template.t_multi_a.lista[50].nome = 'Xa';
+					proxy.template.t_multi_b.lista[50].nome = 'Xb';
+					proxy.template.t_multi_c.lista[50].nome = 'Xc';
+					await wait(20);
+					const ms = performance.now() - t0;
+					assert(multiAItems()[50].textContent.trim() === 'Xa', 'A[50] errado');
+					assert(multiBItems()[50].textContent.trim() === 'Xb', 'B[50] errado');
+					assert(multiCItems()[50].textContent.trim() === 'Xc', 'C[50] errado');
+					assert(ms < 50, `lento demais: ${Math.round(ms)}ms`);
+				}
+			},
+		]);
+
+		// ── Init ──────────────────────────────────────────────────────────────────────
+		buildUI();
+	</script>
+</body>
+
+</html>

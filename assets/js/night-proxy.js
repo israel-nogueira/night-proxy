@@ -1,27 +1,29 @@
 /*!
- * night-proxy.js v2.2.0
+ * night-proxy.js v2.3.1
  * Reactive DOM binding via Recursive Proxy
  * https://github.com/israel-nogueira/night-proxy
  *
  * Directives:
- *   x-target="key"                          → component root
- *   x-for="item in lista"                   → reactive loop (nestable)
- *   x-bind="item.titulo"                    → reactive text / interpolation with {var}
- *   x-text="item.titulo"                    → reactive text content
- *   x-if="item.ativo"                       → removes/restores element from DOM
- *   x-show="item.ativo"                     → toggles visibility (display)
- *   x-on:event="expr"                       → event listener with loop scope
- *   x-model="key.prop"                      → two-way binding
- *   x-ref="nome"                            → register element reference
- *   $i                                      → loop index (item.$i)
+ *   x-for="item in lista"                    → reactive loop (nestable)
+ *   x-key="item.id"                          → optional unique key for x-for (fallback: auto __nid)
+ *   x-bind="item.titulo"                     → reactive text / interpolation with {var}
+ *   x-if="item.ativo"                        → reactive conditional
+ *   x-on:event="expr"                        → event listener with loop scope
+ *   x-model="elemento_01.nome"               → two-way binding (input/checkbox/radio/select)
+ *   x-model="elemento_01.lista[1].titulo"    → deep path two-way binding
+ *   $i                                       → index via scoped variable (item.$i)
  *
- * Magic properties (available in x-on expressions):
- *   $root            → root x-target element
- *   $ref.nome        → element with x-ref="nome"
- *   $event           → native DOM event
- *   $emit(name)      → dispatch CustomEvent on $root
- *   $afterRender(fn) → run fn after next render cycle
- *   $observe(path, fn) → watch a property path for changes
+ * v2.3.0 — Granular reactivity (track/trigger):
+ *   - Cada nó DOM rastreia exatamente quais propriedades leu durante o render
+ *   - Updates cirúrgicos: lista[1].nome = 'x' atualiza APENAS o nó do item[1]
+ *   - Nenhum loop sobre a lista inteira para updates pontuais
+ *   - Estruturas de lista (push/splice/substituição) ainda fazem re-render completo do x-for
+ *   - Batching via requestAnimationFrame mantido para rajadas de updates
+ *
+ * v2.3.1 — Fixes:
+ *   - x-bind fora de x-for agora recebe Effect próprio → reatividade granular em qualquer contexto
+ *   - _syncModelsForKey chamado após flush de effects → x-model sempre sincronizado
+ *   - _renderNodeRaw propaga _renderTracked em TODOS os filhos com x-bind/x-if/x-for
  */
 
 var proxy = (function () {
@@ -30,19 +32,137 @@ var proxy = (function () {
 
     const _store = {};
     const _proxies = {};
-    const _targetTemplates = {};
-    const _observers = {};
 
-    // ─── Helpers ──────────────────────────────────────────────────────────────
+    // ─── Dependency tracking ──────────────────────────────────────────────────
+    //
+    // _deps: WeakMap<rawObject, Map<prop, Set<Effect>>>
+    //
+    // Durante o render de um nó, _activeEffect aponta para o Effect daquele nó.
+    // Qualquer get() de proxy registra a dependência automaticamente.
+    // Quando a prop muda, trigger() agenda só os Effects dependentes.
 
-    function _interpolate(str, scope) {
-        return str.replace(/\{([^}]+)\}/g, (_, expr) => {
-            const val = _evalExpr(expr.trim(), scope);
-            return val != null ? val : '';
+    const _deps = new WeakMap();
+    let _activeEffect = null;
+
+    function _track(rawObj, prop) {
+        if (!_activeEffect) return;
+        if (!_deps.has(rawObj)) _deps.set(rawObj, new Map());
+        const propMap = _deps.get(rawObj);
+        if (!propMap.has(prop)) propMap.set(prop, new Set());
+        const effects = propMap.get(prop);
+        if (!effects.has(_activeEffect)) {
+            effects.add(_activeEffect);
+            _activeEffect.deps.add(effects);
+        }
+    }
+
+    function _trigger(rawObj, prop) {
+        if (!_deps.has(rawObj)) return false;
+        const propMap = _deps.get(rawObj);
+        if (!propMap.has(prop)) return false;
+        const effects = propMap.get(prop);
+        if (!effects.size) return false;
+
+        const list = [...effects];
+        if (list.length === 1) {
+            // Update cirúrgico — roda síncrono, sem microtask
+            const e = list[0];
+            e.scheduled = false;
+            e.run();
+            if (e.key) _syncModelsForKey(e.key);
+        } else {
+            list.forEach(e => e.schedule());
+        }
+        return true;
+    }
+
+    // ─── Effect ───────────────────────────────────────────────────────────────
+
+    function _createEffect(fn) {
+        const effect = {
+            fn,
+            deps: new Set(),
+            scheduled: false,
+            key: null,    // root key para _syncModelsForKey após flush
+
+            cleanup() {
+                effect.deps.forEach(depSet => depSet.delete(effect));
+                effect.deps.clear();
+            },
+
+            run() {
+                effect.cleanup();
+                const prev = _activeEffect;
+                _activeEffect = effect;
+                try { fn(); } finally { _activeEffect = prev; }
+            },
+
+            schedule() {
+                if (effect.scheduled) return;
+                effect.scheduled = true;
+                _pendingEffects.add(effect);
+                _scheduleFlush();
+            }
+        };
+        return effect;
+    }
+
+    // ─── Flush de effects (microtask) ────────────────────────────────────────
+    // Usa Promise.resolve() — dispara antes do próximo frame e antes de qualquer
+    // setTimeout, garantindo reatividade quasi-síncrona sem bloquear a thread.
+
+    const _pendingEffects = new Set();
+    let _flushQueued = false;
+
+    function _scheduleFlush() {
+        if (_flushQueued) return;
+        _flushQueued = true;
+        Promise.resolve().then(function () {
+            _flushQueued = false;
+            const batch = [..._pendingEffects];
+            _pendingEffects.clear();
+
+            const keysToSync = new Set();
+
+            batch.forEach(e => {
+                e.scheduled = false;
+                e.run();
+                if (e.key) keysToSync.add(e.key);
+            });
+
+            keysToSync.forEach(_syncModelsForKey);
         });
     }
 
+    // ─── Batching para _applyTarget (push/splice/substituição de lista) ───────
+    // Também usa microtask — consistência no timing entre os dois paths.
+
+    const _pendingKeys = new Set();
+    let _applyQueued = false;
+
+    function _scheduleApply(key) {
+        _pendingKeys.add(key);
+        if (_applyQueued) return;
+        _applyQueued = true;
+        Promise.resolve().then(function () {
+            _applyQueued = false;
+            const keys = [..._pendingKeys];
+            _pendingKeys.clear();
+            keys.forEach(_applyTarget);
+            keys.forEach(_syncModelsForKey);
+        });
+    }
+
+    // ─── Segurança ────────────────────────────────────────────────────────────
+
+    const _SAFE_EXPR = /^[a-zA-Z0-9_$.\[\]!<>=&|?:()\s,'"+-]*$/;
+
+    function _safeExpr(expr) {
+        return _SAFE_EXPR.test(expr.trim());
+    }
+
     function _evalExpr(expr, scope) {
+        if (!_safeExpr(expr)) return undefined;
         try {
             const keys = Object.keys(scope);
             const values = Object.values(scope);
@@ -52,13 +172,21 @@ var proxy = (function () {
         }
     }
 
+    function _interpolate(str, scope) {
+        return str.replace(/\{([^}]+)\}/g, (_, expr) => {
+            const val = _evalExpr(expr.trim(), scope);
+            return val != null ? val : '';
+        });
+    }
+
     function _isTruthy(expr, scope) {
         return !!_evalExpr(expr, scope);
     }
 
+    // ─── x-model ──────────────────────────────────────────────────────────────
+
     function _parsePath(path) {
-        const normalized = path.replace(/\[(\d+)\]/g, '.$1');
-        const parts = normalized.split('.');
+        const parts = path.replace(/\[(\d+)\]/g, '.$1').split('.');
         return { key: parts[0], parts };
     }
 
@@ -73,128 +201,12 @@ var proxy = (function () {
 
     function _getDeep(parts) {
         let obj = _store;
-        for (let i = 0; i < parts.length; i++) {
+        for (const k of parts) {
             if (obj == null) return undefined;
-            obj = obj[parts[i]];
+            obj = obj[k];
         }
         return obj;
     }
-
-    // ─── DOM diff (sem dependência externa) ───────────────────────────────────
-
-    function _patch(from, to) {
-        // patch attributes
-        const toAttrs = Array.from(to.attributes || []);
-        const fromAttrs = Array.from(from.attributes || []);
-
-        toAttrs.forEach(function (attr) {
-            if (from.getAttribute(attr.name) !== attr.value) {
-                from.setAttribute(attr.name, attr.value);
-            }
-        });
-        fromAttrs.forEach(function (attr) {
-            if (!to.hasAttribute(attr.name)) {
-                from.removeAttribute(attr.name);
-            }
-        });
-
-        // patch style if set directly
-        if (to.style && to.style.cssText !== from.style.cssText) {
-            from.style.cssText = to.style.cssText;
-        }
-
-        // patch textContent for leaf nodes (no children)
-        if (to.children.length === 0 && from.children.length === 0) {
-            if (from.textContent !== to.textContent) {
-                from.textContent = to.textContent;
-            }
-            return;
-        }
-
-        // patch children
-        const fromChildren = Array.from(from.childNodes);
-        const toChildren = Array.from(to.childNodes);
-
-        // remove extra nodes
-        for (let i = fromChildren.length - 1; i >= toChildren.length; i--) {
-            from.removeChild(fromChildren[i]);
-        }
-
-        toChildren.forEach(function (toChild, i) {
-            const fromChild = from.childNodes[i];
-
-            if (!fromChild) {
-                // usa o nó diretamente para preservar listeners
-                from.appendChild(toChild);
-                return;
-            }
-
-            // different node type or tag → replace
-            // mas nunca substituir nós que contêm x-on (perdem listeners)
-            if (fromChild.nodeType !== toChild.nodeType ||
-                fromChild.nodeName !== toChild.nodeName) {
-                const hasXOn = fromChild.querySelector && fromChild.querySelector('[x-on\:click],[x-on\:input],[x-on\:change]');
-                if (hasXOn) {
-                    _patch(fromChild, toChild);
-                } else {
-                    from.replaceChild(toChild, fromChild);
-                }
-                return;
-            }
-
-            // text node
-            if (toChild.nodeType === Node.TEXT_NODE) {
-                if (fromChild.textContent !== toChild.textContent) {
-                    fromChild.textContent = toChild.textContent;
-                }
-                return;
-            }
-
-            // preserve focused element
-            if (fromChild === document.activeElement) return;
-
-            // nós gerados por x-for: substituir direto para preservar listeners
-            if (toChild.__nightForNode) {
-                from.replaceChild(toChild, fromChild);
-                return;
-            }
-
-            // recurse
-            _patch(fromChild, toChild);
-        });
-    }
-
-    // ─── $ref helper ──────────────────────────────────────────────────────────
-
-    function _buildRefProxy(root) {
-        return new Proxy({}, {
-            get(_, name) {
-                return root.querySelector('[x-ref="' + name + '"]') || undefined;
-            }
-        });
-    }
-
-    // ─── Magic scope ──────────────────────────────────────────────────────────
-
-    function _buildMagics(key, rootEl) {
-        return {
-            $root: rootEl,
-            $ref: _buildRefProxy(rootEl),
-            $emit: function (name, detail) {
-                rootEl.dispatchEvent(new CustomEvent(name, { bubbles: true, detail: detail || {} }));
-            },
-            $afterRender: function (fn) {
-                Promise.resolve().then(fn);
-            },
-            $observe: function (path, fn) {
-                const fullPath = key + '.' + path;
-                if (!_observers[fullPath]) _observers[fullPath] = [];
-                _observers[fullPath].push(fn);
-            }
-        };
-    }
-
-    // ─── Models ───────────────────────────────────────────────────────────────
 
     function _syncModelsForKey(key) {
         document.querySelectorAll('[x-model]').forEach(function (el) {
@@ -204,7 +216,7 @@ var proxy = (function () {
             if (el.type === 'checkbox') {
                 el.checked = !!val;
             } else if (el.type === 'radio') {
-                el.checked = (el.value === val);
+                el.checked = (el.value === String(val));
             } else {
                 const str = val == null ? '' : String(val);
                 if (el.value !== str) el.value = str;
@@ -220,13 +232,9 @@ var proxy = (function () {
             const { key, parts } = _parsePath(el.getAttribute('x-model'));
             const val = _getDeep(parts);
 
-            if (el.type === 'checkbox') {
-                el.checked = !!val;
-            } else if (el.type === 'radio') {
-                el.checked = (el.value === val);
-            } else {
-                el.value = val == null ? '' : val;
-            }
+            if (el.type === 'checkbox') el.checked = !!val;
+            else if (el.type === 'radio') el.checked = (el.value === String(val));
+            else el.value = val == null ? '' : val;
 
             function _onInput() {
                 const v = el.type === 'checkbox' ? el.checked : el.value;
@@ -240,37 +248,81 @@ var proxy = (function () {
         });
     }
 
-    // ─── DOM renderer ─────────────────────────────────────────────────────────
+    // ─── x-on ─────────────────────────────────────────────────────────────────
 
-    function _renderNode(node, scope) {
+    function _bindEvents(root, scope) {
+        const els = root.nodeType === Node.ELEMENT_NODE
+            ? [root, ...root.querySelectorAll('*')]
+            : [];
+
+        els.forEach(function (el) {
+            if (!el.attributes) return;
+            for (let attr of el.attributes) {
+                if (!attr.name.startsWith('x-on:')) continue;
+                const event = attr.name.slice(5);
+                const expr = attr.value;
+                const flag = '__night_' + event;
+
+                if (el[flag]) el.removeEventListener(event, el[flag]);
+
+                if (!_safeExpr(expr)) {
+                    console.warn('[night-proxy] unsafe x-on blocked:', expr);
+                    continue;
+                }
+
+                el[flag] = function (e) {
+                    try {
+                        const keys = Object.keys(scope);
+                        const values = Object.values(scope);
+                        new Function(...keys, 'event', expr).call(null, ...values, e);
+                    } catch (err) {
+                        console.error('[night-proxy] x-on error:', err);
+                    }
+                };
+                el.addEventListener(event, el[flag]);
+            }
+        });
+    }
+
+    // ─── Render com tracking ──────────────────────────────────────────────────
+    //
+    // _renderTracked: cria ou reutiliza um Effect para o nó.
+    // Cada nó com diretiva reativa (x-bind, x-if, x-for) tem seu próprio Effect.
+    // Updates pontuais chegam direto ao Effect do nó — sem percorrer a lista.
+
+    function _renderTracked(node, scope, key) {
+        if (node.__nightEffect) {
+            node.__nightEffect.scope = scope;
+            if (key) node.__nightEffect.key = key;
+            node.__nightEffect.run();
+            return;
+        }
+
+        const effect = _createEffect(function () {
+            _renderNodeRaw(node, effect.scope);
+        });
+        effect.scope = scope;
+        effect.key = key || null;
+        node.__nightEffect = effect;
+        effect.run();
+    }
+
+    // _renderNodeRaw: executa o render dentro do Effect ativo.
+    // Propaga _renderTracked para todos os filhos com diretivas reativas.
+    function _renderNodeRaw(node, scope) {
         if (node.nodeType === Node.TEXT_NODE) return;
 
         const xFor = node.getAttribute && node.getAttribute('x-for');
         const xIf = node.getAttribute && node.getAttribute('x-if');
-        const xShow = node.getAttribute && node.getAttribute('x-show');
         const xBind = node.getAttribute && node.getAttribute('x-bind');
-        const xText = node.getAttribute && node.getAttribute('x-text');
 
-        // x-if
-        if (xIf !== null && xIf !== undefined) {
+        if (xIf != null) {
             const show = _isTruthy(xIf, scope);
             node.style.display = show ? '' : 'none';
             if (!show) return;
         }
 
-        // x-show
-        if (xShow !== null && xShow !== undefined) {
-            node.style.display = _isTruthy(xShow, scope) ? '' : 'none';
-        }
-
-        // x-text
-        if (xText !== null && xText !== undefined) {
-            const val = _evalExpr(xText, scope);
-            node.textContent = val != null ? val : '';
-        }
-
-        // x-bind
-        if (xBind !== null && xBind !== undefined) {
+        if (xBind != null) {
             if (xBind.includes('{')) {
                 node.textContent = _interpolate(xBind, scope);
             } else {
@@ -279,41 +331,41 @@ var proxy = (function () {
             }
         }
 
-        // x-on:*
-        if (node.attributes) {
-            for (let attr of node.attributes) {
-                if (attr.name.startsWith('x-on:')) {
-                    const event = attr.name.slice(5);
-                    const expr = attr.value;
-                    if (!node.__nightListeners) node.__nightListeners = {};
-                    if (!node.__nightListeners[event]) {
-                        node.__nightListeners[event] = true;
-                        node.addEventListener(event, function (e) {
-                            const s = Object.assign({}, node.__nightScope || scope, { $event: e });
-                            try {
-                                const keys = Object.keys(s);
-                                const values = Object.values(s);
-                                new Function(...keys, expr).call(null, ...values);
-                            } catch (err) {
-                                console.error('[night-proxy] x-on error:', err);
-                            }
-                        });
-                    }
-                    node.__nightScope = scope;
-                }
-            }
-        }
-
-        // x-for
-        if (xFor !== null && xFor !== undefined) {
+        if (xFor != null) {
             _renderFor(node, scope, xFor);
             return;
         }
 
         for (let child of node.children) {
-            _renderNode(child, scope);
+            const hasDirective = child.hasAttribute('x-bind')
+                || child.hasAttribute('x-if')
+                || child.hasAttribute('x-for');
+
+            if (hasDirective) {
+                // Filho com diretiva ganha Effect próprio — rastreamento granular
+                const parentEffect = node.__nightEffect;
+                const rootKey = parentEffect ? parentEffect.key : null;
+                _renderTracked(child, scope, rootKey);
+            } else {
+                _renderNodeRaw(child, scope);
+            }
         }
     }
+
+    // ─── x-key / __nid ────────────────────────────────────────────────────────
+
+    let _nidCounter = 0;
+
+    function _getItemKey(item, xKeyExpr, scope) {
+        if (xKeyExpr) {
+            const val = _evalExpr(xKeyExpr, scope);
+            if (val != null) return String(val);
+        }
+        if (!item.__nid) item.__nid = 'nid_' + (++_nidCounter);
+        return item.__nid;
+    }
+
+    // ─── x-for ────────────────────────────────────────────────────────────────
 
     function _renderFor(node, parentScope, expr) {
         const match = expr.match(/^\s*(\w+)\s+in\s+(.+)\s*$/);
@@ -325,82 +377,126 @@ var proxy = (function () {
         const alias = match[1];
         const listExp = match[2].trim();
         const list = _evalExpr(listExp, parentScope);
+        const xKeyExpr = node.getAttribute('x-key') || null;
+        const template = node.__nightTemplate;
 
-        if (!Array.isArray(list)) return;
+        // Propaga key do effect pai para os filhos
+        const parentEffect = node.__nightEffect;
+        const rootKey = parentEffect ? parentEffect.key : null;
 
-        const template = node.__nightTemplate || '';
-        node.innerHTML = '';
+        // ── Lista vazia ───────────────────────────────────────────────────────
+        if (!Array.isArray(list) || list.length === 0) {
+            while (node.firstChild) node.removeChild(node.firstChild);
+            node.__nightKeys = [];
+            return;
+        }
 
-        // parser do template para restaurar __nightTemplate nos x-for internos
-        const tplParser = document.createElement('div');
-        tplParser.innerHTML = template;
+        // ── Monta mapa key → nó existente ────────────────────────────────────
+        const existingByKey = {};
+        const currentKeys = node.__nightKeys || [];
+
+        currentKeys.forEach(function (key, i) {
+            const el = node.children[i];
+            if (el) existingByKey[key] = el;
+        });
+
+        const newKeys = [];
+        const newNodes = [];
+        const newScopes = [];
 
         list.forEach(function (item, index) {
-            const itemWithIndex = Object.assign({}, item, { $i: index });
-            const scope = Object.assign({}, parentScope, { [alias]: itemWithIndex });
-            const wrapper = document.createElement('div');
-            wrapper.innerHTML = template;
-
-            // restaurar __nightTemplate nos x-for filhos a partir do template limpo
-            wrapper.querySelectorAll('[x-for]').forEach(function (el) {
-                const expr = el.getAttribute('x-for');
-                const tplEl = tplParser.querySelector('[x-for="' + expr + '"]');
-                if (tplEl) el.__nightTemplate = tplEl.innerHTML;
+            // Preserva o proxy do item — não copia props para objeto plain.
+            // $i é exposto via wrapper que delega gets ao proxy original.
+            const rawItem = (item && item.__isProxy) ? item : _makeProxy(
+                (item && item.__raw) ? item.__raw : item,
+                rootKey || ''
+            );
+            const itemWithIndex = new Proxy(rawItem, {
+                get(target, prop, receiver) {
+                    if (prop === '$i') return index;
+                    return Reflect.get(target, prop, receiver);
+                }
             });
+            const scope = Object.assign({}, parentScope, { [alias]: itemWithIndex });
+            const key = _getItemKey(item, xKeyExpr, scope);
 
-            const children = Array.from(wrapper.children);
-            for (let child of children) {
-                _renderNode(child, scope);
-                child.__nightForNode = true;
-                node.appendChild(child);
+            newKeys.push(key);
+            newScopes.push(scope);
+
+            if (existingByKey[key]) {
+                _renderTracked(existingByKey[key], scope, rootKey);
+                newNodes.push(existingByKey[key]);
+            } else {
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = template;
+                _cacheTemplates(wrapper);
+                const children = Array.from(wrapper.children);
+                if (children.length === 1) {
+                    _renderTracked(children[0], scope, rootKey);
+                    newNodes.push(children[0]);
+                } else {
+                    children.forEach(c => _renderTracked(c, scope, rootKey));
+                    newNodes.push(...children);
+                }
+            }
+        });
+
+        // ── Remove obsoletos ──────────────────────────────────────────────────
+        const newKeySet = new Set(newKeys);
+        currentKeys.forEach(function (key) {
+            if (!newKeySet.has(key) && existingByKey[key]) {
+                const el = existingByKey[key];
+                if (el.__nightEffect) el.__nightEffect.cleanup();
+                el.remove();
+            }
+        });
+
+        // ── Remove filhos extras não rastreados ───────────────────────────────
+        const newNodeSet = new Set(newNodes);
+        Array.from(node.children).forEach(function (child) {
+            if (!newNodeSet.has(child)) child.remove();
+        });
+
+        // ── Reordena no DOM ───────────────────────────────────────────────────
+        newNodes.forEach(function (el, i) {
+            const current = node.children[i];
+            if (current !== el) node.insertBefore(el, current || null);
+        });
+
+        node.__nightKeys = newKeys;
+
+        // ── Bind eventos ──────────────────────────────────────────────────────
+        newNodes.forEach(function (el, i) {
+            if (el && el.nodeType === Node.ELEMENT_NODE) {
+                _bindEvents(el, newScopes[i]);
             }
         });
     }
 
-    // ─── Apply target ─────────────────────────────────────────────────────────
+    // ─── Template cache ───────────────────────────────────────────────────────
+
+    function _cacheTemplates(root) {
+        root.querySelectorAll('[x-for]').forEach(function (el) {
+            if (!el.__nightTemplate) el.__nightTemplate = el.innerHTML;
+        });
+    }
+
+    // ─── Apply ────────────────────────────────────────────────────────────────
 
     function _applyTarget(key) {
-        const targets = document.querySelectorAll('[x-target="' + key + '"], [x-data="' + key + '"]');
-        if (!targets.length) {
-            console.warn('[night-proxy] No x-target/x-data found for "' + key + '"');
-            return;
-        }
+        const targets = document.querySelectorAll(
+            '[proxy-target="' + key + '"], [x-data="' + key + '"]'
+        );
+        if (!targets.length) return;
 
         const data = _store[key];
-        const cleanHTML = _targetTemplates[key];
 
         targets.forEach(function (target) {
-            const isXData = target.hasAttribute('x-data');
-            const magics = _buildMagics(key, target);
-            const virtual = document.createElement(target.tagName);
-
-            Array.from(target.attributes).forEach(function (attr) {
-                virtual.setAttribute(attr.name, attr.value);
-            });
-            virtual.innerHTML = cleanHTML;
-
-            // restaurar __nightTemplate nos x-for do virtual a partir do cleanHTML
-            const tplContainer = document.createElement('div');
-            tplContainer.innerHTML = cleanHTML;
-            virtual.querySelectorAll('[x-for]').forEach(function (el) {
-                const tplEl = tplContainer.querySelector('[x-for="' + el.getAttribute('x-for') + '"]');
-                if (tplEl) el.__nightTemplate = tplEl.innerHTML;
-            });
-
-            // extrair funções do store para o scope
-            const fns = {};
-            Object.keys(data).forEach(function (k) {
-                if (typeof data[k] === 'function') fns[k] = data[k];
-            });
-
-            // x-data: scope direto sem prefixo
-            // x-target: scope com prefixo { key: data }
-            const scope = isXData
-                ? Object.assign({}, data, fns, magics)
-                : Object.assign({ [key]: data }, fns, magics);
-
-            _renderNode(virtual, scope);
-            _patch(target, virtual);
+            _cacheTemplates(target);
+            const scope = target.hasAttribute('x-data')
+                ? Object.assign({}, data)
+                : { [key]: data };
+            _renderTracked(target, scope, key);
         });
 
         _syncModelsForKey(key);
@@ -408,41 +504,39 @@ var proxy = (function () {
 
     // ─── Proxy factory ────────────────────────────────────────────────────────
 
-    function _makeProxy(data, key, path) {
+    function _makeProxy(data, key) {
         return new Proxy(data, {
             get(target, prop, receiver) {
                 if (prop === '__isProxy') return true;
                 if (prop === '__raw') return target;
 
-                const val = Reflect.get(target, prop, receiver);
-
-                if (val !== null && typeof val === 'object' && !val.__isProxy) {
-                    return _makeProxy(val, key, path ? path + '.' + prop : prop);
+                if (typeof prop === 'string' && prop !== '__nid') {
+                    _track(target, prop);
                 }
 
+                const val = Reflect.get(target, prop, receiver);
+                if (val !== null && typeof val === 'object' && !val.__isProxy) {
+                    return _makeProxy(val, key);
+                }
                 return val;
             },
+
             set(target, prop, value) {
-                const old = target[prop];
-                if (old === value) return true;
+                if (target[prop] === value) return true;
                 target[prop] = value;
 
-                // funções não trigam re-render
-                if (typeof value === 'function') return true;
-
-                const fullPath = path ? path + '.' + prop : String(prop);
-                const obsKey = key + '.' + fullPath;
-                if (_observers[obsKey]) {
-                    _observers[obsKey].forEach(fn => fn(value, old));
+                const triggered = _trigger(target, prop);
+                if (!triggered) {
+                    _scheduleApply(key);
                 }
 
-                _applyTarget(key);
-                _syncModelsForKey(key);
                 return true;
             },
+
             deleteProperty(target, prop) {
                 delete target[prop];
-                _applyTarget(key);
+                _trigger(target, prop);
+                _scheduleApply(key);
                 return true;
             }
         });
@@ -453,31 +547,29 @@ var proxy = (function () {
     return {
 
         name: 'night-proxy.js',
-        version: '2.2.0',
+        version: '2.3.1',
         template: {},
 
         initProxy: function () {
             const self = this;
 
-            document.querySelectorAll('[x-target], [x-data]').forEach(function (el) {
-                const key = el.getAttribute('x-target') || el.getAttribute('x-data');
+            document.querySelectorAll('[proxy-target], [x-data]').forEach(function (el) {
+                const key = el.getAttribute('proxy-target') || el.getAttribute('x-data');
                 if (!_store[key]) _store[key] = {};
-                _targetTemplates[key] = el.innerHTML;
             });
 
             self.template = new Proxy(_store, {
                 get(target, key) {
                     if (!target[key]) target[key] = {};
                     if (!_proxies[key]) {
-                        _proxies[key] = _makeProxy(target[key], key, '');
+                        _proxies[key] = _makeProxy(target[key], key);
                     }
                     return _proxies[key];
                 },
                 set(target, key, value) {
                     target[key] = value;
-                    _proxies[key] = _makeProxy(target[key], key, '');
-                    _applyTarget(key);
-                    _syncModelsForKey(key);
+                    _proxies[key] = _makeProxy(target[key], key);
+                    _scheduleApply(key);
                     return true;
                 }
             });
