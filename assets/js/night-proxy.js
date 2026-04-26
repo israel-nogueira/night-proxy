@@ -1,29 +1,46 @@
 /*!
- * night-proxy.js v2.3.1
+ * night-proxy.js v2.5.0
  * Reactive DOM binding via Recursive Proxy
  * https://github.com/israel-nogueira/night-proxy
  *
  * Directives:
  *   x-for="item in lista"                    → reactive loop (nestable)
+ *   x-for="item, k in lista"                 → loop with named index alias
+ *   x-for="item in lista as k"               → alternative syntax for named index
  *   x-key="item.id"                          → optional unique key for x-for (fallback: auto __nid)
  *   x-bind="item.titulo"                     → reactive text / interpolation with {var}
  *   x-if="item.ativo"                        → reactive conditional
  *   x-on:event="expr"                        → event listener with loop scope
  *   x-model="elemento_01.nome"               → two-way binding (input/checkbox/radio/select)
  *   x-model="elemento_01.lista[1].titulo"    → deep path two-way binding
- *   $i                                       → index via scoped variable (item.$i)
+ *   x-ref="nome"                             → element reference via $ref.nome
  *
- * v2.3.0 — Granular reactivity (track/trigger):
- *   - Cada nó DOM rastreia exatamente quais propriedades leu durante o render
- *   - Updates cirúrgicos: lista[1].nome = 'x' atualiza APENAS o nó do item[1]
- *   - Nenhum loop sobre a lista inteira para updates pontuais
- *   - Estruturas de lista (push/splice/substituição) ainda fazem re-render completo do x-for
- *   - Batching via requestAnimationFrame mantido para rajadas de updates
+ * Magic variables (available in x-on expressions):
+ *   $root                  → root DOM element of the x-data container
+ *   $ref.nome              → element marked with x-ref="nome"
+ *   $emit(name, detail)    → dispatch CustomEvent on $root
+ *   $i / $index            → current loop index (fallback when no alias declared)
+ *   $this.index            → current item index
+ *   $this.dom              → current item DOM element
+ *   $this.data             → current item data object
+ *   $this.parent           → $this of parent loop (chainable)
  *
- * v2.3.1 — Fixes:
- *   - x-bind fora de x-for agora recebe Effect próprio → reatividade granular em qualquer contexto
- *   - _syncModelsForKey chamado após flush de effects → x-model sempre sincronizado
- *   - _renderNodeRaw propaga _renderTracked em TODOS os filhos com x-bind/x-if/x-for
+ * Lifecycle hooks (per component key):
+ *   proxy.template.key.$beforeRender = fn    → called before every render
+ *   proxy.template.key.$afterRender  = fn    → called after every render
+ *   el.addEventListener('before-render', fn) → same via DOM event
+ *   el.addEventListener('after-render', fn)  → same via DOM event
+ *
+ * Watchers:
+ *   proxy.on('key.prop', (newVal, oldVal) => {})   → watch any deep path
+ *
+ * v2.3.0 — Granular reactivity (track/trigger)
+ * v2.3.1 — Fixes: x-bind granular, _syncModelsForKey, _renderTracked propagation
+ * v2.4.0 — Magic vars: $root, $ref, $emit, $this (+parent), $i/$index
+ *           Named index alias: "item, k in lista" / "item in lista as k"
+ *           Lifecycle hooks: $beforeRender / $afterRender (template + DOM event)
+ *           Watchers: proxy.on(path, fn)
+ *           Surgical trigger: single-effect updates run synchronously
  */
 
 var proxy = (function () {
@@ -33,7 +50,25 @@ var proxy = (function () {
     const _store = {};
     const _proxies = {};
 
-    // ─── Dependency tracking ──────────────────────────────────────────────────
+    // ─── Watchers — proxy.on(path, fn) ───────────────────────────────────────
+    // Observa qualquer caminho profundo do store. Dispara com (newVal, oldVal).
+
+    const _watchers = {};   // { 'key.prop.sub': Set<fn> }
+
+    function _notifyWatchers(path, newVal, oldVal) {
+        if (newVal === oldVal) return;
+        const fns = _watchers[path];
+        if (!fns || !fns.size) return;
+        fns.forEach(fn => { try { fn(newVal, oldVal); } catch (e) { console.error('[night-proxy] watcher error:', e); } });
+    }
+
+    function _registerWatcher(path, fn) {
+        if (!_watchers[path]) _watchers[path] = new Set();
+        _watchers[path].add(fn);
+        return function () { _watchers[path].delete(fn); };  // retorna unsubscribe
+    }
+
+
     //
     // _deps: WeakMap<rawObject, Map<prop, Set<Effect>>>
     //
@@ -368,14 +403,27 @@ var proxy = (function () {
     // ─── x-for ────────────────────────────────────────────────────────────────
 
     function _renderFor(node, parentScope, expr) {
-        const match = expr.match(/^\s*(\w+)\s+in\s+(.+)\s*$/);
-        if (!match) {
+        // Suporta:
+        //   "item in lista"
+        //   "item, k in lista"
+        //   "item in lista as k"
+        let alias, indexAlias, listExp;
+
+        const matchAs = expr.match(/^\s*(\w+)\s+in\s+(.+?)\s+as\s+(\w+)\s*$/);
+        const matchComma = expr.match(/^\s*(\w+)\s*,\s*(\w+)\s+in\s+(.+)\s*$/);
+        const matchPlain = expr.match(/^\s*(\w+)\s+in\s+(.+)\s*$/);
+
+        if (matchAs) {
+            alias = matchAs[1]; listExp = matchAs[2].trim(); indexAlias = matchAs[3];
+        } else if (matchComma) {
+            alias = matchComma[1]; indexAlias = matchComma[2]; listExp = matchComma[3].trim();
+        } else if (matchPlain) {
+            alias = matchPlain[1]; listExp = matchPlain[2].trim(); indexAlias = null;
+        } else {
             console.error('[night-proxy] x-for syntax error:', expr);
             return;
         }
 
-        const alias = match[1];
-        const listExp = match[2].trim();
         const list = _evalExpr(listExp, parentScope);
         const xKeyExpr = node.getAttribute('x-key') || null;
         const template = node.__nightTemplate;
@@ -383,6 +431,11 @@ var proxy = (function () {
         // Propaga key do effect pai para os filhos
         const parentEffect = node.__nightEffect;
         const rootKey = parentEffect ? parentEffect.key : null;
+
+        // $root do container
+        const rootEl = rootKey
+            ? document.querySelector('[x-data="' + rootKey + '"]')
+            : null;
 
         // ── Lista vazia ───────────────────────────────────────────────────────
         if (!Array.isArray(list) || list.length === 0) {
@@ -403,25 +456,43 @@ var proxy = (function () {
         const newKeys = [];
         const newNodes = [];
         const newScopes = [];
+        const newThis = [];   // $this de cada item
 
         list.forEach(function (item, index) {
-            // Preserva o proxy do item — não copia props para objeto plain.
-            // $i é exposto via wrapper que delega gets ao proxy original.
+            // Preserva o proxy do item
             const rawItem = (item && item.__isProxy) ? item : _makeProxy(
                 (item && item.__raw) ? item.__raw : item,
                 rootKey || ''
             );
             const itemWithIndex = new Proxy(rawItem, {
                 get(target, prop, receiver) {
-                    if (prop === '$i') return index;
+                    if (prop === '$i' || prop === '$index') return index;
                     return Reflect.get(target, prop, receiver);
                 }
             });
-            const scope = Object.assign({}, parentScope, { [alias]: itemWithIndex });
-            const key = _getItemKey(item, xKeyExpr, scope);
 
+            // $this do item — dom será preenchido após criação do nó
+            const parentThis = parentScope.$this || null;
+            const itemThis = {
+                index: index,
+                dom: null,   // preenchido abaixo
+                data: item,
+                parent: parentThis
+            };
+
+            // Monta scope com alias, indexAlias, $i, $index, $this
+            const scope = Object.assign({}, parentScope, {
+                [alias]: itemWithIndex,
+                $i: index,
+                $index: index,
+                $this: itemThis
+            });
+            if (indexAlias) scope[indexAlias] = index;
+
+            const key = _getItemKey(item, xKeyExpr, scope);
             newKeys.push(key);
             newScopes.push(scope);
+            newThis.push(itemThis);
 
             if (existingByKey[key]) {
                 _renderTracked(existingByKey[key], scope, rootKey);
@@ -465,10 +536,32 @@ var proxy = (function () {
 
         node.__nightKeys = newKeys;
 
-        // ── Bind eventos ──────────────────────────────────────────────────────
+        // ── Preenche $this.dom e bind eventos ─────────────────────────────────
         newNodes.forEach(function (el, i) {
             if (el && el.nodeType === Node.ELEMENT_NODE) {
-                _bindEvents(el, newScopes[i]);
+                newThis[i].dom = el;
+
+                // $ref — elementos marcados com x-ref dentro do x-data
+                const $ref = {};
+                if (rootEl) {
+                    rootEl.querySelectorAll('[x-ref]').forEach(function (refEl) {
+                        $ref[refEl.getAttribute('x-ref')] = refEl;
+                    });
+                }
+
+                // $emit — dispara CustomEvent no $root
+                const $emit = function (name, detail) {
+                    if (!rootEl) return;
+                    rootEl.dispatchEvent(new CustomEvent(name, { bubbles: true, detail: detail || {} }));
+                };
+
+                const enrichedScope = Object.assign({}, newScopes[i], {
+                    $root: rootEl,
+                    $ref: $ref,
+                    $emit: $emit
+                });
+
+                _bindEvents(el, enrichedScope);
             }
         });
     }
@@ -490,13 +583,48 @@ var proxy = (function () {
         if (!targets.length) return;
 
         const data = _store[key];
+        if (!data) return;
 
         targets.forEach(function (target) {
+            // ── $beforeRender ─────────────────────────────────────────────────
+            if (typeof data.$beforeRender === 'function') {
+                try { data.$beforeRender(target); } catch (e) { console.error('[night-proxy] $beforeRender error:', e); }
+            }
+            target.dispatchEvent(new CustomEvent('before-render', { bubbles: false }));
+
             _cacheTemplates(target);
-            const scope = target.hasAttribute('x-data')
+
+            // Magic vars disponíveis no escopo raiz
+            const $ref = {};
+            target.querySelectorAll('[x-ref]').forEach(function (el) {
+                $ref[el.getAttribute('x-ref')] = el;
+            });
+            const $emit = function (name, detail) {
+                target.dispatchEvent(new CustomEvent(name, { bubbles: true, detail: detail || {} }));
+            };
+
+            const baseScope = target.hasAttribute('x-data')
                 ? Object.assign({}, data)
                 : { [key]: data };
+
+            const scope = Object.assign(baseScope, {
+                $root: target,
+                $ref: $ref,
+                $emit: $emit,
+                $i: undefined,
+                $index: undefined,
+                $this: null
+            });
+
             _renderTracked(target, scope, key);
+
+            // ── $afterRender ──────────────────────────────────────────────────
+            Promise.resolve().then(function () {
+                if (typeof data.$afterRender === 'function') {
+                    try { data.$afterRender(target); } catch (e) { console.error('[night-proxy] $afterRender error:', e); }
+                }
+                target.dispatchEvent(new CustomEvent('after-render', { bubbles: false }));
+            });
         });
 
         _syncModelsForKey(key);
@@ -504,7 +632,8 @@ var proxy = (function () {
 
     // ─── Proxy factory ────────────────────────────────────────────────────────
 
-    function _makeProxy(data, key) {
+    function _makeProxy(data, key, _path) {
+        const basePath = _path || key;
         return new Proxy(data, {
             get(target, prop, receiver) {
                 if (prop === '__isProxy') return true;
@@ -516,14 +645,17 @@ var proxy = (function () {
 
                 const val = Reflect.get(target, prop, receiver);
                 if (val !== null && typeof val === 'object' && !val.__isProxy) {
-                    return _makeProxy(val, key);
+                    return _makeProxy(val, key, basePath + '.' + prop);
                 }
                 return val;
             },
 
             set(target, prop, value) {
-                if (target[prop] === value) return true;
+                const oldVal = target[prop];
+                if (oldVal === value) return true;
                 target[prop] = value;
+
+                _notifyWatchers(basePath + '.' + prop, value, oldVal);
 
                 const triggered = _trigger(target, prop);
                 if (!triggered) {
@@ -534,7 +666,9 @@ var proxy = (function () {
             },
 
             deleteProperty(target, prop) {
+                const oldVal = target[prop];
                 delete target[prop];
+                _notifyWatchers(basePath + '.' + prop, undefined, oldVal);
                 _trigger(target, prop);
                 _scheduleApply(key);
                 return true;
@@ -542,13 +676,113 @@ var proxy = (function () {
         });
     }
 
+    // ─── Destroy helpers ──────────────────────────────────────────────────────
+
+    function _destroyNode(node) {
+        if (!node || node.nodeType !== Node.ELEMENT_NODE) return;
+
+        // Remove x-on listeners
+        if (node.attributes) {
+            for (let attr of node.attributes) {
+                if (!attr.name.startsWith('x-on:')) continue;
+                const event = attr.name.slice(5);
+                const flag = '__night_' + event;
+                if (node[flag]) {
+                    node.removeEventListener(event, node[flag]);
+                    delete node[flag];
+                }
+            }
+        }
+
+        // Cleanup effect granular
+        if (node.__nightEffect) {
+            node.__nightEffect.cleanup();
+            delete node.__nightEffect;
+        }
+
+        // Remove x-model listeners (marca interna __nightModel)
+        if (node.__nightModel) {
+            delete node.__nightModel;
+        }
+
+        // Recursivo nos filhos
+        Array.from(node.children).forEach(_destroyNode);
+    }
+
+    function _destroyKey(key) {
+        // Cancela renders pendentes do key antes de qualquer coisa
+        _pendingKeys.delete(key);
+
+        const targets = document.querySelectorAll(
+            '[proxy-target="' + key + '"], [x-data="' + key + '"]'
+        );
+
+        targets.forEach(function (target) {
+            const data = _store[key] || {};
+
+            // ── $beforeDestroy ────────────────────────────────────────────────
+            if (typeof data.$beforeDestroy === 'function') {
+                try { data.$beforeDestroy(target); } catch (e) { console.error('[night-proxy] $beforeDestroy error:', e); }
+            }
+            target.dispatchEvent(new CustomEvent('before-destroy', { bubbles: false }));
+
+            // ── Destroy recursivo nos filhos ──────────────────────────────────
+            Array.from(target.children).forEach(_destroyNode);
+
+            // ── Limpa o próprio target ────────────────────────────────────────
+            if (target.__nightEffect) {
+                target.__nightEffect.cleanup();
+                delete target.__nightEffect;
+            }
+            delete target.__nightKeys;
+
+            // ── $afterDestroy ─────────────────────────────────────────────────
+            if (typeof data.$afterDestroy === 'function') {
+                try { data.$afterDestroy(target); } catch (e) { console.error('[night-proxy] $afterDestroy error:', e); }
+            }
+            target.dispatchEvent(new CustomEvent('after-destroy', { bubbles: false }));
+        });
+
+        // Limpa store, proxy e watchers do key
+        delete _store[key];
+        delete _proxies[key];
+
+        // Remove watchers cujo path começa com esse key
+        Object.keys(_watchers).forEach(function (path) {
+            if (path === key || path.startsWith(key + '.')) {
+                delete _watchers[path];
+            }
+        });
+
+        // Remove entrada no template público
+        if (proxy.template && proxy.template[key]) {
+            delete proxy.template.__raw__[key]; // segurança; o Proxy recria se precisar
+        }
+    }
+
     // ─── Public API ───────────────────────────────────────────────────────────
 
     return {
 
         name: 'night-proxy.js',
-        version: '2.3.1',
+        version: '2.5.0',
         template: {},
+
+        // proxy.on('key.prop', (newVal, oldVal) => {})
+        // Retorna função de unsubscribe
+        on: function (path, fn) {
+            return _registerWatcher(path, fn);
+        },
+
+        // proxy.destroy('produto')  → destrói apenas 1 key
+        // proxy.destroy()           → destrói tudo
+        destroy: function (key) {
+            if (key) {
+                _destroyKey(key);
+            } else {
+                Object.keys(_store).forEach(_destroyKey);
+            }
+        },
 
         initProxy: function () {
             const self = this;
@@ -560,9 +794,21 @@ var proxy = (function () {
 
             self.template = new Proxy(_store, {
                 get(target, key) {
+                    if (key === '__raw__') return target;
                     if (!target[key]) target[key] = {};
-                    if (!_proxies[key]) {
+                    // Recria proxy se o raw mudou (ex: após destroy)
+                    if (!_proxies[key] || _proxies[key].__raw !== target[key]) {
                         _proxies[key] = _makeProxy(target[key], key);
+                    }
+                    // Injeta .destroy() diretamente no raw do key
+                    const raw = target[key];
+                    if (raw && !raw.__destroyBound) {
+                        Object.defineProperty(raw, 'destroy', {
+                            configurable: true,
+                            enumerable: false,
+                            value: function () { _destroyKey(key); }
+                        });
+                        raw.__destroyBound = true;
                     }
                     return _proxies[key];
                 },

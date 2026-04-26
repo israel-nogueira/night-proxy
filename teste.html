@@ -319,10 +319,18 @@
 				<div class="multi-c-item" x-bind="{item.nome}"></div>
 			</div>
 		</div>
+		<div x-data="t_destroy_a">
+			<div x-for="item in lista">
+				<div class="destroy-a-item" x-bind="{item.nome}"></div>
+			</div>
+		</div>
+		<div x-data="t_destroy_b">
+			<span class="destroy-b-titulo" x-bind="titulo"></span>
+		</div>
 	</div>
 
 	<h1>night-proxy<span>.js</span> — Test Suite</h1>
-	<p class="subtitle">v2.3.1 · testes automatizados de reatividade</p>
+	<p class="subtitle">v2.5.0 · testes automatizados de reatividade</p>
 
 	<div class="controls">
 		<button onclick="runAll()">▶ Rodar todos</button>
@@ -485,6 +493,8 @@
 		function multiAItems() { return getAll('#test-targets [x-data="t_multi_a"] .multi-a-item'); }
 		function multiBItems() { return getAll('#test-targets [x-data="t_multi_b"] .multi-b-item'); }
 		function multiCItems() { return getAll('#test-targets [x-data="t_multi_c"] .multi-c-item'); }
+		function destroyAItems() { return getAll('#test-targets [x-data="t_destroy_a"] .destroy-a-item'); }
+		function destroyBTitulo() { return document.querySelector('#test-targets [x-data="t_destroy_b"] .destroy-b-titulo'); }
 
 		// ── GRUPOS DE TESTES ─────────────────────────────────────────────────────────
 
@@ -962,6 +972,123 @@
 					assert(multiBItems()[50].textContent.trim() === 'Xb', 'B[50] errado');
 					assert(multiCItems()[50].textContent.trim() === 'Xc', 'C[50] errado');
 					assert(ms < 50, `lento demais: ${Math.round(ms)}ms`);
+				}
+			},
+		]);
+
+
+		group('💣 destroy — lifecycle', [
+			{
+				name: 'proxy.destroy(key) — limpa store',
+				fn: async () => {
+					proxy.template.t_destroy_a.lista = [{ nome: 'X' }, { nome: 'Y' }];
+					await wait(20);
+					assert(destroyAItems().length === 2, 'pré-condição: esperado 2 itens');
+					proxy.destroy('t_destroy_a');
+					await wait(10);
+					// store limpo: proxy.template.t_destroy_a deve ser objeto vazio
+					const raw = proxy.template.t_destroy_a;
+					assert(!raw.lista, 'store deveria estar limpo após destroy');
+				}
+			},
+			{
+				name: 'proxy.template.key.destroy() — shortcut funciona',
+				fn: async () => {
+					proxy.template.t_destroy_b.titulo = 'antes';
+					await wait(10);
+					proxy.template.t_destroy_b.destroy();
+					await wait(10);
+					const raw = proxy.template.t_destroy_b;
+					assert(!raw.titulo, 'store deveria estar limpo via shortcut destroy');
+				}
+			},
+			{
+				name: '$beforeDestroy hook é chamado',
+				fn: async () => {
+					proxy.template.t_destroy_a.lista = [{ nome: 'Hook' }];
+					await wait(10);
+					let called = false;
+					proxy.template.t_destroy_a.$beforeDestroy = function (el) { called = true; };
+					proxy.destroy('t_destroy_a');
+					await wait(10);
+					assert(called, '$beforeDestroy não foi chamado');
+				}
+			},
+			{
+				name: '$afterDestroy hook é chamado',
+				fn: async () => {
+					proxy.template.t_destroy_b.titulo = 'after-test';
+					await wait(10);
+					let called = false;
+					proxy.template.t_destroy_b.$afterDestroy = function (el) { called = true; };
+					proxy.destroy('t_destroy_b');
+					await wait(10);
+					assert(called, '$afterDestroy não foi chamado');
+				}
+			},
+			{
+				name: 'evento before-destroy dispara no elemento',
+				fn: async () => {
+					proxy.template.t_destroy_a.lista = [{ nome: 'Ev' }];
+					await wait(10);
+					let fired = false;
+					const el = document.querySelector('[x-data="t_destroy_a"]');
+					const handler = () => { fired = true; };
+					el.addEventListener('before-destroy', handler);
+					proxy.destroy('t_destroy_a');
+					await wait(10);
+					el.removeEventListener('before-destroy', handler);
+					assert(fired, 'evento before-destroy não disparou');
+				}
+			},
+			{
+				name: 'evento after-destroy dispara no elemento',
+				fn: async () => {
+					proxy.template.t_destroy_b.titulo = 'ev2';
+					await wait(10);
+					let fired = false;
+					const el = document.querySelector('[x-data="t_destroy_b"]');
+					const handler = () => { fired = true; };
+					el.addEventListener('after-destroy', handler);
+					proxy.destroy('t_destroy_b');
+					await wait(10);
+					el.removeEventListener('after-destroy', handler);
+					assert(fired, 'evento after-destroy não disparou');
+				}
+			},
+			{
+				name: 'watcher removido após destroy — não dispara mais',
+				fn: async () => {
+					proxy.template.t_destroy_a.lista = [];
+					await wait(10);
+					let watchCount = 0;
+					proxy.on('t_destroy_a.lista', () => { watchCount++; });
+					proxy.destroy('t_destroy_a');
+					await wait(10);
+					// Após destroy, o watcher foi removido junto com o key
+					// Reinicia e seta lista — não deve disparar o watcher antigo
+					proxy.template.t_destroy_a.lista = [{ nome: 'pós-destroy' }];
+					await wait(10);
+					assert(watchCount === 0, `watcher disparou ${watchCount}x após destroy`);
+				}
+			},
+			{
+				name: 'ciclo fetch — destroy → reinit → reativa normalmente',
+				fn: async () => {
+					// Simula carregamento inicial
+					proxy.template.t_destroy_b.titulo = 'original';
+					await wait(10);
+					// Destroy (simula troca de página via fetch)
+					proxy.destroy('t_destroy_b');
+					await wait(10);
+					// Reinit (simula novo conteúdo injetado e proxy.initProxy() chamado)
+					proxy.initProxy();
+					await wait(10);
+					// Seta novo valor — DOM deve reagir
+					proxy.template.t_destroy_b.titulo = 'reativado';
+					await wait(20);
+					const el = document.querySelector('[x-data="t_destroy_b"] .destroy-b-titulo');
+					assert(el && el.textContent.trim() === 'reativado', `esperado "reativado", got "${el ? el.textContent.trim() : 'null'}"`);
 				}
 			},
 		]);
