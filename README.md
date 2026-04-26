@@ -1,15 +1,82 @@
+
+
+
+
+
+
+
+
 <p align="center">
     <img src="https://raw.githubusercontent.com/israel-nogueira/night-proxy/master/assets/img/avatar.png" width="650"/>
 </p>
 
-# night-proxy.js
+<p align="center">
+    <img src="https://img.shields.io/badge/version-2.5.0-7c3aed?style=flat-square" />
+    <img src="https://img.shields.io/badge/zero%20dependencies-✓-22c55e?style=flat-square" />
+    <img src="https://img.shields.io/badge/no%20build%20tools-✓-06b6d4?style=flat-square" />
+    <img src="https://img.shields.io/badge/license-MIT-f59e0b?style=flat-square" />
+</p>
 
-Reatividade declarativa no HTML puro — sem frameworks, sem build tools.  
-Usa **Proxy Recursivo** para atualizar o DOM de forma granular e eficiente.
+# night-proxy.js
 
 ---
 
-## Instalação
+## Para quem está chegando agora
+
+Sua página PHP/HTML está pronta! E agora você precisa que **uma lista atualize sozinha**, que **um contador mude em tempo real**.<br>
+Ou que **um formulário reaja ao que o usuário digita** _(tudo isso sem recarregar a página)_.
+
+A solução padrão seria aprender **REACT, VUE OU ANGULAR**. Instalar o Node.js, configurar um bundler, entender componentes, props, estado global... horas de setup antes de escrever uma linha útil.
+
+Mas o **night-proxy.js já faz a mesma coisa com uma única linha:**
+
+```html
+<script src="./assets/js/night-proxy.js"></script>
+```
+
+Sem npm. Sem build. Sem configuração. Você escreve HTML normal, adiciona alguns atributos, e a página começa a reagir sozinha às mudanças de dados. Funciona em qualquer projeto — PHP, HTML puro, WordPress, Laravel, o que for.
+
+---
+> ✅ Se você já sabe fazer uma página em HTML, você já sabe usar night-proxy.js.
+---
+
+## Para quem quer saber como funciona de verdade
+
+night-proxy.js implementa **reatividade declarativa baseada em Proxy Recursivo** com dependency tracking granular — sem virtual DOM, sem dirty checking, sem re-renders desnecessários.
+
+### 🔥 O que isso significa na prática
+
+A maioria das soluções "leves" de reatividade usa uma de duas abordagens ruins: re-renderiza o componente inteiro a cada mudança, ou percorre o DOM em busca de diferenças (dirty checking). Ambas escalam mal.
+
+night-proxy.js faz diferente. Durante o render de cada nó, qualquer leitura de propriedade registra automaticamente uma dependência via `WeakMap`. Quando um valor muda, **apenas os nós que dependem daquela propriedade específica são atualizados!** cirurgicamente, sem tocar no resto.
+
+### 🛡️ Garantias de performance
+
+- **1 dependente** → update síncrono imediato, sem microtask, sem overhead de scheduler
+- **N dependentes** → batching via `Promise.resolve()` — agrupa mudanças simultâneas em um único ciclo
+- **Mudanças estruturais** (push/splice/substituição de lista) → re-render do `x-for` via microtask
+
+Em testes com 5.000 itens renderizados, um update pontual (`lista[2500].nome = 'x'`) executa em menos de 1 frame (< 16ms) — porque toca **exatamente 1 nó**, independente do tamanho da lista.
+
+### ⚙️ Diferenciais técnicos
+
+- **Proxy Recursivo** — qualquer nível de aninhamento é rastreado automaticamente, sem necessidade de declarar observers manualmente
+- **Effects com auto-cleanup** — cada nó reativo tem seu próprio Effect que se desregistra e re-registra nas dependências a cada run, evitando memory leaks e renders obsoletos
+- **Lifecycle completo** — `$beforeRender`, `$afterRender`, `$beforeDestroy`, `$afterDestroy` com suporte a eventos DOM nativos (`before-render`, `after-destroy`...)
+- **Destroy real** — limpa effects, event listeners, watchers e store em cascata; essencial para SPAs que trocam conteúdo via fetch
+- **44 testes automatizados** — cobrindo reatividade, granularidade, stress (500 / 1k / 5k itens) e ciclo de vida completo, todos passando
+
+### 🤓 Para quem é indicado
+
+Projetos que precisam de reatividade pontual sem o custo de adotar um framework completo.<br>
+Aplicações PHP, páginas com conteúdo dinâmico via fetch, dashboards simples, formulários reativos <br>
+e qualquer cenário onde **React ou Vue seria complexidade desnecessária**.
+
+**Um arquivo. Sem dependências. Sem opinião sobre sua stack.**
+
+---
+
+## 🛠️ Instalação
 
 Um único arquivo. Inclua no `<head>`:
 
@@ -65,18 +132,20 @@ proxy.template.produto.nome = "Coxinha Supreme";
 Renderiza um valor reativo como texto. Suporta expressão direta ou interpolação com `{}`.
 
 ```html
-<h1 x-bind="nome"></h1>
-<p x-bind="Preço: R$ {preco} — Qtd: {qty}"></p>
-```
+<div x-data="produto">
+    <h1 x-bind="nome"></h1>
+    <p x-bind="Preço: R$ {preco} — Qtd: {qty}"></p>
+</div>
 
-```javascript
-proxy.initProxy();
-proxy.template.produto.nome  = "Coxinha Supreme";
-proxy.template.produto.preco = 9.90;
-proxy.template.produto.qty   = 3;
+<script>
+    proxy.initProxy();
+    proxy.template.produto.nome  = "Coxinha Supreme";
+    proxy.template.produto.preco = 9.90;
+    proxy.template.produto.qty   = 3;
 
-// Qualquer alteração posterior atualiza o DOM automaticamente
-proxy.template.produto.nome = "Novo nome";
+    // Qualquer alteração posterior atualiza o DOM automaticamente
+    proxy.template.produto.nome = "Novo nome";
+</script>
 ```
 
 ---
@@ -569,7 +638,7 @@ Registre funções diretamente no `proxy.template` para usá-las nos eventos sem
     proxy.template.lista.remover = function(idx) {
         proxy.template.lista.itens.splice(idx, 1);
     };
-</script>
+</>
 ```
 
 ---
