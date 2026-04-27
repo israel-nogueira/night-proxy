@@ -298,7 +298,8 @@ var proxy = (function () {
                 const expr = attr.value;
                 const flag = '__night_' + event;
 
-                if (el[flag]) el.removeEventListener(event, el[flag]);
+                // if (el[flag]) el.removeEventListener(event, el[flag]);
+                if (el[flag]) continue;
 
                 if (!_safeExpr(expr)) {
                     console.warn('[night-proxy] unsafe x-on blocked:', expr);
