@@ -496,9 +496,24 @@ var proxy = (function () {
             newThis.push(itemThis);
 
             if (existingByKey[key]) {
-                _renderTracked(existingByKey[key], scope, rootKey);
-                newNodes.push(existingByKey[key]);
-            } else {
+                const existingEl = existingByKey[key];
+                // ✅ Limpa TODOS os flags x-on para forçar rebind com scope atualizado
+                [existingEl, ...existingEl.querySelectorAll('*')].forEach(el => {
+                    if (!el.attributes) return;
+                    for (let attr of el.attributes) {
+                        if (!attr.name.startsWith('x-on:')) continue;
+                        const flag = '__night_' + attr.name.slice(5);
+                        if (el[flag]) {
+                            el.removeEventListener(attr.name.slice(5), el[flag]);
+                            delete el[flag];
+                        }
+                    }
+                });
+                _renderTracked(existingEl, scope, rootKey);
+                newNodes.push(existingEl);
+            } 
+            else 
+            {
                 const wrapper = document.createElement('div');
                 wrapper.innerHTML = template;
                 _cacheTemplates(wrapper);
@@ -620,7 +635,7 @@ var proxy = (function () {
             // removeu o _bindEvents daqui
 
             Promise.resolve().then(function () {
-                // ✅ FIX: binda x-on após render completo (incluindo x-for)
+                // ✅ FIX: binda x-on apenas em elementos fora do x-for
                 _bindEvents(target, scope);
 
                 if (typeof data.$afterRender === 'function') {
@@ -776,6 +791,8 @@ var proxy = (function () {
         on: function (path, fn) {
             return _registerWatcher(path, fn);
         },
+
+        bindEvents: _bindEvents,
 
         // proxy.destroy('produto')  → destrói apenas 1 key
         // proxy.destroy()           → destrói tudo
