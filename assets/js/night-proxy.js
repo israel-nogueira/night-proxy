@@ -617,10 +617,12 @@ var proxy = (function () {
 
             _renderTracked(target, scope, key);
 
-            // ✅ FIX: binda x-on em elementos sem diretivas reativas (fora do x-for)
-            _bindEvents(target, scope);
+            // removeu o _bindEvents daqui
 
             Promise.resolve().then(function () {
+                // ✅ FIX: binda x-on após render completo (incluindo x-for)
+                _bindEvents(target, scope);
+
                 if (typeof data.$afterRender === 'function') {
                     try { data.$afterRender(target); } catch (e) { console.error('[night-proxy] $afterRender error:', e); }
                 }
