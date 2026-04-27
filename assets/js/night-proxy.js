@@ -586,7 +586,6 @@ var proxy = (function () {
         if (!data) return;
 
         targets.forEach(function (target) {
-            // ── $beforeRender ─────────────────────────────────────────────────
             if (typeof data.$beforeRender === 'function') {
                 try { data.$beforeRender(target); } catch (e) { console.error('[night-proxy] $beforeRender error:', e); }
             }
@@ -594,7 +593,6 @@ var proxy = (function () {
 
             _cacheTemplates(target);
 
-            // Magic vars disponíveis no escopo raiz
             const $ref = {};
             target.querySelectorAll('[x-ref]').forEach(function (el) {
                 $ref[el.getAttribute('x-ref')] = el;
@@ -618,7 +616,9 @@ var proxy = (function () {
 
             _renderTracked(target, scope, key);
 
-            // ── $afterRender ──────────────────────────────────────────────────
+            // ✅ FIX: binda x-on em elementos sem diretivas reativas (fora do x-for)
+            _bindEvents(target, scope);
+
             Promise.resolve().then(function () {
                 if (typeof data.$afterRender === 'function') {
                     try { data.$afterRender(target); } catch (e) { console.error('[night-proxy] $afterRender error:', e); }
