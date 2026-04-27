@@ -603,7 +603,7 @@ var proxy = (function () {
             };
 
             const baseScope = target.hasAttribute('x-data')
-                ? Object.assign({}, data)
+                ? data
                 : { [key]: data };
 
             const scope = Object.assign(baseScope, {
