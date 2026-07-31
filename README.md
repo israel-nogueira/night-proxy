@@ -29,7 +29,7 @@ Você escreve os atributos no HTML, popula os dados via JavaScript, e o DOM se a
 
 Ou via CDN:
 ```html
-<script src="https://cdn.jsdelivr.net/gh/israel-nogueira/night-proxy@no-reflow/assets/js/night-proxy.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/israel-nogueira/shadow-proxy@refs/heads/no-reflow/assets/js/night-proxy.min.js"></script>
 ```
 
 Sem npm. Sem build. Sem configuração. Você escreve HTML normal, adiciona alguns atributos, e a página começa a reagir sozinha às mudanças de dados. Funciona em qualquer projeto, PHP, HTML puro, WordPress, Laravel, o que for.
