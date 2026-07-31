@@ -4,12 +4,12 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>night-proxy.js — Reatividade sem framework</title>
+	<title>shadow-proxy.js — Reatividade sem framework</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link
 		href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,300&display=swap"
 		rel="stylesheet">
-	<script src="./assets/js/night-proxy.js"></script>
+	<script src="./assets/js/shadow-proxy.js"></script>
 	<style>
 		*,
 		*::before,
@@ -1347,16 +1347,16 @@
 	<nav>
 		<a href="#" class="nav-logo" onclick="showPage('home')">
 			<span class="dot"></span>
-			night-proxy.js
+			shadow-proxy.js
 		</a>
 		<div class="nav-links">
 			<a href="#" class="active" onclick="showPage('home'); setActive(this)">Início</a>
 			<a href="#" onclick="showPage('docs'); setActive(this)">Docs</a>
-			<a href="https://github.com/israel-nogueira/night-proxy" target="_blank">GitHub</a>
+			<a href="https://github.com/israel-nogueira/shadow-proxy" target="_blank">GitHub</a>
 		</div>
 		<div class="nav-right">
 			<span class="nav-badge">v2.6.0</span>
-			<a href="https://cdn.jsdelivr.net/gh/israel-nogueira/night-proxy@no-reflow/assets/js/night-proxy.js"
+			<a href="https://cdn.jsdelivr.net/gh/israel-nogueira/shadow-proxy@no-reflow/assets/js/shadow-proxy.js"
 				class="nav-gh" download>
 				↓ Download
 			</a>
@@ -1474,7 +1474,7 @@
 		<section class="section" id="exemplos">
 			<div class="section-eyebrow">// exemplos interativos</div>
 			<h2 class="section-title">Veja <em>funcionando</em> agora</h2>
-			<p class="section-sub">Cada exemplo abaixo está rodando de verdade com night-proxy.js. Edite, clique,
+			<p class="section-sub">Cada exemplo abaixo está rodando de verdade com shadow-proxy.js. Edite, clique,
 				experimente.</p>
 
 			<!-- EXEMPLO 1: x-bind + x-if + x-model -->
@@ -1550,7 +1550,7 @@
   <span class="t-fn">proxy</span>.<span class="t-fn">initProxy</span>();
 
   <span class="t-fn">proxy</span>.template.tarefas.lista = [
-    { texto: <span class="t-str">"Aprender night-proxy"</span>, done: <span class="t-key">false</span> },
+    { texto: <span class="t-str">"Aprender shadow-proxy"</span>, done: <span class="t-key">false</span> },
     { texto: <span class="t-str">"Refatorar o projeto"</span>, done: <span class="t-key">false</span> },
   ];
 
@@ -1627,7 +1627,7 @@
 		<section class="section">
 			<div class="section-eyebrow">// por que usar</div>
 			<h2 class="section-title">Tudo que você precisa,<br><em>nada que você não precisa</em></h2>
-			<p class="section-sub">night-proxy.js entrega reatividade real sem as abstrações desnecessárias dos grandes
+			<p class="section-sub">shadow-proxy.js entrega reatividade real sem as abstrações desnecessárias dos grandes
 				frameworks.</p>
 
 			<div class="features-grid">
@@ -1677,14 +1677,14 @@
 			<div class="section-eyebrow">// comparação</div>
 			<h2 class="section-title">Por que não <em>Alpine, Vue ou React?</em></h2>
 			<p class="section-sub">Existe um espaço enorme entre "página HTML com PHP" e "SPA completa com React".
-				night-proxy.js ocupa exatamente esse espaço.</p>
+				shadow-proxy.js ocupa exatamente esse espaço.</p>
 
 			<div class="table-wrap">
 				<table class="comp-table">
 					<thead>
 						<tr>
 							<th>Característica</th>
-							<th class="hl">NightProxy</th>
+							<th class="hl">ShadowProxy</th>
 							<th>Alpine.js</th>
 							<th>Vue.js (CDN)</th>
 							<th>React (CDN)</th>
@@ -1768,7 +1768,7 @@
 					<div class="install-code" id="cdn-code"><span style="color:var(--t-tag, #7dd3fc)">&lt;script</span>
 						<span style="color:var(--a78bfa, #a78bfa)">src</span>=<span
 							style="color:#86efac">"https://cdn.jsdelivr.net/gh/israel-nogueira/
-							night-proxy@no-reflow/assets/js/night-proxy.js"</span><span
+							shadow-proxy@no-reflow/assets/js/shadow-proxy.js"</span><span
 							style="color:#7dd3fc">&gt;&lt;/script&gt;</span></div>
 				</div>
 				<div class="install-card">
@@ -1778,7 +1778,7 @@
 					</div>
 					<div class="install-code" id="local-code"><span style="color:#7dd3fc">&lt;script</span> <span
 							style="color:#a78bfa">src</span>=<span
-							style="color:#86efac">"./assets/js/night-proxy.js"</span><span
+							style="color:#86efac">"./assets/js/shadow-proxy.js"</span><span
 							style="color:#7dd3fc">&gt;&lt;/script&gt;</span></div>
 				</div>
 			</div>
@@ -1792,7 +1792,7 @@
 		</section>
 
 		<footer class="footer">
-			<span>night-proxy.js v2.6.0 — MIT License</span>
+			<span>shadow-proxy.js v2.6.0 — MIT License</span>
 			<span>
 				Feito por <a href="https://github.com/israel-nogueira" target="_blank">@israel-nogueira</a>
 			</span>
@@ -1873,7 +1873,7 @@
 
 		// ── TAREFAS ──────────────────────────────────────────────────────────────────
 		proxy.template.tarefas.lista = [
-			{ texto: "Aprender night-proxy.js", done: false },
+			{ texto: "Aprender shadow-proxy.js", done: false },
 			{ texto: "Remover o Vue do projeto", done: false },
 			{ texto: "Fazer café ☕", done: true },
 		];
@@ -1964,13 +1964,13 @@
 
 			'inicio-rapido': `
 <h1>Início rápido</h1>
-<p>night-proxy.js é uma lib de reatividade declarativa baseada em Proxy Recursivo. Um arquivo. Sem npm. Sem build. Funciona em qualquer projeto PHP, HTML, WordPress, Laravel.</p>
+<p>shadow-proxy.js é uma lib de reatividade declarativa baseada em Proxy Recursivo. Um arquivo. Sem npm. Sem build. Funciona em qualquer projeto PHP, HTML, WordPress, Laravel.</p>
 
 <h2>Instalação</h2>
 <p>Inclua o script no <code style="font-family:var(--mono);color:var(--cyan)">&lt;head&gt;</code>:</p>
 <div class="docs-code">
   <div class="docs-code-bar"><span>CDN</span></div>
-  <pre><span class="t-tag">&lt;script</span> <span class="t-attr">src</span>=<span class="t-val">"https://cdn.jsdelivr.net/gh/israel-nogueira/night-proxy@no-reflow/assets/js/night-proxy.js"</span><span class="t-tag">&gt;&lt;/script&gt;</span></pre>
+  <pre><span class="t-tag">&lt;script</span> <span class="t-attr">src</span>=<span class="t-val">"https://cdn.jsdelivr.net/gh/israel-nogueira/shadow-proxy@no-reflow/assets/js/shadow-proxy.js"</span><span class="t-tag">&gt;&lt;/script&gt;</span></pre>
 </div>
 
 <h2>Primeiro componente</h2>
@@ -1999,7 +1999,7 @@
 
 			'como-funciona': `
 <h1>Como funciona</h1>
-<p>night-proxy.js implementa <strong>reatividade declarativa baseada em Proxy Recursivo</strong> com dependency tracking granular, sem virtual DOM, sem dirty checking.</p>
+<p>shadow-proxy.js implementa <strong>reatividade declarativa baseada em Proxy Recursivo</strong> com dependency tracking granular, sem virtual DOM, sem dirty checking.</p>
 
 <h2>Dependency Tracking</h2>
 <p>Durante o render de cada nó, qualquer leitura de propriedade registra automaticamente uma dependência via <code style="font-family:var(--mono);color:var(--cyan)">WeakMap</code>. Quando um valor muda, apenas os nós que dependem daquela propriedade específica são atualizados — cirurgicamente.</p>
@@ -2021,7 +2021,7 @@
 </div>
 
 <h2>Sem Virtual DOM</h2>
-<p>Ao contrário do React e Vue, night-proxy.js não usa Virtual DOM nem dirty checking. Cada nó tem seu próprio Effect que se desregistra e re-registra nas dependências a cada run, evitando memory leaks e renders obsoletos.</p>
+<p>Ao contrário do React e Vue, shadow-proxy.js não usa Virtual DOM nem dirty checking. Cada nó tem seu próprio Effect que se desregistra e re-registra nas dependências a cada run, evitando memory leaks e renders obsoletos.</p>
 `,
 
 			'x-data': `
@@ -2218,7 +2218,7 @@
 <div class="docs-code">
   <div class="docs-code-bar"><span>JavaScript</span></div>
   <pre><span class="t-fn">proxy</span>.onError = <span class="t-key">function</span>(err) {
-  console.<span class="t-fn">error</span>(<span class="t-str">'[night-proxy]'</span>, err.type, err.message);
+  console.<span class="t-fn">error</span>(<span class="t-str">'[shadow-proxy]'</span>, err.type, err.message);
 };
 
 <span class="t-com">// Tipos de erro possíveis:</span>
@@ -2286,7 +2286,7 @@ document.<span class="t-fn">querySelector</span>(<span class="t-str">'[x-data="p
 
 			'spa-fetch': `
 <h1>SPA com fetch</h1>
-<p>night-proxy.js tem destroy real — essencial para SPAs que trocam conteúdo via fetch.</p>
+<p>shadow-proxy.js tem destroy real — essencial para SPAs que trocam conteúdo via fetch.</p>
 <div class="docs-code">
   <div class="docs-code-bar"><span>JavaScript</span></div>
   <pre><span class="t-fn">proxy</span>.<span class="t-fn">initProxy</span>();
