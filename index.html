@@ -4,12 +4,12 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>night-proxy.js — Painel de Testes</title>
+	<title>night-proxy.js — Reatividade sem framework</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link
-		href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap"
+		href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,300&display=swap"
 		rel="stylesheet">
 	<script src="./assets/js/night-proxy.js"></script>
-
 	<style>
 		*,
 		*::before,
@@ -20,80 +20,328 @@
 		}
 
 		:root {
-			--bg: #0a0a0f;
-			--bg2: #111118;
-			--bg3: #1a1a24;
-			--border: #2a2a3a;
-			--accent: #7c3aed;
-			--accent2: #06b6d4;
-			--accent3: #f59e0b;
-			--danger: #ef4444;
-			--success: #22c55e;
-			--text: #e2e8f0;
+			--bg: #09090b;
+			--bg2: #111115;
+			--bg3: #18181f;
+			--bg4: #1e1e28;
+			--border: rgba(255, 255, 255, 0.07);
+			--border2: rgba(255, 255, 255, 0.12);
+			--violet: #7c3aed;
+			--violet-lt: #9d6fff;
+			--cyan: #06b6d4;
+			--amber: #f59e0b;
+			--green: #22c55e;
+			--red: #ef4444;
+			--text: #f1f5f9;
 			--text2: #94a3b8;
 			--text3: #475569;
-			--font-mono: 'JetBrains Mono', monospace;
-			--font-display: 'Syne', sans-serif;
+			--mono: 'JetBrains Mono', monospace;
+			--sans: 'Inter', sans-serif;
+			--display: 'Fraunces', serif;
+			--nav-h: 60px;
+			--sidebar-w: 260px;
+		}
+
+		html {
+			scroll-behavior: smooth;
 		}
 
 		body {
 			background: var(--bg);
 			color: var(--text);
-			font-family: var(--font-mono);
-			min-height: 100vh;
+			font-family: var(--sans);
+			font-size: 15px;
+			line-height: 1.6;
 			overflow-x: hidden;
 		}
 
-		/* ── HEADER ── */
-		header {
+		/* ══ NAV ══════════════════════════════════════════════════════════════ */
+		nav {
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			z-index: 200;
+			height: var(--nav-h);
+			background: rgba(9, 9, 11, 0.85);
+			backdrop-filter: blur(12px);
 			border-bottom: 1px solid var(--border);
-			padding: 20px 32px;
 			display: flex;
 			align-items: center;
-			gap: 16px;
-			background: var(--bg2);
-			position: sticky;
-			top: 0;
-			z-index: 100;
+			padding: 0 32px;
+			gap: 32px;
 		}
 
-		.logo {
-			font-family: var(--font-display);
-			font-weight: 800;
-			font-size: 1.25rem;
-			letter-spacing: -0.02em;
-			color: #fff;
-		}
-
-		.logo span {
-			color: var(--accent);
-		}
-
-		.badge {
-			font-size: 0.65rem;
-			background: var(--accent);
-			color: #fff;
-			padding: 2px 8px;
-			border-radius: 99px;
+		.nav-logo {
+			font-family: var(--mono);
 			font-weight: 600;
-			letter-spacing: 0.05em;
-		}
-
-		.header-status {
-			margin-left: auto;
+			font-size: 1rem;
+			color: #fff;
+			text-decoration: none;
 			display: flex;
 			align-items: center;
 			gap: 8px;
-			font-size: 0.75rem;
-			color: var(--text2);
 		}
 
-		.dot {
+		.nav-logo .dot {
 			width: 8px;
 			height: 8px;
 			border-radius: 50%;
-			background: var(--success);
-			box-shadow: 0 0 8px var(--success);
+			background: var(--violet);
+			box-shadow: 0 0 10px var(--violet);
+		}
+
+		.nav-links {
+			display: flex;
+			gap: 4px;
+		}
+
+		.nav-links a {
+			color: var(--text2);
+			text-decoration: none;
+			font-size: 0.875rem;
+			padding: 6px 12px;
+			border-radius: 6px;
+			transition: color .15s, background .15s;
+		}
+
+		.nav-links a:hover {
+			color: var(--text);
+			background: var(--bg3);
+		}
+
+		.nav-links a.active {
+			color: var(--violet-lt);
+		}
+
+		.nav-right {
+			margin-left: auto;
+			display: flex;
+			align-items: center;
+			gap: 12px;
+		}
+
+		.nav-badge {
+			font-family: var(--mono);
+			font-size: 0.7rem;
+			background: rgba(124, 58, 237, 0.15);
+			color: var(--violet-lt);
+			border: 1px solid rgba(124, 58, 237, 0.3);
+			padding: 3px 10px;
+			border-radius: 99px;
+		}
+
+		.nav-gh {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			color: var(--text2);
+			text-decoration: none;
+			font-size: 0.85rem;
+			padding: 6px 12px;
+			border-radius: 6px;
+			border: 1px solid var(--border2);
+			transition: all .15s;
+		}
+
+		.nav-gh:hover {
+			color: var(--text);
+			border-color: var(--border2);
+			background: var(--bg3);
+		}
+
+		/* ══ HERO ══════════════════════════════════════════════════════════════ */
+		.hero {
+			padding: calc(var(--nav-h) + 80px) 32px 80px;
+			max-width: 1200px;
+			margin: 0 auto;
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 64px;
+			align-items: center;
+		}
+
+		.hero-eyebrow {
+			font-family: var(--mono);
+			font-size: 0.75rem;
+			color: var(--violet-lt);
+			letter-spacing: 0.1em;
+			text-transform: uppercase;
+			margin-bottom: 20px;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.hero-eyebrow::before {
+			content: '';
+			display: block;
+			width: 24px;
+			height: 1px;
+			background: var(--violet-lt);
+		}
+
+		.hero-title {
+			font-family: var(--display);
+			font-size: clamp(2.4rem, 4vw, 3.6rem);
+			font-weight: 700;
+			line-height: 1.1;
+			letter-spacing: -0.02em;
+			margin-bottom: 24px;
+		}
+
+		.hero-title em {
+			font-style: italic;
+			color: var(--violet-lt);
+		}
+
+		.hero-sub {
+			font-size: 1.1rem;
+			color: var(--text2);
+			line-height: 1.7;
+			margin-bottom: 36px;
+			max-width: 480px;
+		}
+
+		.hero-sub strong {
+			color: var(--text);
+			font-weight: 500;
+		}
+
+		.hero-actions {
+			display: flex;
+			gap: 12px;
+			flex-wrap: wrap;
+		}
+
+		.btn {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			padding: 10px 20px;
+			border-radius: 8px;
+			border: none;
+			font-family: var(--sans);
+			font-size: 0.9rem;
+			font-weight: 600;
+			cursor: pointer;
+			text-decoration: none;
+			transition: all .15s;
+		}
+
+		.btn-primary {
+			background: var(--violet);
+			color: #fff;
+		}
+
+		.btn-primary:hover {
+			background: var(--violet-lt);
+			transform: translateY(-1px);
+			box-shadow: 0 8px 24px rgba(124, 58, 237, 0.35);
+		}
+
+		.btn-ghost {
+			background: transparent;
+			color: var(--text2);
+			border: 1px solid var(--border2);
+		}
+
+		.btn-ghost:hover {
+			color: var(--text);
+			background: var(--bg3);
+			transform: translateY(-1px);
+		}
+
+		.hero-meta {
+			margin-top: 40px;
+			display: flex;
+			align-items: center;
+			gap: 24px;
+			font-size: 0.8rem;
+			color: var(--text3);
+		}
+
+		.hero-meta span {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+		}
+
+		.hero-meta svg {
+			opacity: .5;
+		}
+
+		/* ══ HERO DEMO (live) ══════════════════════════════════════════════════ */
+		.hero-demo {
+			background: var(--bg2);
+			border: 1px solid var(--border2);
+			border-radius: 16px;
+			overflow: hidden;
+			box-shadow: 0 32px 64px rgba(0, 0, 0, 0.4);
+		}
+
+		.demo-bar {
+			background: var(--bg3);
+			border-bottom: 1px solid var(--border);
+			padding: 10px 16px;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.demo-bar-dots {
+			display: flex;
+			gap: 6px;
+		}
+
+		.demo-bar-dots span {
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+		}
+
+		.demo-bar-dots span:nth-child(1) {
+			background: #ef4444;
+		}
+
+		.demo-bar-dots span:nth-child(2) {
+			background: #f59e0b;
+		}
+
+		.demo-bar-dots span:nth-child(3) {
+			background: #22c55e;
+		}
+
+		.demo-bar-title {
+			font-family: var(--mono);
+			font-size: 0.7rem;
+			color: var(--text3);
+			margin-left: 8px;
+		}
+
+		.demo-body {
+			padding: 24px;
+		}
+
+		.demo-live-label {
+			font-family: var(--mono);
+			font-size: 0.65rem;
+			color: var(--text3);
+			text-transform: uppercase;
+			letter-spacing: .1em;
+			margin-bottom: 16px;
+			display: flex;
+			align-items: center;
+			gap: 6px;
+		}
+
+		.demo-live-label::before {
+			content: '';
+			width: 6px;
+			height: 6px;
+			border-radius: 50%;
+			background: var(--green);
+			box-shadow: 0 0 6px var(--green);
 			animation: pulse 2s infinite;
 		}
 
@@ -105,911 +353,1984 @@
 			}
 
 			50% {
-				opacity: 0.4;
+				opacity: .4;
 			}
 		}
 
-		/* ── LAYOUT ── */
-		.layout {
-			display: grid;
-			grid-template-columns: 320px 1fr 300px;
-			gap: 0;
-			min-height: calc(100vh - 65px);
+		/* hero live demo UI */
+		.live-card {
+			background: var(--bg4);
+			border: 1px solid var(--border);
+			border-radius: 10px;
+			padding: 16px;
+			margin-bottom: 12px;
 		}
 
-		/* ── SIDEBAR ── */
-		.sidebar {
-			border-right: 1px solid var(--border);
-			padding: 24px;
+		.live-card-name {
+			font-weight: 600;
+			font-size: 1rem;
+			margin-bottom: 4px;
+		}
+
+		.live-card-price {
+			color: var(--violet-lt);
+			font-family: var(--mono);
+			font-size: 0.9rem;
+		}
+
+		.live-card-cat {
+			color: var(--text3);
+			font-size: 0.75rem;
+			margin-top: 4px;
+		}
+
+		.live-status {
+			display: inline-flex;
+			align-items: center;
+			gap: 5px;
+			font-size: 0.7rem;
+			font-weight: 600;
+			padding: 3px 8px;
+			border-radius: 99px;
+			margin-top: 8px;
+		}
+
+		.live-status.on {
+			background: rgba(34, 197, 94, .15);
+			color: var(--green);
+		}
+
+		.live-status.off {
+			background: rgba(239, 68, 68, .1);
+			color: var(--red);
+		}
+
+		.live-controls {
 			display: flex;
 			flex-direction: column;
-			gap: 24px;
-			background: var(--bg2);
+			gap: 8px;
 		}
 
-		.section-label {
-			font-size: 0.65rem;
+		.live-input {
+			background: var(--bg3);
+			border: 1px solid var(--border2);
+			color: var(--text);
+			font-family: var(--mono);
+			font-size: 0.8rem;
+			padding: 7px 10px;
+			border-radius: 6px;
+			outline: none;
+			transition: border-color .15s;
+			width: 100%;
+		}
+
+		.live-input:focus {
+			border-color: var(--violet);
+		}
+
+		.live-row {
+			display: flex;
+			gap: 8px;
+		}
+
+		.live-btn {
+			flex: 1;
+			padding: 7px;
+			border: none;
+			border-radius: 6px;
+			font-family: var(--mono);
+			font-size: 0.75rem;
 			font-weight: 600;
-			letter-spacing: 0.12em;
+			cursor: pointer;
+			transition: all .15s;
+		}
+
+		.live-btn.toggle {
+			background: rgba(124, 58, 237, .2);
+			color: var(--violet-lt);
+		}
+
+		.live-btn.toggle:hover {
+			background: rgba(124, 58, 237, .35);
+		}
+
+		.live-btn.reset {
+			background: var(--bg4);
+			color: var(--text2);
+			border: 1px solid var(--border);
+		}
+
+		.live-btn.reset:hover {
+			background: var(--bg3);
+		}
+
+		/* ══ COMPARE STRIP ══════════════════════════════════════════════════════ */
+		.compare-strip {
+			border-top: 1px solid var(--border);
+			border-bottom: 1px solid var(--border);
+			background: var(--bg2);
+			padding: 24px 32px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 0;
+			overflow-x: auto;
+		}
+
+		.compare-item {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			padding: 0 32px;
+			gap: 4px;
+			border-right: 1px solid var(--border);
+		}
+
+		.compare-item:last-child {
+			border-right: none;
+		}
+
+		.compare-val {
+			font-family: var(--mono);
+			font-size: 1.5rem;
+			font-weight: 600;
+			color: var(--violet-lt);
+		}
+
+		.compare-val.good {
+			color: var(--green);
+		}
+
+		.compare-label {
+			font-size: 0.75rem;
 			color: var(--text3);
+			white-space: nowrap;
+		}
+
+		/* ══ SECTIONS ══════════════════════════════════════════════════════════ */
+		.section {
+			max-width: 1200px;
+			margin: 0 auto;
+			padding: 80px 32px;
+		}
+
+		.section-eyebrow {
+			font-family: var(--mono);
+			font-size: 0.7rem;
+			color: var(--violet-lt);
+			letter-spacing: .12em;
 			text-transform: uppercase;
 			margin-bottom: 12px;
 		}
 
-		/* ── INPUTS ── */
-		.field {
-			display: flex;
-			flex-direction: column;
-			gap: 6px;
+		.section-title {
+			font-family: var(--display);
+			font-size: clamp(1.8rem, 3vw, 2.8rem);
+			font-weight: 700;
+			line-height: 1.15;
+			letter-spacing: -.02em;
+			margin-bottom: 16px;
 		}
 
-		.field label {
-			font-size: 0.7rem;
+		.section-title em {
+			font-style: italic;
+			color: var(--violet-lt);
+		}
+
+		.section-sub {
 			color: var(--text2);
-			letter-spacing: 0.05em;
+			font-size: 1rem;
+			max-width: 540px;
+			line-height: 1.7;
 		}
 
-		.field input[type="text"],
-		.field select {
-			background: var(--bg3);
+		/* ══ SPLIT (code + preview) ════════════════════════════════════════════ */
+		.split {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 0;
 			border: 1px solid var(--border);
-			color: var(--text);
-			font-family: var(--font-mono);
-			font-size: 0.8rem;
-			padding: 8px 12px;
-			border-radius: 6px;
-			outline: none;
-			transition: border-color 0.2s;
-			width: 100%;
+			border-radius: 16px;
+			overflow: hidden;
+			margin-top: 40px;
+			background: var(--bg2);
 		}
 
-		.field input[type="text"]:focus,
-		.field select:focus {
-			border-color: var(--accent);
-		}
-
-		.field select option {
-			background: var(--bg3);
-		}
-
-		/* checkbox / radio row */
-		.check-row {
-			display: flex;
-			align-items: center;
-			gap: 10px;
-			font-size: 0.8rem;
-			color: var(--text2);
-			cursor: pointer;
-		}
-
-		.check-row input {
-			accent-color: var(--accent);
-			width: 15px;
-			height: 15px;
-			cursor: pointer;
-		}
-
-		.radio-group {
+		.split-code {
+			border-right: 1px solid var(--border);
 			display: flex;
 			flex-direction: column;
-			gap: 8px;
 		}
 
-		/* ── BUTTONS ── */
-		.btn {
-			display: inline-flex;
+		.split-tab {
+			background: var(--bg3);
+			border-bottom: 1px solid var(--border);
+			padding: 12px 20px;
+			display: flex;
+			gap: 12px;
 			align-items: center;
-			gap: 6px;
-			padding: 8px 14px;
-			border-radius: 6px;
-			border: none;
-			font-family: var(--font-mono);
+		}
+
+		.split-tab-item {
+			font-family: var(--mono);
 			font-size: 0.75rem;
-			font-weight: 600;
+			color: var(--text3);
+			padding: 4px 10px;
+			border-radius: 5px;
 			cursor: pointer;
-			transition: all 0.15s;
-			letter-spacing: 0.03em;
+			transition: all .15s;
 		}
 
-		.btn-primary {
-			background: var(--accent);
-			color: #fff;
-		}
-
-		.btn-secondary {
-			background: var(--bg3);
+		.split-tab-item.active {
 			color: var(--text);
-			border: 1px solid var(--border);
+			background: var(--bg4);
 		}
 
-		.btn-danger {
-			background: var(--danger);
-			color: #fff;
+		.code-block {
+			padding: 24px;
+			font-family: var(--mono);
+			font-size: 0.8rem;
+			line-height: 1.75;
+			overflow-x: auto;
+			flex: 1;
+			tab-size: 2;
 		}
 
-		.btn-cyan {
-			background: var(--accent2);
-			color: #000;
+		.code-block pre {
+			white-space: pre;
 		}
 
-		.btn-amber {
-			background: var(--accent3);
-			color: #000;
+		/* syntax highlight classes */
+		.t-tag {
+			color: #7dd3fc;
 		}
 
-		.btn:hover {
-			filter: brightness(1.15);
-			transform: translateY(-1px);
+		.t-attr {
+			color: #a78bfa;
 		}
 
-		.btn:active {
-			transform: translateY(0);
-			filter: brightness(0.9);
+		.t-val {
+			color: #86efac;
 		}
 
-		.btn-group {
-			display: flex;
-			flex-wrap: wrap;
-			gap: 8px;
+		.t-str {
+			color: #fde68a;
 		}
 
-		/* ── MAIN ── */
-		.main {
+		.t-key {
+			color: #c084fc;
+		}
+
+		.t-fn {
+			color: #6ee7b7;
+		}
+
+		.t-com {
+			color: #475569;
+			font-style: italic;
+		}
+
+		.t-num {
+			color: #fb923c;
+		}
+
+		.t-op {
+			color: #94a3b8;
+		}
+
+		.split-preview {
 			padding: 32px;
 			display: flex;
 			flex-direction: column;
-			gap: 32px;
-			overflow-y: auto;
+			background: var(--bg);
 		}
 
-		/* ── CARD ── */
-		.card {
+		.preview-label {
+			font-family: var(--mono);
+			font-size: 0.65rem;
+			color: var(--text3);
+			letter-spacing: .1em;
+			text-transform: uppercase;
+			margin-bottom: 20px;
+			display: flex;
+			align-items: center;
+			gap: 6px;
+		}
+
+		.preview-label::before {
+			content: '';
+			width: 6px;
+			height: 6px;
+			border-radius: 50%;
+			background: var(--green);
+			box-shadow: 0 0 6px var(--green);
+			animation: pulse 2s infinite;
+		}
+
+		/* ══ FEATURES GRID ══════════════════════════════════════════════════════ */
+		.features-grid {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: 1px;
+			background: var(--border);
+			border: 1px solid var(--border);
+			border-radius: 16px;
+			overflow: hidden;
+			margin-top: 48px;
+		}
+
+		.feature-card {
+			background: var(--bg2);
+			padding: 28px;
+			transition: background .15s;
+		}
+
+		.feature-card:hover {
+			background: var(--bg3);
+		}
+
+		.feature-icon {
+			width: 40px;
+			height: 40px;
+			border-radius: 10px;
+			margin-bottom: 16px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 1.2rem;
+		}
+
+		.feature-icon.v {
+			background: rgba(124, 58, 237, .15);
+		}
+
+		.feature-icon.c {
+			background: rgba(6, 182, 212, .12);
+		}
+
+		.feature-icon.g {
+			background: rgba(34, 197, 94, .12);
+		}
+
+		.feature-icon.a {
+			background: rgba(245, 158, 11, .12);
+		}
+
+		.feature-icon.r {
+			background: rgba(239, 68, 68, .1);
+		}
+
+		.feature-icon.p {
+			background: rgba(168, 85, 247, .12);
+		}
+
+		.feature-name {
+			font-weight: 600;
+			font-size: 0.95rem;
+			margin-bottom: 8px;
+		}
+
+		.feature-desc {
+			color: var(--text2);
+			font-size: 0.85rem;
+			line-height: 1.6;
+		}
+
+		/* ══ TABLE SECTION ══════════════════════════════════════════════════════ */
+		.table-wrap {
+			border: 1px solid var(--border);
+			border-radius: 16px;
+			overflow: hidden;
+			margin-top: 40px;
+		}
+
+		.comp-table {
+			width: 100%;
+			border-collapse: collapse;
+		}
+
+		.comp-table th {
+			background: var(--bg3);
+			padding: 14px 20px;
+			text-align: left;
+			font-size: 0.8rem;
+			font-weight: 600;
+			color: var(--text2);
+			letter-spacing: .05em;
+			border-bottom: 1px solid var(--border);
+		}
+
+		.comp-table th:first-child {
+			color: var(--text3);
+		}
+
+		.comp-table th.hl {
+			color: var(--violet-lt);
+		}
+
+		.comp-table td {
+			padding: 12px 20px;
+			border-bottom: 1px solid var(--border);
+			font-size: 0.85rem;
+			color: var(--text2);
+		}
+
+		.comp-table tr:last-child td {
+			border-bottom: none;
+		}
+
+		.comp-table tr:hover td {
+			background: rgba(255, 255, 255, .02);
+		}
+
+		.comp-table td:first-child {
+			color: var(--text);
+			font-family: var(--mono);
+			font-size: 0.8rem;
+		}
+
+		.comp-table td.hl {
+			color: var(--violet-lt);
+			font-weight: 600;
+		}
+
+		.ic-yes {
+			color: var(--green);
+		}
+
+		.ic-no {
+			color: var(--red);
+			opacity: .7;
+		}
+
+		.ic-warn {
+			color: var(--amber);
+		}
+
+		/* ══ INSTALL SECTION ══════════════════════════════════════════════════ */
+		.install-grid {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 24px;
+			margin-top: 40px;
+		}
+
+		.install-card {
 			background: var(--bg2);
 			border: 1px solid var(--border);
 			border-radius: 12px;
 			overflow: hidden;
 		}
 
-		.card-header {
-			padding: 14px 20px;
-			border-bottom: 1px solid var(--border);
-			display: flex;
-			align-items: center;
-			gap: 10px;
+		.install-card-header {
 			background: var(--bg3);
-		}
-
-		.card-title {
-			font-family: var(--font-display);
-			font-size: 0.85rem;
-			font-weight: 600;
-			color: var(--text);
-		}
-
-		.card-key {
-			margin-left: auto;
-			font-size: 0.65rem;
-			color: var(--accent2);
-			background: rgba(6, 182, 212, 0.1);
-			padding: 2px 8px;
-			border-radius: 99px;
-			border: 1px solid rgba(6, 182, 212, 0.2);
-		}
-
-		.card-body {
-			padding: 20px;
-		}
-
-		/* ── TARGET: LISTA DE PRODUTOS ── */
-		.produto-item {
-			display: grid;
-			grid-template-columns: 1fr auto auto;
-			align-items: center;
-			gap: 12px;
 			padding: 12px 16px;
-			border-radius: 8px;
-			background: var(--bg3);
-			border: 1px solid var(--border);
-			margin-bottom: 8px;
-			transition: border-color 0.2s;
-		}
-
-		.produto-item:hover {
-			border-color: var(--accent);
-		}
-
-		.produto-nome {
-			font-size: 0.85rem;
-			font-weight: 600;
-			color: var(--text);
-		}
-
-		.produto-cat {
-			font-size: 0.7rem;
-			color: var(--text3);
-			margin-top: 2px;
-		}
-
-		.produto-status {
-			font-size: 0.65rem;
-			padding: 3px 8px;
-			border-radius: 99px;
-			font-weight: 600;
-		}
-
-		.status-ativo {
-			background: rgba(34, 197, 94, 0.15);
-			color: var(--success);
-			border: 1px solid rgba(34, 197, 94, 0.3);
-		}
-
-		.status-inativo {
-			background: rgba(239, 68, 68, 0.15);
-			color: var(--danger);
-			border: 1px solid rgba(239, 68, 68, 0.3);
-		}
-
-		.produto-actions {
-			display: flex;
-			gap: 6px;
-		}
-
-		.btn-icon {
-			width: 30px;
-			height: 30px;
-			border-radius: 6px;
-			border: 1px solid var(--border);
-			background: var(--bg);
-			color: var(--text2);
-			cursor: pointer;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			font-size: 0.75rem;
-			transition: all 0.15s;
-		}
-
-		.btn-icon:hover {
-			background: var(--accent);
-			color: #fff;
-			border-color: var(--accent);
-		}
-
-		.btn-icon.del:hover {
-			background: var(--danger);
-			border-color: var(--danger);
-		}
-
-		/* ── TARGET: INFO CARD ── */
-		.info-grid {
-			display: grid;
-			grid-template-columns: 1fr 1fr;
-			gap: 12px;
-		}
-
-		.info-field {
-			background: var(--bg3);
-			border: 1px solid var(--border);
-			border-radius: 8px;
-			padding: 12px 14px;
-		}
-
-		.info-field-label {
-			font-size: 0.65rem;
-			color: var(--text3);
-			text-transform: uppercase;
-			letter-spacing: 0.08em;
-			margin-bottom: 4px;
-		}
-
-		.info-field-value {
-			font-size: 0.9rem;
-			color: var(--text);
-			font-weight: 600;
-		}
-
-		/* ── LOG PANEL (direita) ── */
-		.log-panel {
-			border-left: 1px solid var(--border);
-			background: var(--bg);
-			display: flex;
-			flex-direction: column;
-		}
-
-		.log-header {
-			padding: 14px 20px;
 			border-bottom: 1px solid var(--border);
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
-			background: var(--bg2);
 		}
 
-		.log-title {
+		.install-card-title {
+			font-family: var(--mono);
 			font-size: 0.75rem;
-			font-weight: 600;
 			color: var(--text2);
-			letter-spacing: 0.05em;
 		}
 
-		.log-clear {
-			font-size: 0.65rem;
-			color: var(--text3);
-			cursor: pointer;
+		.copy-btn {
 			background: none;
-			border: none;
-			font-family: var(--font-mono);
-			transition: color 0.2s;
-		}
-
-		.log-clear:hover {
-			color: var(--danger);
-		}
-
-		.log-body {
-			flex: 1;
-			overflow-y: auto;
-			padding: 12px;
-			display: flex;
-			flex-direction: column;
-			gap: 6px;
-		}
-
-		.log-entry {
-			font-size: 0.7rem;
-			padding: 6px 10px;
-			border-radius: 4px;
-			border-left: 2px solid var(--border);
-			background: var(--bg2);
-			color: var(--text2);
-			animation: slideIn 0.2s ease;
-			word-break: break-all;
-		}
-
-		.log-entry.info {
-			border-color: var(--accent2);
-			color: var(--accent2);
-		}
-
-		.log-entry.warn {
-			border-color: var(--accent3);
-			color: var(--accent3);
-		}
-
-		.log-entry.error {
-			border-color: var(--danger);
-			color: var(--danger);
-		}
-
-		.log-entry.success {
-			border-color: var(--success);
-			color: var(--success);
-		}
-
-		.log-time {
+			border: 1px solid var(--border);
 			color: var(--text3);
-			margin-right: 6px;
+			font-family: var(--mono);
+			font-size: 0.65rem;
+			padding: 3px 8px;
+			border-radius: 4px;
+			cursor: pointer;
+			transition: all .15s;
 		}
 
-		@keyframes slideIn {
-			from {
-				opacity: 0;
-				transform: translateX(8px);
-			}
-
-			to {
-				opacity: 1;
-				transform: translateX(0);
-			}
-		}
-
-		/* ── TAG CHIPS ── */
-		.tag-list {
-			display: flex;
-			flex-wrap: wrap;
-			gap: 6px;
-			margin-top: 8px;
-		}
-
-		.tag {
-			font-size: 0.7rem;
-			padding: 3px 10px;
-			border-radius: 99px;
-			background: rgba(124, 58, 237, 0.15);
-			color: var(--accent);
-			border: 1px solid rgba(124, 58, 237, 0.3);
-		}
-
-		/* ── MODAL de edição ── */
-		.modal-overlay {
-			position: fixed;
-			inset: 0;
-			background: rgba(0, 0, 0, 0.7);
-			backdrop-filter: blur(4px);
-			display: none;
-			align-items: center;
-			justify-content: center;
-			z-index: 999;
-		}
-
-		.modal-overlay.open {
-			display: flex;
-		}
-
-		.modal {
-			background: var(--bg2);
-			border: 1px solid var(--border);
-			border-radius: 12px;
-			padding: 28px;
-			width: 380px;
-			display: flex;
-			flex-direction: column;
-			gap: 16px;
-			animation: modalIn 0.2s ease;
-		}
-
-		@keyframes modalIn {
-			from {
-				opacity: 0;
-				transform: scale(0.95) translateY(10px);
-			}
-
-			to {
-				opacity: 1;
-				transform: scale(1) translateY(0);
-			}
-		}
-
-		.modal-title {
-			font-family: var(--font-display);
-			font-weight: 700;
-			font-size: 1rem;
-		}
-
-		.modal-actions {
-			display: flex;
-			gap: 8px;
-			justify-content: flex-end;
-			margin-top: 4px;
-		}
-
-		/* ── HEADER LINKS ── */
-		.header-links {
-			display: flex;
-			align-items: center;
-			gap: 8px;
-		}
-
-		.header-link {
-			display: inline-flex;
-			align-items: center;
-			gap: 5px;
-			font-size: 0.7rem;
-			font-weight: 600;
-			padding: 4px 10px;
-			border-radius: 6px;
-			border: 1px solid var(--border);
-			background: var(--bg3);
+		.copy-btn:hover {
 			color: var(--text2);
-			text-decoration: none;
-			letter-spacing: 0.03em;
-			transition: all 0.15s;
+			border-color: var(--border2);
 		}
 
-		.header-link:hover {
-			border-color: var(--accent);
-			color: var(--accent);
-			background: rgba(124, 58, 237, 0.08);
+		.install-code {
+			padding: 16px;
+			font-family: var(--mono);
+			font-size: 0.8rem;
+			line-height: 1.7;
 		}
 
-		.header-link.cyan:hover {
-			border-color: var(--accent2);
-			color: var(--accent2);
-			background: rgba(6, 182, 212, 0.08);
+		/* ══ DOCS LAYOUT ══════════════════════════════════════════════════════ */
+		.docs-page {
+			display: none;
+			padding-top: var(--nav-h);
 		}
 
-		/* ── SCROLLBAR ── */
-		::-webkit-scrollbar {
+		.docs-page.active {
+			display: flex;
+		}
+
+		.docs-sidebar {
+			width: var(--sidebar-w);
+			min-height: calc(100vh - var(--nav-h));
+			background: var(--bg2);
+			border-right: 1px solid var(--border);
+			padding: 32px 16px;
+			position: sticky;
+			top: var(--nav-h);
+			height: calc(100vh - var(--nav-h));
+			overflow-y: auto;
+			flex-shrink: 0;
+		}
+
+		.docs-sidebar::-webkit-scrollbar {
 			width: 4px;
 		}
 
-		::-webkit-scrollbar-track {
-			background: transparent;
+		.docs-sidebar::-webkit-scrollbar-thumb {
+			background: var(--border2);
+			border-radius: 2px;
 		}
 
-		::-webkit-scrollbar-thumb {
-			background: var(--border);
-			border-radius: 99px;
+		.docs-nav-group {
+			margin-bottom: 24px;
 		}
 
-		/* ── EMPTY STATE ── */
-		.empty {
-			text-align: center;
+		.docs-nav-group-title {
+			font-size: 0.65rem;
+			font-weight: 700;
+			letter-spacing: .12em;
+			text-transform: uppercase;
+			color: var(--text3);
+			padding: 0 12px;
+			margin-bottom: 6px;
+		}
+
+		.docs-nav-link {
+			display: block;
+			padding: 6px 12px;
+			border-radius: 6px;
+			color: var(--text2);
+			text-decoration: none;
+			font-size: 0.875rem;
+			transition: all .15s;
+			cursor: pointer;
+		}
+
+		.docs-nav-link:hover {
+			color: var(--text);
+			background: var(--bg3);
+		}
+
+		.docs-nav-link.active {
+			color: var(--violet-lt);
+			background: rgba(124, 58, 237, .1);
+		}
+
+		.docs-content {
+			flex: 1;
+			padding: 48px 56px;
+			max-width: 800px;
+		}
+
+		.docs-content h1 {
+			font-family: var(--display);
+			font-size: 2.2rem;
+			font-weight: 700;
+			letter-spacing: -.02em;
+			margin-bottom: 16px;
+			line-height: 1.2;
+		}
+
+		.docs-content h2 {
+			font-family: var(--display);
+			font-size: 1.4rem;
+			font-weight: 700;
+			margin: 48px 0 16px;
+			padding-top: 32px;
+			border-top: 1px solid var(--border);
+			letter-spacing: -.01em;
+		}
+
+		.docs-content h3 {
+			font-size: 1rem;
+			font-weight: 600;
+			margin: 32px 0 12px;
+			color: var(--text2);
+		}
+
+		.docs-content p {
+			color: var(--text2);
+			line-height: 1.8;
+			margin-bottom: 16px;
+		}
+
+		.docs-content p strong {
+			color: var(--text);
+		}
+
+		.docs-content a {
+			color: var(--violet-lt);
+			text-decoration: none;
+		}
+
+		.docs-content a:hover {
+			text-decoration: underline;
+		}
+
+		.callout {
+			border-left: 3px solid var(--violet);
+			background: rgba(124, 58, 237, .08);
+			padding: 16px 20px;
+			border-radius: 0 8px 8px 0;
+			margin: 24px 0;
+			font-size: 0.9rem;
+			color: var(--text2);
+		}
+
+		.callout strong {
+			color: var(--violet-lt);
+		}
+
+		.callout.green {
+			border-color: var(--green);
+			background: rgba(34, 197, 94, .06);
+		}
+
+		.callout.green strong {
+			color: var(--green);
+		}
+
+		.docs-code {
+			background: var(--bg2);
+			border: 1px solid var(--border);
+			border-radius: 10px;
+			overflow: hidden;
+			margin: 20px 0;
+		}
+
+		.docs-code-bar {
+			background: var(--bg3);
+			border-bottom: 1px solid var(--border);
+			padding: 8px 16px;
+			font-family: var(--mono);
+			font-size: 0.7rem;
+			color: var(--text3);
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+
+		.docs-code pre {
+			padding: 20px;
+			font-family: var(--mono);
+			font-size: 0.8rem;
+			line-height: 1.75;
+			overflow-x: auto;
+			white-space: pre;
+		}
+
+		.docs-table-wrap {
+			border: 1px solid var(--border);
+			border-radius: 10px;
+			overflow: hidden;
+			margin: 20px 0;
+		}
+
+		.docs-table {
+			width: 100%;
+			border-collapse: collapse;
+			font-size: 0.85rem;
+		}
+
+		.docs-table th {
+			background: var(--bg3);
+			padding: 10px 16px;
+			text-align: left;
+			font-size: 0.75rem;
+			color: var(--text2);
+			border-bottom: 1px solid var(--border);
+		}
+
+		.docs-table td {
+			padding: 10px 16px;
+			border-bottom: 1px solid var(--border);
+			color: var(--text2);
+			vertical-align: top;
+		}
+
+		.docs-table tr:last-child td {
+			border-bottom: none;
+		}
+
+		.docs-table td:first-child {
+			font-family: var(--mono);
+			font-size: 0.78rem;
+			color: var(--cyan);
+			white-space: nowrap;
+		}
+
+		.tag {
+			display: inline-block;
+			padding: 1px 6px;
+			border-radius: 4px;
+			font-family: var(--mono);
+			font-size: 0.75rem;
+			background: rgba(124, 58, 237, .15);
+			color: var(--violet-lt);
+		}
+
+		.tag.cyan {
+			background: rgba(6, 182, 212, .12);
+			color: var(--cyan);
+		}
+
+		.tag.green {
+			background: rgba(34, 197, 94, .12);
+			color: var(--green);
+		}
+
+		/* ══ PAGES SWITCH ══════════════════════════════════════════════════════ */
+		#page-home {
+			display: block;
+		}
+
+		#page-docs {
+			display: none;
+		}
+
+		/* ══ FOOTER ══════════════════════════════════════════════════════════ */
+		.footer {
+			border-top: 1px solid var(--border);
 			padding: 32px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
 			color: var(--text3);
 			font-size: 0.8rem;
+			background: var(--bg2);
 		}
 
-		.divider {
-			height: 1px;
-			background: var(--border);
-			margin: 4px 0;
+		.footer a {
+			color: var(--text3);
+			text-decoration: none;
+		}
+
+		.footer a:hover {
+			color: var(--text2);
+		}
+
+		/* ══ RESPONSIVE ══════════════════════════════════════════════════════ */
+		@media (max-width: 900px) {
+			.hero {
+				grid-template-columns: 1fr;
+				gap: 40px;
+			}
+
+			.split {
+				grid-template-columns: 1fr;
+			}
+
+			.split-code {
+				border-right: none;
+				border-bottom: 1px solid var(--border);
+			}
+
+			.features-grid {
+				grid-template-columns: 1fr 1fr;
+			}
+
+			.install-grid {
+				grid-template-columns: 1fr;
+			}
+
+			.docs-page.active {
+				flex-direction: column;
+			}
+
+			.docs-sidebar {
+				position: static;
+				width: 100%;
+				height: auto;
+				min-height: 0;
+			}
+		}
+
+		@media (max-width: 600px) {
+			nav {
+				padding: 0 16px;
+				gap: 16px;
+			}
+
+			.hero {
+				padding-left: 16px;
+				padding-right: 16px;
+			}
+
+			.section {
+				padding: 48px 16px;
+			}
+
+			.features-grid {
+				grid-template-columns: 1fr;
+			}
+
+			.compare-strip {
+				flex-direction: column;
+				gap: 20px;
+			}
+
+			.compare-item {
+				border-right: none;
+				border-bottom: 1px solid var(--border);
+				padding: 12px 0;
+			}
+
+			.compare-item:last-child {
+				border-bottom: none;
+			}
+		}
+
+		/* ══ EXEMPLO 2: LISTA REATIVA ══════════════════════════════════════════ */
+		.todo-list {
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+		}
+
+		.todo-item {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			background: var(--bg2);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			padding: 10px 14px;
+		}
+
+		.todo-check {
+			width: 18px;
+			height: 18px;
+			border-radius: 50%;
+			border: 2px solid var(--border2);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			cursor: pointer;
+			flex-shrink: 0;
+			transition: all .15s;
+			font-size: 0.7rem;
+			color: transparent;
+		}
+
+		.todo-check.done {
+			background: var(--green);
+			border-color: var(--green);
+			color: #000;
+		}
+
+		.todo-text {
+			flex: 1;
+			font-size: 0.9rem;
+		}
+
+		.todo-text.done {
+			text-decoration: line-through;
+			color: var(--text3);
+		}
+
+		.todo-del {
+			color: var(--text3);
+			background: none;
+			border: none;
+			cursor: pointer;
+			font-size: 1rem;
+			padding: 0 4px;
+			transition: color .15s;
+		}
+
+		.todo-del:hover {
+			color: var(--red);
+		}
+
+		.todo-add {
+			display: flex;
+			gap: 8px;
+			margin-top: 12px;
+		}
+
+		.todo-add input {
+			flex: 1;
+		}
+
+		.todo-add button {
+			background: var(--violet);
+			color: #fff;
+			border: none;
+			border-radius: 6px;
+			padding: 8px 14px;
+			font-family: var(--mono);
+			font-size: 0.8rem;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all .15s;
+			white-space: nowrap;
+		}
+
+		.todo-add button:hover {
+			background: var(--violet-lt);
+		}
+
+		.todo-empty {
+			color: var(--text3);
+			font-size: 0.85rem;
+			text-align: center;
+			padding: 24px;
+		}
+
+		/* ══ EXEMPLO 3: WATCHER ══════════════════════════════════════════════ */
+		.watch-display {
+			background: var(--bg4);
+			border: 1px solid var(--border);
+			border-radius: 10px;
+			padding: 20px;
+			font-family: var(--mono);
+		}
+
+		.watch-value {
+			font-size: 2rem;
+			font-weight: 600;
+			color: var(--cyan);
+			margin-bottom: 4px;
+		}
+
+		.watch-path {
+			font-size: 0.7rem;
+			color: var(--text3);
+			margin-bottom: 16px;
+		}
+
+		.watch-log {
+			max-height: 120px;
+			overflow-y: auto;
+		}
+
+		.watch-log-entry {
+			font-size: 0.75rem;
+			color: var(--text3);
+			padding: 3px 0;
+			border-bottom: 1px solid var(--border);
+		}
+
+		.watch-log-entry span {
+			color: var(--amber);
+		}
+
+		.watch-slider {
+			width: 100%;
+			accent-color: var(--violet);
+			margin-top: 16px;
+		}
+
+		/* ══ SECTION DIVIDER ══════════════════════════════════════════════════ */
+		.section-divider {
+			border: none;
+			border-top: 1px solid var(--border);
 		}
 	</style>
 </head>
 
 <body>
 
-	<header>
-		<div class="logo">night<span>-proxy</span>.js</div>
-		<span class="badge">v2.5.0</span>
-		<div class="header-links">
-			<a class="header-link" href="https://github.com/israel-nogueira/night-proxy" target="_blank">
-				<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-					<path
-						d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
-				</svg>
-				GitHub
-			</a>
-			<a class="header-link cyan" href="./teste.html" target="_blank">
-				<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-					stroke-linecap="round" stroke-linejoin="round">
-					<polyline points="9 11 12 14 22 4" />
-					<path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-				</svg>
-				Test Suite
+	<!-- ══ NAV ══════════════════════════════════════════════════════════════════ -->
+	<nav>
+		<a href="#" class="nav-logo" onclick="showPage('home')">
+			<span class="dot"></span>
+			night-proxy.js
+		</a>
+		<div class="nav-links">
+			<a href="#" class="active" onclick="showPage('home'); setActive(this)">Início</a>
+			<a href="#" onclick="showPage('docs'); setActive(this)">Docs</a>
+			<a href="https://github.com/israel-nogueira/night-proxy" target="_blank">GitHub</a>
+		</div>
+		<div class="nav-right">
+			<span class="nav-badge">v2.6.0</span>
+			<a href="https://cdn.jsdelivr.net/gh/israel-nogueira/night-proxy@no-reflow/assets/js/night-proxy.js"
+				class="nav-gh" download>
+				↓ Download
 			</a>
 		</div>
-		<div class="header-status">
-			<div class="dot"></div>
-			proxy ativo
-		</div>
-	</header>
+	</nav>
 
-	<div class="layout">
+	<!-- ══════════════════════════════════════════════════════════════════════════
+     HOME PAGE
+═══════════════════════════════════════════════════════════════════════════ -->
+	<div id="page-home">
 
-		<!-- ══ SIDEBAR: CONTROLES ══ -->
-		<aside class="sidebar">
-
-			<div>
-				<div class="section-label">// info geral</div>
-				<div class="field">
-					<label>x-model → info.titulo</label>
-					<input type="text" x-model="info.titulo" placeholder="Título do painel">
+		<!-- HERO -->
+		<section class="hero">
+			<div class="hero-left">
+				<div class="hero-eyebrow">Reatividade declarativa</div>
+				<h1 class="hero-title">
+					Sua página PHP.<br>
+					<em>Agora reativa.</em><br>
+					Sem npm.
+				</h1>
+				<p class="hero-sub">
+					Um arquivo, uma tag <strong>&lt;script&gt;</strong>, e sua página passa a ser reativa.
+					Proxy recursivo, dependency tracking granular, <strong>~3.6KB gzip</strong>.
+					Funciona em qualquer stack.
+				</p>
+				<div class="hero-actions">
+					<a href="#" class="btn btn-primary" onclick="showPage('docs'); setActiveByText('Início rápido')">
+						Começar →
+					</a>
+					<a href="#exemplos" class="btn btn-ghost">Ver exemplos</a>
 				</div>
-				<div class="field" style="margin-top:10px">
-					<label>x-model → info.descricao</label>
-					<input type="text" x-model="info.descricao" placeholder="Descrição">
-				</div>
-				<div class="field" style="margin-top:10px">
-					<label>x-model → info.categoria</label>
-					<select x-model="info.categoria">
-						<option value="frontend">Frontend</option>
-						<option value="backend">Backend</option>
-						<option value="devops">DevOps</option>
-						<option value="mobile">Mobile</option>
-					</select>
-				</div>
-			</div>
-
-			<div>
-				<div class="section-label">// flags</div>
-				<label class="check-row">
-					<input type="checkbox" x-model="info.ativo">
-					info.ativo (x-if)
-				</label>
-				<div class="radio-group" style="margin-top:12px">
-					<div class="section-label">info.prioridade</div>
-					<label class="check-row"><input type="radio" x-model="info.prioridade" name="prio" value="alta">
-						Alta</label>
-					<label class="check-row"><input type="radio" x-model="info.prioridade" name="prio" value="media">
-						Média</label>
-					<label class="check-row"><input type="radio" x-model="info.prioridade" name="prio" value="baixa">
-						Baixa</label>
-				</div>
-			</div>
-
-			<div>
-				<div class="section-label">// adicionar produto</div>
-				<div class="field">
-					<label>nome</label>
-					<input type="text" id="inp-nome" placeholder="Nome do produto">
-				</div>
-				<div class="field" style="margin-top:8px">
-					<label>categoria</label>
-					<input type="text" id="inp-cat" placeholder="ex: UI, API, DB">
-				</div>
-				<div class="btn-group" style="margin-top:12px">
-					<button class="btn btn-primary" onclick="addProduto()">＋ Adicionar</button>
-					<button class="btn btn-secondary" onclick="addRandom()">⚡ Random</button>
+				<div class="hero-meta">
+					<span>
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+							stroke-width="2">
+							<polyline points="20 6 9 17 4 12" />
+						</svg>
+						Zero dependências
+					</span>
+					<span>
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+							stroke-width="2">
+							<polyline points="20 6 9 17 4 12" />
+						</svg>
+						Sem build tools
+					</span>
+					<span>
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+							stroke-width="2">
+							<polyline points="20 6 9 17 4 12" />
+						</svg>
+						MIT License
+					</span>
 				</div>
 			</div>
 
-			<div>
-				<div class="section-label">// ações globais</div>
-				<div class="btn-group">
-					<button class="btn btn-cyan" onclick="toggleTodos()">⇄ Toggle todos</button>
-					<button class="btn btn-amber" onclick="shuffleLista()">⟳ Shuffle</button>
-					<button class="btn btn-danger" onclick="limparLista()">✕ Limpar lista</button>
+			<!-- DEMO LIVE -->
+			<div class="hero-demo">
+				<div class="demo-bar">
+					<div class="demo-bar-dots">
+						<span></span><span></span><span></span>
+					</div>
+					<span class="demo-bar-title">demo.html</span>
 				</div>
-			</div>
+				<div class="demo-body">
+					<div class="demo-live-label">Preview ao vivo</div>
 
-		</aside>
+					<div x-data="hero">
+						<div class="live-card">
+							<div class="live-card-name" x-bind="{nome}"></div>
+							<div class="live-card-price" x-bind="R$ {preco}"></div>
+							<div class="live-card-cat" x-bind="{categoria}"></div>
+							<div x-if="ativo" class="live-status on">● Disponível</div>
+							<div x-if="!ativo" class="live-status off">● Fora de estoque</div>
+						</div>
 
-		<!-- ══ MAIN: TARGETS ══ -->
-		<main class="main">
-
-			<!-- Card: Info (x-bind, x-if, x-model) -->
-			<div class="card">
-				<div class="card-header">
-					<div class="card-title">Painel de Informações</div>
-					<span class="card-key">x-target="info"</span>
-				</div>
-				<div class="card-body">
-					<div x-data="info">
-						<div class="info-grid">
-							<div class="info-field">
-								<div class="info-field-label">Título</div>
-								<div class="info-field-value" x-bind="titulo"></div>
-							</div>
-							<div class="info-field">
-								<div class="info-field-label">Categoria</div>
-								<div class="info-field-value" x-bind="categoria"></div>
-							</div>
-							<div class="info-field" style="grid-column: 1 / -1">
-								<div class="info-field-label">Descrição</div>
-								<div class="info-field-value" x-bind="descricao"></div>
-							</div>
-							<div class="info-field">
-								<div class="info-field-label">Prioridade</div>
-								<div class="info-field-value" x-bind="prioridade"></div>
-							</div>
-							<div class="info-field">
-								<div class="info-field-label">Status</div>
-								<div x-if="ativo" class="produto-status status-ativo">● Ativo</div>
-								<div x-if="!ativo" class="produto-status status-inativo">● Inativo</div>
+						<div class="live-controls">
+							<input class="live-input" type="text" x-model="hero.nome" placeholder="Nome do produto">
+							<input class="live-input" type="text" x-model="hero.preco" placeholder="Preço">
+							<div class="live-row">
+								<button class="live-btn toggle" x-on:click="toggleAtivo()">⇄ Toggle status</button>
+								<button class="live-btn reset" x-on:click="resetDemo()">↺ Reset</button>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
+		</section>
 
-			<!-- Card: Lista de Produtos (x-for, x-on, x-if) -->
-			<div class="card">
-				<div class="card-header">
-					<div class="card-title">Lista de Produtos</div>
-					<span class="card-key">x-target="produtos"</span>
+		<!-- COMPARE STRIP -->
+		<div class="compare-strip">
+			<div class="compare-item">
+				<div class="compare-val">~3.6KB</div>
+				<div class="compare-label">gzipped</div>
+			</div>
+			<div class="compare-item">
+				<div class="compare-val good">0</div>
+				<div class="compare-label">dependências</div>
+			</div>
+			<div class="compare-item">
+				<div class="compare-val">15min</div>
+				<div class="compare-label">curva de aprendizado</div>
+			</div>
+			<div class="compare-item">
+				<div class="compare-val">&lt;16ms</div>
+				<div class="compare-label">update em 5k itens</div>
+			</div>
+			<div class="compare-item">
+				<div class="compare-val">1</div>
+				<div class="compare-label">arquivo necessário</div>
+			</div>
+		</div>
+
+		<!-- SECTION: EXEMPLOS -->
+		<section class="section" id="exemplos">
+			<div class="section-eyebrow">// exemplos interativos</div>
+			<h2 class="section-title">Veja <em>funcionando</em> agora</h2>
+			<p class="section-sub">Cada exemplo abaixo está rodando de verdade com night-proxy.js. Edite, clique,
+				experimente.</p>
+
+			<!-- EXEMPLO 1: x-bind + x-if + x-model -->
+			<div class="split" style="margin-top:48px">
+				<div class="split-code">
+					<div class="split-tab">
+						<div class="split-tab-item active">index.html</div>
+					</div>
+					<div class="code-block">
+						<pre><span class="t-tag">&lt;div</span> <span class="t-attr">x-data</span>=<span class="t-val">"produto"</span><span class="t-tag">&gt;</span>
+  <span class="t-tag">&lt;h2</span> <span class="t-attr">x-bind</span>=<span class="t-val">"{nome}"</span><span class="t-tag">&gt;&lt;/h2&gt;</span>
+  <span class="t-tag">&lt;p</span>  <span class="t-attr">x-bind</span>=<span class="t-val">"R$ {preco}"</span><span class="t-tag">&gt;&lt;/p&gt;</span>
+
+  <span class="t-tag">&lt;div</span> <span class="t-attr">x-if</span>=<span class="t-val">"ativo"</span><span class="t-tag">&gt;</span>✅ Disponível<span class="t-tag">&lt;/div&gt;</span>
+  <span class="t-tag">&lt;div</span> <span class="t-attr">x-if</span>=<span class="t-val">"!ativo"</span><span class="t-tag">&gt;</span>❌ Indisponível<span class="t-tag">&lt;/div&gt;</span>
+<span class="t-tag">&lt;/div&gt;</span>
+
+<span class="t-tag">&lt;input</span> <span class="t-attr">x-model</span>=<span class="t-val">"produto.nome"</span><span class="t-tag">&gt;</span>
+
+<span class="t-tag">&lt;script&gt;</span>
+  <span class="t-fn">proxy</span>.<span class="t-fn">initProxy</span>();
+
+  <span class="t-fn">proxy</span>.template.produto.nome  = <span class="t-str">"Coxinha Supreme"</span>;
+  <span class="t-fn">proxy</span>.template.produto.preco = <span class="t-num">9.90</span>;
+  <span class="t-fn">proxy</span>.template.produto.ativo = <span class="t-key">true</span>;
+<span class="t-tag">&lt;/script&gt;</span></pre>
+					</div>
 				</div>
-				<div class="card-body">
-					<div x-data="produtos">
-						<div x-for="item in lista">
-							<div class="produto-item">
-								<div>
-									<div class="produto-nome" x-bind="{item.nome}"></div>
-									<div class="produto-cat" x-bind="cat: {item.categoria} · idx: {item.$i}"></div>
-								</div>
-								<div x-if="item.ativo" class="produto-status status-ativo">ativo</div>
-								<div x-if="!item.ativo" class="produto-status status-inativo">inativo</div>
-								<div class="produto-actions">
-									<button class="btn-icon" x-on:click="editarItem(item.$i)" title="Editar">✎</button>
-									<button class="btn-icon" x-on:click="toggleItem(item.$i)" title="Toggle">⇄</button>
-									<button class="btn-icon del" x-on:click="removerItem(item.$i)"
-										title="Remover">✕</button>
-								</div>
-							</div>
+				<div class="split-preview">
+					<div class="preview-label">Resultado ao vivo</div>
+					<div x-data="ex1">
+						<div style="margin-bottom:16px">
+							<div style="font-size:1.3rem;font-weight:700;margin-bottom:4px" x-bind="{nome}"></div>
+							<div style="color:var(--violet-lt);font-family:var(--mono);font-size:1rem;margin-bottom:8px"
+								x-bind="R$ {preco}"></div>
+							<div x-if="ativo"
+								style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,.1);color:var(--green);border-radius:99px;padding:4px 12px;font-size:0.8rem;font-weight:600">
+								✅ Disponível</div>
+							<div x-if="!ativo"
+								style="display:inline-flex;align-items:center;gap:6px;background:rgba(239,68,68,.1);color:var(--red);border-radius:99px;padding:4px 12px;font-size:0.8rem;font-weight:600">
+								❌ Indisponível</div>
+						</div>
+						<div style="display:flex;flex-direction:column;gap:8px">
+							<input class="live-input" type="text" x-model="ex1.nome" placeholder="Nome">
+							<input class="live-input" type="number" x-model="ex1.preco" placeholder="Preço" step="0.01">
+							<label
+								style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--text2);cursor:pointer">
+								<input type="checkbox" x-model="ex1.ativo"
+									style="accent-color:var(--violet);width:15px;height:15px">
+								Produto ativo
+							</label>
 						</div>
 					</div>
 				</div>
 			</div>
 
-			<!-- Card: Subitems (loop aninhado) -->
-			<div class="card">
-				<div class="card-header">
-					<div class="card-title">Categorias & Tags</div>
-					<span class="card-key">x-target="categorias" · x-for aninhado</span>
+			<!-- EXEMPLO 2: x-for com lista reativa -->
+			<div class="split" style="margin-top:32px">
+				<div class="split-code">
+					<div class="split-tab">
+						<div class="split-tab-item active">lista-reativa.html</div>
+					</div>
+					<div class="code-block">
+						<pre><span class="t-tag">&lt;div</span> <span class="t-attr">x-data</span>=<span class="t-val">"tarefas"</span><span class="t-tag">&gt;</span>
+  <span class="t-tag">&lt;div</span> <span class="t-attr">x-for</span>=<span class="t-val">"item, k in lista"</span><span class="t-tag">&gt;</span>
+    <span class="t-tag">&lt;span</span> <span class="t-attr">x-bind</span>=<span class="t-val">"{item.texto}"</span><span class="t-tag">&gt;&lt;/span&gt;</span>
+    <span class="t-tag">&lt;button</span> <span class="t-attr">x-on:click</span>=<span class="t-val">"toggle(k)"</span><span class="t-tag">&gt;</span>✓<span class="t-tag">&lt;/button&gt;</span>
+    <span class="t-tag">&lt;button</span> <span class="t-attr">x-on:click</span>=<span class="t-val">"remove(k)"</span><span class="t-tag">&gt;</span>✕<span class="t-tag">&lt;/button&gt;</span>
+  <span class="t-tag">&lt;/div&gt;</span>
+<span class="t-tag">&lt;/div&gt;</span>
+
+<span class="t-tag">&lt;script&gt;</span>
+  <span class="t-fn">proxy</span>.<span class="t-fn">initProxy</span>();
+
+  <span class="t-fn">proxy</span>.template.tarefas.lista = [
+    { texto: <span class="t-str">"Aprender night-proxy"</span>, done: <span class="t-key">false</span> },
+    { texto: <span class="t-str">"Refatorar o projeto"</span>, done: <span class="t-key">false</span> },
+  ];
+
+  <span class="t-fn">proxy</span>.template.tarefas.toggle = <span class="t-key">function</span>(k) {
+    <span class="t-fn">proxy</span>.template.tarefas.lista[k].done
+      = !<span class="t-fn">proxy</span>.template.tarefas.lista[k].done;
+  };
+<span class="t-tag">&lt;/script&gt;</span></pre>
+					</div>
 				</div>
-				<div class="card-body">
-					<div x-data="categorias">
-						<div x-for="cat in lista">
-							<div style="margin-bottom:16px">
-								<div style="font-size:0.8rem; font-weight:600; color: var(--accent2); margin-bottom:6px"
-									x-bind="{cat.nome}"></div>
-								<div class="tag-list">
-									<div x-for="tag in cat.tags">
-										<span class="tag" x-bind="{tag.label}"></span>
+				<div class="split-preview">
+					<div class="preview-label">Resultado ao vivo</div>
+					<div x-data="tarefas">
+						<div class="todo-list">
+							<div x-for="item, k in lista">
+								<div class="todo-item">
+									<div class="todo-check" x-on:click="toggleTodo(k)" x-bind="{item.done ? '✓' : ''}">
 									</div>
+									<span class="todo-text" x-bind="{item.texto}"></span>
+									<button class="todo-del" x-on:click="removeTodo(k)">✕</button>
 								</div>
-								<div class="divider" style="margin-top:12px"></div>
 							</div>
+						</div>
+						<div class="todo-add">
+							<input class="live-input" type="text" id="todo-input" placeholder="Nova tarefa...">
+							<button x-on:click="addTodo()">+ Adicionar</button>
 						</div>
 					</div>
 				</div>
 			</div>
 
-		</main>
+			<!-- EXEMPLO 3: proxy.on watcher -->
+			<div class="split" style="margin-top:32px">
+				<div class="split-code">
+					<div class="split-tab">
+						<div class="split-tab-item active">watcher.html</div>
+					</div>
+					<div class="code-block">
+						<pre><span class="t-tag">&lt;div</span> <span class="t-attr">x-data</span>=<span class="t-val">"contador"</span><span class="t-tag">&gt;</span>
+  <span class="t-tag">&lt;h2</span> <span class="t-attr">x-bind</span>=<span class="t-val">"{valor}"</span><span class="t-tag">&gt;&lt;/h2&gt;</span>
+<span class="t-tag">&lt;/div&gt;</span>
 
-		<!-- ══ LOG PANEL ══ -->
-		<aside class="log-panel">
-			<div class="log-header">
-				<span class="log-title">// event log</span>
-				<button class="log-clear" onclick="clearLog()">limpar</button>
+<span class="t-tag">&lt;input</span> <span class="t-attr">type</span>=<span class="t-val">"range"</span> <span class="t-attr">x-model</span>=<span class="t-val">"contador.valor"</span><span class="t-tag">&gt;</span>
+
+<span class="t-tag">&lt;script&gt;</span>
+  <span class="t-fn">proxy</span>.<span class="t-fn">initProxy</span>();
+  <span class="t-fn">proxy</span>.template.contador.valor = <span class="t-num">50</span>;
+
+  <span class="t-com">// Observa qualquer mudança no valor</span>
+  <span class="t-fn">proxy</span>.<span class="t-fn">on</span>(<span class="t-str">'contador.valor'</span>, (novo, velho) =&gt; {
+    console.<span class="t-fn">log</span>(<span class="t-str">`${velho} → ${novo}`</span>);
+  });
+<span class="t-tag">&lt;/script&gt;</span></pre>
+					</div>
+				</div>
+				<div class="split-preview">
+					<div class="preview-label">Resultado ao vivo</div>
+					<div x-data="watcher">
+						<div class="watch-display">
+							<div class="watch-path">contador.valor</div>
+							<div class="watch-value" x-bind="{valor}"></div>
+							<input class="watch-slider" type="range" min="0" max="100" x-model="watcher.valor">
+							<div style="margin-top:12px;font-size:0.7rem;color:var(--text3);margin-bottom:6px">//
+								proxy.on log</div>
+							<div class="watch-log" id="watch-log"></div>
+						</div>
+					</div>
+				</div>
 			</div>
-			<div class="log-body" id="log-body"></div>
+		</section>
+
+		<!-- SECTION: FEATURES -->
+		<hr class="section-divider">
+		<section class="section">
+			<div class="section-eyebrow">// por que usar</div>
+			<h2 class="section-title">Tudo que você precisa,<br><em>nada que você não precisa</em></h2>
+			<p class="section-sub">night-proxy.js entrega reatividade real sem as abstrações desnecessárias dos grandes
+				frameworks.</p>
+
+			<div class="features-grid">
+				<div class="feature-card">
+					<div class="feature-icon v">⚡</div>
+					<div class="feature-name">Proxy Recursivo</div>
+					<div class="feature-desc">Qualquer nível de aninhamento é rastreado automaticamente. Sem observers
+						manuais, sem boilerplate.</div>
+				</div>
+				<div class="feature-card">
+					<div class="feature-icon c">🎯</div>
+					<div class="feature-name">Update Cirúrgico</div>
+					<div class="feature-desc"><code
+							style="font-size:.8rem;color:var(--cyan)">lista[250].nome = 'x'</code> toca exatamente 1 nó
+						no DOM, independente do tamanho da lista.</div>
+				</div>
+				<div class="feature-card">
+					<div class="feature-icon g">🔗</div>
+					<div class="feature-name">Two-way Binding</div>
+					<div class="feature-desc">x-model funciona com input, checkbox, radio e select. Mudanças no DOM
+						refletem no objeto automaticamente.</div>
+				</div>
+				<div class="feature-card">
+					<div class="feature-icon a">🏗️</div>
+					<div class="feature-name">Loops Aninháveis</div>
+					<div class="feature-desc">x-for com índice nomeado, sintaxe flexível, e suporte a arrays vazios sem
+						dados dummy.</div>
+				</div>
+				<div class="feature-card">
+					<div class="feature-icon r">🛡️</div>
+					<div class="feature-name">Lifecycle Hooks</div>
+					<div class="feature-desc">$beforeRender, $afterRender, $beforeDestroy, $afterDestroy — controle
+						total sobre o ciclo de vida.</div>
+				</div>
+				<div class="feature-card">
+					<div class="feature-icon p">🔍</div>
+					<div class="feature-name">Destroy Real</div>
+					<div class="feature-desc">Limpa effects, event listeners, watchers e store em cascata. Essencial
+						para SPAs com fetch.</div>
+				</div>
+			</div>
+		</section>
+
+		<!-- SECTION: COMPARISON -->
+		<hr class="section-divider">
+		<section class="section">
+			<div class="section-eyebrow">// comparação</div>
+			<h2 class="section-title">Por que não <em>Alpine, Vue ou React?</em></h2>
+			<p class="section-sub">Existe um espaço enorme entre "página HTML com PHP" e "SPA completa com React".
+				night-proxy.js ocupa exatamente esse espaço.</p>
+
+			<div class="table-wrap">
+				<table class="comp-table">
+					<thead>
+						<tr>
+							<th>Característica</th>
+							<th class="hl">NightProxy</th>
+							<th>Alpine.js</th>
+							<th>Vue.js (CDN)</th>
+							<th>React (CDN)</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>Tamanho (min+gzip)</td>
+							<td class="hl">~3.6KB</td>
+							<td>~13.5KB</td>
+							<td>~34KB</td>
+							<td>~45KB</td>
+						</tr>
+						<tr>
+							<td>Build tools</td>
+							<td class="hl"><span class="ic-no">✕</span> Não precisa</td>
+							<td><span class="ic-no">✕</span></td>
+							<td><span class="ic-no">✕</span></td>
+							<td><span class="ic-no">✕</span></td>
+						</tr>
+						<tr>
+							<td>Dependências</td>
+							<td class="hl"><span class="ic-yes">✓</span> Zero</td>
+							<td><span class="ic-yes">✓</span> Zero</td>
+							<td><span class="ic-yes">✓</span> Zero</td>
+							<td><span class="ic-yes">✓</span> Zero</td>
+						</tr>
+						<tr>
+							<td>Curva de aprendizado</td>
+							<td class="hl">15 minutos</td>
+							<td>1 hora</td>
+							<td>2 dias</td>
+							<td>1 semana</td>
+						</tr>
+						<tr>
+							<td>Two-way binding</td>
+							<td class="hl"><span class="ic-yes">✓</span></td>
+							<td><span class="ic-yes">✓</span></td>
+							<td><span class="ic-yes">✓</span></td>
+							<td><span class="ic-no">✕</span></td>
+						</tr>
+						<tr>
+							<td>Error handler customizável</td>
+							<td class="hl"><span class="ic-yes">✓</span></td>
+							<td><span class="ic-no">✕</span></td>
+							<td><span class="ic-no">✕</span></td>
+							<td><span class="ic-no">✕</span></td>
+						</tr>
+						<tr>
+							<td>Destroy real (SPA/fetch)</td>
+							<td class="hl"><span class="ic-yes">✓</span></td>
+							<td><span class="ic-warn">⚠</span></td>
+							<td><span class="ic-warn">⚠</span></td>
+							<td><span class="ic-yes">✓</span></td>
+						</tr>
+						<tr>
+							<td>Funciona em PHP puro</td>
+							<td class="hl"><span class="ic-yes">✓</span></td>
+							<td><span class="ic-yes">✓</span></td>
+							<td><span class="ic-warn">⚠</span></td>
+							<td><span class="ic-no">✕</span></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</section>
+
+		<!-- SECTION: INSTALL -->
+		<hr class="section-divider">
+		<section class="section">
+			<div class="section-eyebrow">// instalação</div>
+			<h2 class="section-title">Pronto em <em>30 segundos</em></h2>
+			<p class="section-sub">Um arquivo. Sem npm, sem config, sem opinião sobre sua stack.</p>
+
+			<div class="install-grid">
+				<div class="install-card">
+					<div class="install-card-header">
+						<span class="install-card-title">Via CDN (mais rápido)</span>
+						<button class="copy-btn" onclick="copyCode('cdn-code')">Copiar</button>
+					</div>
+					<div class="install-code" id="cdn-code"><span style="color:var(--t-tag, #7dd3fc)">&lt;script</span>
+						<span style="color:var(--a78bfa, #a78bfa)">src</span>=<span
+							style="color:#86efac">"https://cdn.jsdelivr.net/gh/israel-nogueira/
+							night-proxy@no-reflow/assets/js/night-proxy.js"</span><span
+							style="color:#7dd3fc">&gt;&lt;/script&gt;</span></div>
+				</div>
+				<div class="install-card">
+					<div class="install-card-header">
+						<span class="install-card-title">Download direto</span>
+						<button class="copy-btn" onclick="copyCode('local-code')">Copiar</button>
+					</div>
+					<div class="install-code" id="local-code"><span style="color:#7dd3fc">&lt;script</span> <span
+							style="color:#a78bfa">src</span>=<span
+							style="color:#86efac">"./assets/js/night-proxy.js"</span><span
+							style="color:#7dd3fc">&gt;&lt;/script&gt;</span></div>
+				</div>
+			</div>
+
+			<div class="callout green" style="margin-top:24px">
+				<strong>✓ É só isso.</strong> Inclua o script no &lt;head&gt;, adicione <code
+					style="font-family:var(--mono);color:var(--green)">x-data</code> no HTML e chame <code
+					style="font-family:var(--mono);color:var(--green)">proxy.initProxy()</code>. Sua página já é
+				reativa.
+			</div>
+		</section>
+
+		<footer class="footer">
+			<span>night-proxy.js v2.6.0 — MIT License</span>
+			<span>
+				Feito por <a href="https://github.com/israel-nogueira" target="_blank">@israel-nogueira</a>
+			</span>
+		</footer>
+
+	</div><!-- /page-home -->
+
+
+	<!-- ══════════════════════════════════════════════════════════════════════════
+     DOCS PAGE
+═══════════════════════════════════════════════════════════════════════════ -->
+	<div id="page-docs" class="docs-page">
+
+		<aside class="docs-sidebar">
+			<div class="docs-nav-group">
+				<div class="docs-nav-group-title">Começando</div>
+				<a class="docs-nav-link active" onclick="showDoc('inicio-rapido')">Início rápido</a>
+				<a class="docs-nav-link" onclick="showDoc('como-funciona')">Como funciona</a>
+			</div>
+			<div class="docs-nav-group">
+				<div class="docs-nav-group-title">Diretivas</div>
+				<a class="docs-nav-link" onclick="showDoc('x-data')">x-data</a>
+				<a class="docs-nav-link" onclick="showDoc('x-bind')">x-bind</a>
+				<a class="docs-nav-link" onclick="showDoc('x-if')">x-if</a>
+				<a class="docs-nav-link" onclick="showDoc('x-for')">x-for</a>
+				<a class="docs-nav-link" onclick="showDoc('x-model')">x-model</a>
+				<a class="docs-nav-link" onclick="showDoc('x-on')">x-on</a>
+				<a class="docs-nav-link" onclick="showDoc('x-ref')">x-ref</a>
+			</div>
+			<div class="docs-nav-group">
+				<div class="docs-nav-group-title">API JavaScript</div>
+				<a class="docs-nav-link" onclick="showDoc('api-init')">proxy.initProxy()</a>
+				<a class="docs-nav-link" onclick="showDoc('api-on')">proxy.on()</a>
+				<a class="docs-nav-link" onclick="showDoc('api-destroy')">proxy.destroy()</a>
+				<a class="docs-nav-link" onclick="showDoc('api-error')">proxy.onError</a>
+			</div>
+			<div class="docs-nav-group">
+				<div class="docs-nav-group-title">Avançado</div>
+				<a class="docs-nav-link" onclick="showDoc('lifecycle')">Lifecycle Hooks</a>
+				<a class="docs-nav-link" onclick="showDoc('magic-vars')">Magic Variables</a>
+				<a class="docs-nav-link" onclick="showDoc('spa-fetch')">SPA com fetch</a>
+			</div>
 		</aside>
 
-	</div>
-
-	<!-- Modal de edição -->
-	<div class="modal-overlay" id="modal">
-		<div class="modal">
-			<div class="modal-title">✎ Editar Produto</div>
-			<div class="field">
-				<label>nome</label>
-				<input type="text" id="modal-nome" placeholder="Nome">
-			</div>
-			<div class="field">
-				<label>categoria</label>
-				<input type="text" id="modal-cat" placeholder="Categoria">
-			</div>
-			<div class="modal-actions">
-				<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-				<button class="btn btn-primary" onclick="salvarModal()">Salvar</button>
-			</div>
+		<div class="docs-content" id="docs-content">
+			<!-- conteúdo injetado por JS -->
 		</div>
-	</div>
+
+	</div><!-- /page-docs -->
+
 
 	<script>
-
-		// ── Logger ──────────────────────────────────────────────────────────────
-		function log(msg, type = 'info') {
-			const body = document.getElementById('log-body');
-			const now = new Date().toLocaleTimeString('pt-BR', { hour12: false });
-			const el = document.createElement('div');
-			el.className = `log-entry ${type}`;
-			el.innerHTML = `<span class="log-time">${now}</span>${msg}`;
-			body.prepend(el);
-			if (body.children.length > 80) body.lastChild.remove();
-		}
-
-		function clearLog() {
-			document.getElementById('log-body').innerHTML = '';
-		}
-
-		// ── Init ─────────────────────────────────────────────────────────────────
+		// ══════════════════════════════════════════════════════════════════════════════
+		// INIT
+		// ══════════════════════════════════════════════════════════════════════════════
 		proxy.initProxy();
 
-		// ── Info ─────────────────────────────────────────────────────────────────
-		proxy.template.info.titulo = "night-proxy.js";
-		proxy.template.info.descricao = "Reatividade declarativa sem frameworks";
-		proxy.template.info.categoria = "frontend";
-		proxy.template.info.prioridade = "alta";
-		proxy.template.info.ativo = true;
+		// ── HERO demo ────────────────────────────────────────────────────────────────
+		proxy.template.hero.nome = "Coxinha Supreme";
+		proxy.template.hero.preco = "9.90";
+		proxy.template.hero.categoria = "Categoria: Salgados";
+		proxy.template.hero.ativo = true;
 
-		log('proxy.initProxy() executado', 'success');
-		log('info inicializado', 'info');
+		proxy.template.hero.toggleAtivo = function () {
+			proxy.template.hero.ativo = !proxy.template.hero.ativo;
+		};
+		proxy.template.hero.resetDemo = function () {
+			proxy.template.hero.nome = "Coxinha Supreme";
+			proxy.template.hero.preco = "9.90";
+			proxy.template.hero.categoria = "Categoria: Salgados";
+			proxy.template.hero.ativo = true;
+		};
 
-		// ── Produtos ─────────────────────────────────────────────────────────────
-		proxy.template.produtos.lista = [
-			{ nome: "night-proxy core", categoria: "reactive", ativo: true },
-			{ nome: "morphdom diffing", categoria: "dom", ativo: true },
-			{ nome: "x-for nested", categoria: "template", ativo: false },
-			{ nome: "x-model binding", categoria: "input", ativo: true },
+		// ── EX1 ──────────────────────────────────────────────────────────────────────
+		proxy.template.ex1.nome = "Notebook Pro X";
+		proxy.template.ex1.preco = "4999.90";
+		proxy.template.ex1.ativo = true;
+
+		// ── TAREFAS ──────────────────────────────────────────────────────────────────
+		proxy.template.tarefas.lista = [
+			{ texto: "Aprender night-proxy.js", done: false },
+			{ texto: "Remover o Vue do projeto", done: false },
+			{ texto: "Fazer café ☕", done: true },
 		];
 
-		log('produtos.lista inicializado com 4 itens', 'info');
+		proxy.template.tarefas.toggleTodo = function (k) {
+			var item = proxy.template.tarefas.lista[k];
+			item.done = !item.done;
+			// atualiza classe manualmente via efeito colateral
+			var els = document.querySelectorAll('[x-data="tarefas"] .todo-check');
+			var texts = document.querySelectorAll('[x-data="tarefas"] .todo-text');
+			if (els[k]) {
+				els[k].classList.toggle('done', item.done);
+			}
+			if (texts[k]) {
+				texts[k].classList.toggle('done', item.done);
+			}
+		};
 
-		// ── Categorias ────────────────────────────────────────────────────────────
-		proxy.template.categorias.lista = [
-			{
-				nome: "Diretivas", tags: [
-					{ label: "x-bind" }, { label: "x-for" }, { label: "x-if" },
-					{ label: "x-model" }, { label: "x-on" }, { label: "x-target" }
-				]
-			},
-			{
-				nome: "Recursos", tags: [
-					{ label: "Proxy Recursivo" }, { label: "morphdom" },
-					{ label: "Two-way binding" }, { label: "Loop aninhado" },
-					{ label: "$i index" }
-				]
-			},
-			{
-				nome: "Stack", tags: [
-					{ label: "Vanilla JS" }, { label: "ES6+" }, { label: "Zero deps" }
-				]
-			},
-		];
+		proxy.template.tarefas.removeTodo = function (k) {
+			proxy.template.tarefas.lista.splice(k, 1);
+		};
 
-		log('categorias.lista inicializado', 'info');
+		proxy.template.tarefas.addTodo = function () {
+			var inp = document.getElementById('todo-input');
+			var txt = inp.value.trim();
+			if (!txt) return;
+			proxy.template.tarefas.lista.push({ texto: txt, done: false });
+			inp.value = '';
+		};
 
-		// ── Ações ─────────────────────────────────────────────────────────────────
-		const nomes = ["x-portal", "night-store", "proxy-router", "dark-bind", "reactive-kit", "shadow-dom-helper", "flux-proxy", "nano-state"];
-		const cats = ["UI", "API", "DB", "Auth", "Infra", "Cache", "Queue", "Log"];
+		// ── WATCHER ──────────────────────────────────────────────────────────────────
+		proxy.template.watcher.valor = 50;
 
-		function addProduto() {
-			const nome = document.getElementById('inp-nome').value.trim();
-			const cat = document.getElementById('inp-cat').value.trim();
-			if (!nome) { log('Nome vazio — nada adicionado', 'warn'); return; }
-			proxy.template.produtos.lista.push({ nome, categoria: cat || 'geral', ativo: true });
-			log(`adicionado: "${nome}"`, 'success');
-			document.getElementById('inp-nome').value = '';
-			document.getElementById('inp-cat').value = '';
-		}
-
-		function addRandom() {
-			const nome = nomes[Math.floor(Math.random() * nomes.length)];
-			const cat = cats[Math.floor(Math.random() * cats.length)];
-			proxy.template.produtos.lista.push({ nome, categoria: cat, ativo: Math.random() > 0.4 });
-			log(`random adicionado: "${nome}"`, 'success');
-		}
-
-		function removerItem(idx) {
-			const item = proxy.template.produtos.lista[idx];
-			log(`removido[${idx}]: "${item.nome}"`, 'error');
-			proxy.template.produtos.lista.splice(idx, 1);
-		}
-
-		function toggleItem(idx) {
-			const item = proxy.template.produtos.lista[idx];
-			item.ativo = !item.ativo;
-			log(`toggle[${idx}] "${item.nome}" → ${item.ativo ? 'ativo' : 'inativo'}`, 'warn');
-		}
-
-		function toggleTodos() {
-			const lista = proxy.template.produtos.lista;
-			const algumAtivo = lista.some(i => i.ativo);
-			lista.forEach((_, i) => { lista[i].ativo = !algumAtivo; });
-			log(`todos → ${!algumAtivo ? 'ativo' : 'inativo'}`, 'warn');
-		}
-
-		function shuffleLista() {
-			const arr = [...proxy.template.produtos.lista].sort(() => Math.random() - 0.5);
-			proxy.template.produtos.lista = arr;
-			log('lista embaralhada', 'info');
-		}
-
-		function limparLista() {
-			proxy.template.produtos.lista = [];
-			log('lista limpa', 'error');
-		}
-
-		// ── Modal ─────────────────────────────────────────────────────────────────
-		let _editIdx = null;
-
-		function editarItem(idx) {
-			_editIdx = idx;
-			const item = proxy.template.produtos.lista[idx];
-			document.getElementById('modal-nome').value = item.nome;
-			document.getElementById('modal-cat').value = item.categoria;
-			document.getElementById('modal').classList.add('open');
-			log(`editando[${idx}]: "${item.nome}"`, 'info');
-		}
-
-		function closeModal() {
-			document.getElementById('modal').classList.remove('open');
-			_editIdx = null;
-		}
-
-		function salvarModal() {
-			if (_editIdx === null) return;
-			const nome = document.getElementById('modal-nome').value.trim();
-			const cat = document.getElementById('modal-cat').value.trim();
-			proxy.template.produtos.lista[_editIdx].nome = nome;
-			proxy.template.produtos.lista[_editIdx].categoria = cat;
-			log(`salvo[${_editIdx}]: "${nome}"`, 'success');
-			closeModal();
-		}
-
-		// registrar funções no escopo do componente produtos
-		proxy.template.produtos.editarItem = editarItem;
-		proxy.template.produtos.toggleItem = toggleItem;
-		proxy.template.produtos.removerItem = removerItem;
-
-		document.getElementById('modal').addEventListener('click', function (e) {
-			if (e.target === this) closeModal();
+		proxy.on('watcher.valor', function (novo, velho) {
+			var log = document.getElementById('watch-log');
+			if (!log) return;
+			var entry = document.createElement('div');
+			entry.className = 'watch-log-entry';
+			entry.innerHTML = '<span>' + velho + '</span> → <span>' + novo + '</span>';
+			log.prepend(entry);
+			if (log.children.length > 8) log.lastChild.remove();
 		});
 
+		// ══════════════════════════════════════════════════════════════════════════════
+		// PAGE SWITCH
+		// ══════════════════════════════════════════════════════════════════════════════
+		function showPage(page) {
+			document.getElementById('page-home').style.display = page === 'home' ? 'block' : 'none';
+			var docsEl = document.getElementById('page-docs');
+			docsEl.style.display = page === 'docs' ? 'flex' : 'none';
+			docsEl.className = page === 'docs' ? 'docs-page active' : 'docs-page';
+			if (page === 'docs') {
+				var active = document.querySelector('.docs-nav-link.active');
+				var docId = active ? active.getAttribute('onclick').match(/'([^']+)'/)[1] : 'inicio-rapido';
+				showDoc(docId);
+			}
+		}
+
+		function setActive(el) {
+			document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+			el.classList.add('active');
+			return false;
+		}
+
+		function setActiveByText(txt) {
+			document.querySelectorAll('.docs-nav-link').forEach(function (a) {
+				if (a.textContent.trim() === txt) {
+					document.querySelectorAll('.docs-nav-link').forEach(x => x.classList.remove('active'));
+					a.classList.add('active');
+				}
+			});
+			showDoc('inicio-rapido');
+		}
+
+		// ══════════════════════════════════════════════════════════════════════════════
+		// DOCS CONTENT
+		// ══════════════════════════════════════════════════════════════════════════════
+		function showDoc(id) {
+			document.querySelectorAll('.docs-nav-link').forEach(function (a) {
+				var match = a.getAttribute('onclick') && a.getAttribute('onclick').includes("'" + id + "'");
+				a.classList.toggle('active', !!match);
+			});
+			var el = document.getElementById('docs-content');
+			el.innerHTML = DOCS[id] || '<p>Seção em construção.</p>';
+		}
+
+		var DOCS = {
+
+			'inicio-rapido': `
+<h1>Início rápido</h1>
+<p>night-proxy.js é uma lib de reatividade declarativa baseada em Proxy Recursivo. Um arquivo. Sem npm. Sem build. Funciona em qualquer projeto PHP, HTML, WordPress, Laravel.</p>
+
+<h2>Instalação</h2>
+<p>Inclua o script no <code style="font-family:var(--mono);color:var(--cyan)">&lt;head&gt;</code>:</p>
+<div class="docs-code">
+  <div class="docs-code-bar"><span>CDN</span></div>
+  <pre><span class="t-tag">&lt;script</span> <span class="t-attr">src</span>=<span class="t-val">"https://cdn.jsdelivr.net/gh/israel-nogueira/night-proxy@no-reflow/assets/js/night-proxy.js"</span><span class="t-tag">&gt;&lt;/script&gt;</span></pre>
+</div>
+
+<h2>Primeiro componente</h2>
+<p>Adicione <code style="font-family:var(--mono);color:var(--cyan)">x-data</code> em um elemento HTML e chame <code style="font-family:var(--mono);color:var(--cyan)">proxy.initProxy()</code>:</p>
+<div class="docs-code">
+  <div class="docs-code-bar"><span>index.html</span></div>
+  <pre><span class="t-tag">&lt;div</span> <span class="t-attr">x-data</span>=<span class="t-val">"produto"</span><span class="t-tag">&gt;</span>
+  <span class="t-tag">&lt;h1</span> <span class="t-attr">x-bind</span>=<span class="t-val">"nome"</span><span class="t-tag">&gt;&lt;/h1&gt;</span>
+  <span class="t-tag">&lt;p</span>  <span class="t-attr">x-bind</span>=<span class="t-val">"Preço: R$ {preco}"</span><span class="t-tag">&gt;&lt;/p&gt;</span>
+<span class="t-tag">&lt;/div&gt;</span>
+
+<span class="t-tag">&lt;script&gt;</span>
+  <span class="t-fn">proxy</span>.<span class="t-fn">initProxy</span>();
+  <span class="t-fn">proxy</span>.template.produto.nome  = <span class="t-str">"Coxinha Supreme"</span>;
+  <span class="t-fn">proxy</span>.template.produto.preco = <span class="t-num">9.90</span>;
+<span class="t-tag">&lt;/script&gt;</span></pre>
+</div>
+
+<div class="callout green">
+  <strong>✓ É só isso.</strong> Qualquer mudança em <code style="font-family:var(--mono)">proxy.template.produto.*</code> atualiza o DOM automaticamente.
+</div>
+
+<h2>Próximos passos</h2>
+<p>Explore as diretivas na barra lateral. Comece por <strong>x-for</strong> para listas reativas e <strong>x-model</strong> para formulários.</p>
+`,
+
+			'como-funciona': `
+<h1>Como funciona</h1>
+<p>night-proxy.js implementa <strong>reatividade declarativa baseada em Proxy Recursivo</strong> com dependency tracking granular, sem virtual DOM, sem dirty checking.</p>
+
+<h2>Dependency Tracking</h2>
+<p>Durante o render de cada nó, qualquer leitura de propriedade registra automaticamente uma dependência via <code style="font-family:var(--mono);color:var(--cyan)">WeakMap</code>. Quando um valor muda, apenas os nós que dependem daquela propriedade específica são atualizados — cirurgicamente.</p>
+
+<div class="callout">
+  <strong>Exemplo:</strong> Em uma lista de 5.000 itens, mudar <code style="font-family:var(--mono)">lista[2500].nome = 'x'</code> toca <strong>exatamente 1 nó</strong> no DOM. Menos de 1 frame (&lt;16ms).
+</div>
+
+<h2>Garantias de Performance</h2>
+<div class="docs-table-wrap">
+  <table class="docs-table">
+    <thead><tr><th>Situação</th><th>Comportamento</th></tr></thead>
+    <tbody>
+      <tr><td>1 dependente</td><td>Update síncrono imediato, sem microtask</td></tr>
+      <tr><td>N dependentes</td><td>Batching via Promise.resolve(), 1 ciclo</td></tr>
+      <tr><td>push/splice/substituição</td><td>Re-render do x-for via microtask</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>Sem Virtual DOM</h2>
+<p>Ao contrário do React e Vue, night-proxy.js não usa Virtual DOM nem dirty checking. Cada nó tem seu próprio Effect que se desregistra e re-registra nas dependências a cada run, evitando memory leaks e renders obsoletos.</p>
+`,
+
+			'x-data': `
+<h1>x-data</h1>
+<p>Define o container reativo. As expressões internas não precisam de prefixo.</p>
+<div class="docs-code">
+  <div class="docs-code-bar"><span>HTML</span></div>
+  <pre><span class="t-tag">&lt;div</span> <span class="t-attr">x-data</span>=<span class="t-val">"produto"</span><span class="t-tag">&gt;</span>
+  <span class="t-tag">&lt;h1</span> <span class="t-attr">x-bind</span>=<span class="t-val">"nome"</span><span class="t-tag">&gt;&lt;/h1&gt;</span>  <span class="t-com">&lt;!-- não precisa de "produto.nome" --&gt;</span>
+<span class="t-tag">&lt;/div&gt;</span></pre>
+</div>
+<p>Você pode ter múltiplos containers com chaves diferentes na mesma página:</p>
+<div class="docs-code">
+  <div class="docs-code-bar"><span>HTML</span></div>
+  <pre><span class="t-tag">&lt;div</span> <span class="t-attr">x-data</span>=<span class="t-val">"carrinho"</span><span class="t-tag">&gt;</span>...<span class="t-tag">&lt;/div&gt;</span>
+<span class="t-tag">&lt;div</span> <span class="t-attr">x-data</span>=<span class="t-val">"usuario"</span><span class="t-tag">&gt;</span>...<span class="t-tag">&lt;/div&gt;</span></pre>
+</div>
+`,
+
+			'x-bind': `
+<h1>x-bind</h1>
+<p>Renderiza um valor reativo como texto. Suporta expressão direta, interpolação com <code style="font-family:var(--mono);color:var(--cyan)">{}</code>, ou texto misturado.</p>
+<div class="docs-code">
+  <div class="docs-code-bar"><span>HTML</span></div>
+  <pre><span class="t-tag">&lt;h1</span> <span class="t-attr">x-bind</span>=<span class="t-val">"nome"</span><span class="t-tag">&gt;&lt;/h1&gt;</span>
+<span class="t-tag">&lt;p</span>  <span class="t-attr">x-bind</span>=<span class="t-val">"Preço: R$ {preco}"</span><span class="t-tag">&gt;&lt;/p&gt;</span>
+<span class="t-tag">&lt;span</span> <span class="t-attr">x-bind</span>=<span class="t-val">"{nome} ({categoria})"</span><span class="t-tag">&gt;&lt;/span&gt;</span></pre>
+</div>
+
+<div class="callout">
+  <strong>Dica:</strong> Use <code style="font-family:var(--mono)">{variavel}</code> para interpolação dentro de texto. Sem chaves, a expressão inteira é tratada como nome de propriedade.
+</div>
+`,
+
+			'x-if': `
+<h1>x-if</h1>
+<p>Oculta o elemento via <code style="font-family:var(--mono);color:var(--cyan)">display: none</code> quando a expressão for falsa. O elemento permanece no DOM.</p>
+<div class="docs-code">
+  <div class="docs-code-bar"><span>HTML</span></div>
+  <pre><span class="t-tag">&lt;p</span> <span class="t-attr">x-if</span>=<span class="t-val">"ativo"</span><span class="t-tag">&gt;</span>Produto disponível<span class="t-tag">&lt;/p&gt;</span>
+<span class="t-tag">&lt;p</span> <span class="t-attr">x-if</span>=<span class="t-val">"!ativo"</span><span class="t-tag">&gt;</span>Fora de estoque<span class="t-tag">&lt;/p&gt;</span>
+
+<span class="t-tag">&lt;script&gt;</span>
+  <span class="t-fn">proxy</span>.template.produto.ativo = <span class="t-key">true</span>;
+  <span class="t-fn">proxy</span>.template.produto.ativo = <span class="t-key">false</span>; <span class="t-com">// DOM atualiza sozinho</span>
+<span class="t-tag">&lt;/script&gt;</span></pre>
+</div>
+`,
+
+			'x-for': `
+<h1>x-for</h1>
+<p>Loop reativo e aninhável. Suporta índice nomeado em duas sintaxes.</p>
+<div class="docs-code">
+  <div class="docs-code-bar"><span>Sintaxes disponíveis</span></div>
+  <pre><span class="t-com">&lt;!-- sem índice nomeado (usa $i como fallback) --&gt;</span>
+<span class="t-tag">&lt;div</span> <span class="t-attr">x-for</span>=<span class="t-val">"item in itens"</span><span class="t-tag">&gt;</span>
+
+<span class="t-com">&lt;!-- índice nomeado, sintaxe com vírgula --&gt;</span>
+<span class="t-tag">&lt;div</span> <span class="t-attr">x-for</span>=<span class="t-val">"item, k in itens"</span><span class="t-tag">&gt;</span>
+
+<span class="t-com">&lt;!-- índice nomeado, sintaxe alternativa --&gt;</span>
+<span class="t-tag">&lt;div</span> <span class="t-attr">x-for</span>=<span class="t-val">"item in itens as k"</span><span class="t-tag">&gt;</span></pre>
+</div>
+
+<div class="callout green">
+  <strong>v2.6.0</strong> — Arrays vazios são totalmente suportados. Inicie com <code style="font-family:var(--mono)">[]</code> e popule depois com fetch, sem dados dummy.
+</div>
+
+<h2>Loop aninhado</h2>
+<div class="docs-code">
+  <div class="docs-code-bar"><span>HTML</span></div>
+  <pre><span class="t-tag">&lt;div</span> <span class="t-attr">x-data</span>=<span class="t-val">"pedido"</span><span class="t-tag">&gt;</span>
+  <span class="t-tag">&lt;div</span> <span class="t-attr">x-for</span>=<span class="t-val">"item, k in itens"</span><span class="t-tag">&gt;</span>
+    <span class="t-tag">&lt;strong</span> <span class="t-attr">x-bind</span>=<span class="t-val">"{item.nome}"</span><span class="t-tag">&gt;&lt;/strong&gt;</span>
+    <span class="t-tag">&lt;div</span> <span class="t-attr">x-for</span>=<span class="t-val">"sub in item.subitens"</span><span class="t-tag">&gt;</span>
+      <span class="t-tag">&lt;span</span> <span class="t-attr">x-bind</span>=<span class="t-val">"{sub.label}"</span><span class="t-tag">&gt;&lt;/span&gt;</span>
+    <span class="t-tag">&lt;/div&gt;</span>
+  <span class="t-tag">&lt;/div&gt;</span>
+<span class="t-tag">&lt;/div&gt;</span></pre>
+</div>
+`,
+
+			'x-model': `
+<h1>x-model</h1>
+<p>Two-way binding com inputs. Mudanças no input refletem no proxy e vice-versa.</p>
+<div class="docs-code">
+  <div class="docs-code-bar"><span>HTML</span></div>
+  <pre><span class="t-com">&lt;!-- text input --&gt;</span>
+<span class="t-tag">&lt;input</span> <span class="t-attr">type</span>=<span class="t-val">"text"</span>     <span class="t-attr">x-model</span>=<span class="t-val">"produto.nome"</span><span class="t-tag">&gt;</span>
+
+<span class="t-com">&lt;!-- checkbox --&gt;</span>
+<span class="t-tag">&lt;input</span> <span class="t-attr">type</span>=<span class="t-val">"checkbox"</span> <span class="t-attr">x-model</span>=<span class="t-val">"produto.ativo"</span><span class="t-tag">&gt;</span>
+
+<span class="t-com">&lt;!-- select --&gt;</span>
+<span class="t-tag">&lt;select</span> <span class="t-attr">x-model</span>=<span class="t-val">"produto.categoria"</span><span class="t-tag">&gt;</span>
+  <span class="t-tag">&lt;option&gt;</span>Eletrônicos<span class="t-tag">&lt;/option&gt;</span>
+<span class="t-tag">&lt;/select&gt;</span>
+
+<span class="t-com">&lt;!-- caminho profundo --&gt;</span>
+<span class="t-tag">&lt;input</span> <span class="t-attr">x-model</span>=<span class="t-val">"produto.lista[0].titulo"</span><span class="t-tag">&gt;</span></pre>
+</div>
+<p>Note que x-model usa o <strong>caminho completo</strong> (com prefixo), diferente das diretivas dentro de x-data.</p>
+`,
+
+			'x-on': `
+<h1>x-on</h1>
+<p>Event listener com escopo do loop. A expressão tem acesso a todas as variáveis do contexto.</p>
+<div class="docs-code">
+  <div class="docs-code-bar"><span>HTML</span></div>
+  <pre><span class="t-tag">&lt;div</span> <span class="t-attr">x-data</span>=<span class="t-val">"lista"</span><span class="t-tag">&gt;</span>
+  <span class="t-tag">&lt;div</span> <span class="t-attr">x-for</span>=<span class="t-val">"item, k in itens"</span><span class="t-tag">&gt;</span>
+    <span class="t-tag">&lt;span</span> <span class="t-attr">x-bind</span>=<span class="t-val">"{item.nome}"</span><span class="t-tag">&gt;&lt;/span&gt;</span>
+    <span class="t-tag">&lt;button</span> <span class="t-attr">x-on:click</span>=<span class="t-val">"remover(k)"</span><span class="t-tag">&gt;</span>✕<span class="t-tag">&lt;/button&gt;</span>
+    <span class="t-tag">&lt;button</span> <span class="t-attr">x-on:click</span>=<span class="t-val">"$emit('selecionou', { index: k })"</span><span class="t-tag">&gt;</span>
+      Selecionar
+    <span class="t-tag">&lt;/button&gt;</span>
+  <span class="t-tag">&lt;/div&gt;</span>
+<span class="t-tag">&lt;/div&gt;</span>
+
+<span class="t-tag">&lt;script&gt;</span>
+  <span class="t-fn">proxy</span>.template.lista.remover = <span class="t-key">function</span>(k) {
+    <span class="t-fn">proxy</span>.template.lista.itens.<span class="t-fn">splice</span>(k, <span class="t-num">1</span>);
+  };
+<span class="t-tag">&lt;/script&gt;</span></pre>
+</div>
+`,
+
+			'x-ref': `
+<h1>x-ref</h1>
+<p>Cria uma referência nomeada ao elemento, acessível via <code style="font-family:var(--mono);color:var(--cyan)">$ref.nome</code> dentro de <code style="font-family:var(--mono);color:var(--cyan)">x-on</code>.</p>
+<div class="docs-code">
+  <div class="docs-code-bar"><span>HTML</span></div>
+  <pre><span class="t-tag">&lt;div</span> <span class="t-attr">x-data</span>=<span class="t-val">"form"</span><span class="t-tag">&gt;</span>
+  <span class="t-tag">&lt;input</span> <span class="t-attr">x-ref</span>=<span class="t-val">"campo"</span> <span class="t-attr">type</span>=<span class="t-val">"text"</span><span class="t-tag">&gt;</span>
+  <span class="t-tag">&lt;button</span> <span class="t-attr">x-on:click</span>=<span class="t-val">"$ref.campo.focus()"</span><span class="t-tag">&gt;</span>
+    Focar campo
+  <span class="t-tag">&lt;/button&gt;</span>
+<span class="t-tag">&lt;/div&gt;</span></pre>
+</div>
+`,
+
+			'api-init': `
+<h1>proxy.initProxy()</h1>
+<p>Inicializa o sistema de reatividade. Deve ser chamado após o DOM estar pronto, antes de popular os dados.</p>
+<div class="docs-code">
+  <div class="docs-code-bar"><span>JavaScript</span></div>
+  <pre><span class="t-fn">proxy</span>.<span class="t-fn">initProxy</span>();
+
+<span class="t-com">// Agora pode popular os dados</span>
+<span class="t-fn">proxy</span>.template.produto.nome  = <span class="t-str">"Coxinha Supreme"</span>;
+<span class="t-fn">proxy</span>.template.produto.ativo = <span class="t-key">true</span>;
+<span class="t-fn">proxy</span>.template.produto.lista = [];</pre>
+</div>
+<div class="callout">
+  <strong>Nota:</strong> initProxy também cacheia os templates x-for antes do primeiro render, o que permite iniciar com arrays vazios e popular depois.
+</div>
+`,
+
+			'api-on': `
+<h1>proxy.on()</h1>
+<p>Observa qualquer caminho profundo do store. Dispara com <code style="font-family:var(--mono);color:var(--cyan)">(newVal, oldVal)</code> a cada mudança.</p>
+<div class="docs-code">
+  <div class="docs-code-bar"><span>JavaScript</span></div>
+  <pre><span class="t-com">// Observar uma propriedade</span>
+<span class="t-key">const</span> unsubscribe = <span class="t-fn">proxy</span>.<span class="t-fn">on</span>(<span class="t-str">'pedido.cliente'</span>, (novo, velho) => {
+  console.<span class="t-fn">log</span>(<span class="t-str">\`cliente: \${velho} → \${novo}\`</span>);
+});
+
+<span class="t-com">// Cancelar observação</span>
+<span class="t-fn">unsubscribe</span>();</pre>
+</div>
+`,
+
+			'api-destroy': `
+<h1>proxy.destroy()</h1>
+<p>Destrói um componente específico ou todos. Limpa effects, event listeners, watchers e store em cascata.</p>
+<div class="docs-code">
+  <div class="docs-code-bar"><span>JavaScript</span></div>
+  <pre><span class="t-com">// Destrói apenas o componente "produto"</span>
+<span class="t-fn">proxy</span>.<span class="t-fn">destroy</span>(<span class="t-str">'produto'</span>);
+
+<span class="t-com">// Ou via shortcut no próprio template</span>
+<span class="t-fn">proxy</span>.template.produto.<span class="t-fn">destroy</span>();
+
+<span class="t-com">// Destrói tudo</span>
+<span class="t-fn">proxy</span>.<span class="t-fn">destroy</span>();</pre>
+</div>
+<p>Essencial para SPAs que trocam conteúdo via fetch, evitando memory leaks.</p>
+`,
+
+			'api-error': `
+<h1>proxy.onError</h1>
+<p>Handler global de erros. Todos os erros da lib passam por aqui.</p>
+<div class="docs-code">
+  <div class="docs-code-bar"><span>JavaScript</span></div>
+  <pre><span class="t-fn">proxy</span>.onError = <span class="t-key">function</span>(err) {
+  console.<span class="t-fn">error</span>(<span class="t-str">'[night-proxy]'</span>, err.type, err.message);
+};
+
+<span class="t-com">// Tipos de erro possíveis:</span>
+<span class="t-com">// x-for-syntax, x-on-unsafe, x-bind-eval</span>
+<span class="t-com">// lifecycle-error, watcher-error, render-error</span></pre>
+</div>
+
+<h2>Integração com Sentry</h2>
+<div class="docs-code">
+  <div class="docs-code-bar"><span>JavaScript</span></div>
+  <pre><span class="t-fn">proxy</span>.onError = <span class="t-key">function</span>(err) {
+  Sentry.<span class="t-fn">captureException</span>(<span class="t-key">new</span> <span class="t-fn">Error</span>(err.message), {
+    extra: err
+  });
+};</pre>
+</div>
+`,
+
+			'lifecycle': `
+<h1>Lifecycle Hooks</h1>
+<p>Controle total sobre o ciclo de vida de cada componente.</p>
+<div class="docs-table-wrap">
+  <table class="docs-table">
+    <thead><tr><th>Hook</th><th>Quando dispara</th></tr></thead>
+    <tbody>
+      <tr><td>$beforeRender</td><td>Antes de cada render do componente</td></tr>
+      <tr><td>$afterRender</td><td>Após cada render do componente</td></tr>
+      <tr><td>$beforeDestroy</td><td>Antes de proxy.destroy()</td></tr>
+      <tr><td>$afterDestroy</td><td>Após proxy.destroy()</td></tr>
+    </tbody>
+  </table>
+</div>
+<div class="docs-code">
+  <div class="docs-code-bar"><span>JavaScript</span></div>
+  <pre><span class="t-fn">proxy</span>.template.pedido.<span class="t-fn">$afterRender</span> = <span class="t-key">function</span>() {
+  console.<span class="t-fn">log</span>(<span class="t-str">'pedido renderizado'</span>);
+};
+
+<span class="t-com">// Também disponível via DOM event</span>
+document.<span class="t-fn">querySelector</span>(<span class="t-str">'[x-data="pedido"]'</span>)
+  .<span class="t-fn">addEventListener</span>(<span class="t-str">'after-render'</span>, fn);</pre>
+</div>
+`,
+
+			'magic-vars': `
+<h1>Magic Variables</h1>
+<p>Disponíveis dentro de expressões <code style="font-family:var(--mono);color:var(--cyan)">x-on</code>:</p>
+<div class="docs-table-wrap">
+  <table class="docs-table">
+    <thead><tr><th>Variável</th><th>Descrição</th></tr></thead>
+    <tbody>
+      <tr><td>$root</td><td>Elemento DOM do container x-data</td></tr>
+      <tr><td>$ref.nome</td><td>Elemento marcado com x-ref="nome"</td></tr>
+      <tr><td>$emit(nome, detalhe)</td><td>Dispara CustomEvent no $root</td></tr>
+      <tr><td>$i / $index</td><td>Índice do item (fallback sem alias)</td></tr>
+      <tr><td>$this.index</td><td>Índice do item atual</td></tr>
+      <tr><td>$this.dom</td><td>Elemento DOM do item atual</td></tr>
+      <tr><td>$this.data</td><td>Objeto de dados do item atual</td></tr>
+      <tr><td>$this.parent</td><td>$this do loop pai (encadeável)</td></tr>
+      <tr><td>event</td><td>Evento DOM nativo</td></tr>
+    </tbody>
+  </table>
+</div>
+`,
+
+			'spa-fetch': `
+<h1>SPA com fetch</h1>
+<p>night-proxy.js tem destroy real — essencial para SPAs que trocam conteúdo via fetch.</p>
+<div class="docs-code">
+  <div class="docs-code-bar"><span>JavaScript</span></div>
+  <pre><span class="t-fn">proxy</span>.<span class="t-fn">initProxy</span>();
+
+<span class="t-com">// Começa com array vazio</span>
+<span class="t-fn">proxy</span>.template.pedido.itens    = [];
+<span class="t-fn">proxy</span>.template.pedido.carregado = <span class="t-key">false</span>;
+
+<span class="t-com">// Popula via fetch</span>
+<span class="t-fn">fetch</span>(<span class="t-str">'/api/itens'</span>)
+  .<span class="t-fn">then</span>(r => r.<span class="t-fn">json</span>())
+  .<span class="t-fn">then</span>(data => {
+    <span class="t-fn">proxy</span>.template.pedido.itens    = data;
+    <span class="t-fn">proxy</span>.template.pedido.carregado = <span class="t-key">true</span>;
+  });
+
+<span class="t-com">// Ao trocar de página, destroi o componente</span>
+<span class="t-fn">proxy</span>.<span class="t-fn">destroy</span>(<span class="t-str">'pedido'</span>);</pre>
+</div>
+
+<div class="callout">
+  <strong>Dica:</strong> O destroy limpa effects, event listeners e watchers em cascata — sem memory leaks.
+</div>
+`
+
+		}; // end DOCS
+
+		// ══════════════════════════════════════════════════════════════════════════════
+		// UTILS
+		// ══════════════════════════════════════════════════════════════════════════════
+		function copyCode(id) {
+			var el = document.getElementById(id);
+			if (!el) return;
+			var text = el.innerText;
+			navigator.clipboard.writeText(text).then(function () {
+				var btn = el.parentElement.querySelector('.copy-btn');
+				if (btn) { btn.textContent = '✓ Copiado'; setTimeout(function () { btn.textContent = 'Copiar'; }, 2000); }
+			});
+		}
+
+		// Init docs page with first section
+		showDoc('inicio-rapido');
 	</script>
+
 </body>
 
 </html>

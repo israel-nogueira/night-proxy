@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>night-proxy.js — Painel de Testes</title>
+	<link
+		href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap"
+		rel="stylesheet">
+	<script src="./assets/js/night-proxy.js"></script>
+
+	<style>
+		*,
+		*::before,
+		*::after {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+
+		:root {
+			--bg: #0a0a0f;
+			--bg2: #111118;
+			--bg3: #1a1a24;
+			--border: #2a2a3a;
+			--accent: #7c3aed;
+			--accent2: #06b6d4;
+			--accent3: #f59e0b;
+			--danger: #ef4444;
+			--success: #22c55e;
+			--text: #e2e8f0;
+			--text2: #94a3b8;
+			--text3: #475569;
+			--font-mono: 'JetBrains Mono', monospace;
+			--font-display: 'Syne', sans-serif;
+		}
+
+		body {
+			background: var(--bg);
+			color: var(--text);
+			font-family: var(--font-mono);
+			min-height: 100vh;
+			overflow-x: hidden;
+		}
+
+		/* ── HEADER ── */
+		header {
+			border-bottom: 1px solid var(--border);
+			padding: 20px 32px;
+			display: flex;
+			align-items: center;
+			gap: 16px;
+			background: var(--bg2);
+			position: sticky;
+			top: 0;
+			z-index: 100;
+		}
+
+		.logo {
+			font-family: var(--font-display);
+			font-weight: 800;
+			font-size: 1.25rem;
+			letter-spacing: -0.02em;
+			color: #fff;
+		}
+
+		.logo span {
+			color: var(--accent);
+		}
+
+		.badge {
+			font-size: 0.65rem;
+			background: var(--accent);
+			color: #fff;
+			padding: 2px 8px;
+			border-radius: 99px;
+			font-weight: 600;
+			letter-spacing: 0.05em;
+		}
+
+		.header-status {
+			margin-left: auto;
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			font-size: 0.75rem;
+			color: var(--text2);
+		}
+
+		.dot {
+			width: 8px;
+			height: 8px;
+			border-radius: 50%;
+			background: var(--success);
+			box-shadow: 0 0 8px var(--success);
+			animation: pulse 2s infinite;
+		}
+
+		@keyframes pulse {
+
+			0%,
+			100% {
+				opacity: 1;
+			}
+
+			50% {
+				opacity: 0.4;
+			}
+		}
+
+		/* ── LAYOUT ── */
+		.layout {
+			display: grid;
+			grid-template-columns: 320px 1fr 300px;
+			gap: 0;
+			min-height: calc(100vh - 65px);
+		}
+
+		/* ── SIDEBAR ── */
+		.sidebar {
+			border-right: 1px solid var(--border);
+			padding: 24px;
+			display: flex;
+			flex-direction: column;
+			gap: 24px;
+			background: var(--bg2);
+		}
+
+		.section-label {
+			font-size: 0.65rem;
+			font-weight: 600;
+			letter-spacing: 0.12em;
+			color: var(--text3);
+			text-transform: uppercase;
+			margin-bottom: 12px;
+		}
+
+		/* ── INPUTS ── */
+		.field {
+			display: flex;
+			flex-direction: column;
+			gap: 6px;
+		}
+
+		.field label {
+			font-size: 0.7rem;
+			color: var(--text2);
+			letter-spacing: 0.05em;
+		}
+
+		.field input[type="text"],
+		.field select {
+			background: var(--bg3);
+			border: 1px solid var(--border);
+			color: var(--text);
+			font-family: var(--font-mono);
+			font-size: 0.8rem;
+			padding: 8px 12px;
+			border-radius: 6px;
+			outline: none;
+			transition: border-color 0.2s;
+			width: 100%;
+		}
+
+		.field input[type="text"]:focus,
+		.field select:focus {
+			border-color: var(--accent);
+		}
+
+		.field select option {
+			background: var(--bg3);
+		}
+
+		/* checkbox / radio row */
+		.check-row {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			font-size: 0.8rem;
+			color: var(--text2);
+			cursor: pointer;
+		}
+
+		.check-row input {
+			accent-color: var(--accent);
+			width: 15px;
+			height: 15px;
+			cursor: pointer;
+		}
+
+		.radio-group {
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+		}
+
+		/* ── BUTTONS ── */
+		.btn {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			padding: 8px 14px;
+			border-radius: 6px;
+			border: none;
+			font-family: var(--font-mono);
+			font-size: 0.75rem;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.15s;
+			letter-spacing: 0.03em;
+		}
+
+		.btn-primary {
+			background: var(--accent);
+			color: #fff;
+		}
+
+		.btn-secondary {
+			background: var(--bg3);
+			color: var(--text);
+			border: 1px solid var(--border);
+		}
+
+		.btn-danger {
+			background: var(--danger);
+			color: #fff;
+		}
+
+		.btn-cyan {
+			background: var(--accent2);
+			color: #000;
+		}
+
+		.btn-amber {
+			background: var(--accent3);
+			color: #000;
+		}
+
+		.btn:hover {
+			filter: brightness(1.15);
+			transform: translateY(-1px);
+		}
+
+		.btn:active {
+			transform: translateY(0);
+			filter: brightness(0.9);
+		}
+
+		.btn-group {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 8px;
+		}
+
+		/* ── MAIN ── */
+		.main {
+			padding: 32px;
+			display: flex;
+			flex-direction: column;
+			gap: 32px;
+			overflow-y: auto;
+		}
+
+		/* ── CARD ── */
+		.card {
+			background: var(--bg2);
+			border: 1px solid var(--border);
+			border-radius: 12px;
+			overflow: hidden;
+		}
+
+		.card-header {
+			padding: 14px 20px;
+			border-bottom: 1px solid var(--border);
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			background: var(--bg3);
+		}
+
+		.card-title {
+			font-family: var(--font-display);
+			font-size: 0.85rem;
+			font-weight: 600;
+			color: var(--text);
+		}
+
+		.card-key {
+			margin-left: auto;
+			font-size: 0.65rem;
+			color: var(--accent2);
+			background: rgba(6, 182, 212, 0.1);
+			padding: 2px 8px;
+			border-radius: 99px;
+			border: 1px solid rgba(6, 182, 212, 0.2);
+		}
+
+		.card-body {
+			padding: 20px;
+		}
+
+		/* ── TARGET: LISTA DE PRODUTOS ── */
+		.produto-item {
+			display: grid;
+			grid-template-columns: 1fr auto auto;
+			align-items: center;
+			gap: 12px;
+			padding: 12px 16px;
+			border-radius: 8px;
+			background: var(--bg3);
+			border: 1px solid var(--border);
+			margin-bottom: 8px;
+			transition: border-color 0.2s;
+		}
+
+		.produto-item:hover {
+			border-color: var(--accent);
+		}
+
+		.produto-nome {
+			font-size: 0.85rem;
+			font-weight: 600;
+			color: var(--text);
+		}
+
+		.produto-cat {
+			font-size: 0.7rem;
+			color: var(--text3);
+			margin-top: 2px;
+		}
+
+		.produto-status {
+			font-size: 0.65rem;
+			padding: 3px 8px;
+			border-radius: 99px;
+			font-weight: 600;
+		}
+
+		.status-ativo {
+			background: rgba(34, 197, 94, 0.15);
+			color: var(--success);
+			border: 1px solid rgba(34, 197, 94, 0.3);
+		}
+
+		.status-inativo {
+			background: rgba(239, 68, 68, 0.15);
+			color: var(--danger);
+			border: 1px solid rgba(239, 68, 68, 0.3);
+		}
+
+		.produto-actions {
+			display: flex;
+			gap: 6px;
+		}
+
+		.btn-icon {
+			width: 30px;
+			height: 30px;
+			border-radius: 6px;
+			border: 1px solid var(--border);
+			background: var(--bg);
+			color: var(--text2);
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 0.75rem;
+			transition: all 0.15s;
+		}
+
+		.btn-icon:hover {
+			background: var(--accent);
+			color: #fff;
+			border-color: var(--accent);
+		}
+
+		.btn-icon.del:hover {
+			background: var(--danger);
+			border-color: var(--danger);
+		}
+
+		/* ── TARGET: INFO CARD ── */
+		.info-grid {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 12px;
+		}
+
+		.info-field {
+			background: var(--bg3);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			padding: 12px 14px;
+		}
+
+		.info-field-label {
+			font-size: 0.65rem;
+			color: var(--text3);
+			text-transform: uppercase;
+			letter-spacing: 0.08em;
+			margin-bottom: 4px;
+		}
+
+		.info-field-value {
+			font-size: 0.9rem;
+			color: var(--text);
+			font-weight: 600;
+		}
+
+		/* ── LOG PANEL (direita) ── */
+		.log-panel {
+			border-left: 1px solid var(--border);
+			background: var(--bg);
+			display: flex;
+			flex-direction: column;
+		}
+
+		.log-header {
+			padding: 14px 20px;
+			border-bottom: 1px solid var(--border);
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			background: var(--bg2);
+		}
+
+		.log-title {
+			font-size: 0.75rem;
+			font-weight: 600;
+			color: var(--text2);
+			letter-spacing: 0.05em;
+		}
+
+		.log-clear {
+			font-size: 0.65rem;
+			color: var(--text3);
+			cursor: pointer;
+			background: none;
+			border: none;
+			font-family: var(--font-mono);
+			transition: color 0.2s;
+		}
+
+		.log-clear:hover {
+			color: var(--danger);
+		}
+
+		.log-body {
+			flex: 1;
+			overflow-y: auto;
+			padding: 12px;
+			display: flex;
+			flex-direction: column;
+			gap: 6px;
+		}
+
+		.log-entry {
+			font-size: 0.7rem;
+			padding: 6px 10px;
+			border-radius: 4px;
+			border-left: 2px solid var(--border);
+			background: var(--bg2);
+			color: var(--text2);
+			animation: slideIn 0.2s ease;
+			word-break: break-all;
+		}
+
+		.log-entry.info {
+			border-color: var(--accent2);
+			color: var(--accent2);
+		}
+
+		.log-entry.warn {
+			border-color: var(--accent3);
+			color: var(--accent3);
+		}
+
+		.log-entry.error {
+			border-color: var(--danger);
+			color: var(--danger);
+		}
+
+		.log-entry.success {
+			border-color: var(--success);
+			color: var(--success);
+		}
+
+		.log-time {
+			color: var(--text3);
+			margin-right: 6px;
+		}
+
+		@keyframes slideIn {
+			from {
+				opacity: 0;
+				transform: translateX(8px);
+			}
+
+			to {
+				opacity: 1;
+				transform: translateX(0);
+			}
+		}
+
+		/* ── TAG CHIPS ── */
+		.tag-list {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 6px;
+			margin-top: 8px;
+		}
+
+		.tag {
+			font-size: 0.7rem;
+			padding: 3px 10px;
+			border-radius: 99px;
+			background: rgba(124, 58, 237, 0.15);
+			color: var(--accent);
+			border: 1px solid rgba(124, 58, 237, 0.3);
+		}
+
+		/* ── MODAL de edição ── */
+		.modal-overlay {
+			position: fixed;
+			inset: 0;
+			background: rgba(0, 0, 0, 0.7);
+			backdrop-filter: blur(4px);
+			display: none;
+			align-items: center;
+			justify-content: center;
+			z-index: 999;
+		}
+
+		.modal-overlay.open {
+			display: flex;
+		}
+
+		.modal {
+			background: var(--bg2);
+			border: 1px solid var(--border);
+			border-radius: 12px;
+			padding: 28px;
+			width: 380px;
+			display: flex;
+			flex-direction: column;
+			gap: 16px;
+			animation: modalIn 0.2s ease;
+		}
+
+		@keyframes modalIn {
+			from {
+				opacity: 0;
+				transform: scale(0.95) translateY(10px);
+			}
+
+			to {
+				opacity: 1;
+				transform: scale(1) translateY(0);
+			}
+		}
+
+		.modal-title {
+			font-family: var(--font-display);
+			font-weight: 700;
+			font-size: 1rem;
+		}
+
+		.modal-actions {
+			display: flex;
+			gap: 8px;
+			justify-content: flex-end;
+			margin-top: 4px;
+		}
+
+		/* ── HEADER LINKS ── */
+		.header-links {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.header-link {
+			display: inline-flex;
+			align-items: center;
+			gap: 5px;
+			font-size: 0.7rem;
+			font-weight: 600;
+			padding: 4px 10px;
+			border-radius: 6px;
+			border: 1px solid var(--border);
+			background: var(--bg3);
+			color: var(--text2);
+			text-decoration: none;
+			letter-spacing: 0.03em;
+			transition: all 0.15s;
+		}
+
+		.header-link:hover {
+			border-color: var(--accent);
+			color: var(--accent);
+			background: rgba(124, 58, 237, 0.08);
+		}
+
+		.header-link.cyan:hover {
+			border-color: var(--accent2);
+			color: var(--accent2);
+			background: rgba(6, 182, 212, 0.08);
+		}
+
+		/* ── SCROLLBAR ── */
+		::-webkit-scrollbar {
+			width: 4px;
+		}
+
+		::-webkit-scrollbar-track {
+			background: transparent;
+		}
+
+		::-webkit-scrollbar-thumb {
+			background: var(--border);
+			border-radius: 99px;
+		}
+
+		/* ── EMPTY STATE ── */
+		.empty {
+			text-align: center;
+			padding: 32px;
+			color: var(--text3);
+			font-size: 0.8rem;
+		}
+
+		.divider {
+			height: 1px;
+			background: var(--border);
+			margin: 4px 0;
+		}
+	</style>
+</head>
+
+<body>
+
+	<header>
+		<div class="logo">night<span>-proxy</span>.js</div>
+		<span class="badge">v2.5.0</span>
+		<div class="header-links">
+			<a class="header-link" href="https://github.com/israel-nogueira/night-proxy" target="_blank">
+				<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+					<path
+						d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z" />
+				</svg>
+				GitHub
+			</a>
+			<a class="header-link cyan" href="./teste.html" target="_blank">
+				<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+					stroke-linecap="round" stroke-linejoin="round">
+					<polyline points="9 11 12 14 22 4" />
+					<path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+				</svg>
+				Test Suite
+			</a>
+		</div>
+		<div class="header-status">
+			<div class="dot"></div>
+			proxy ativo
+		</div>
+	</header>
+
+	<div class="layout">
+
+		<!-- ══ SIDEBAR: CONTROLES ══ -->
+		<aside class="sidebar">
+
+			<div>
+				<div class="section-label">// info geral</div>
+				<div class="field">
+					<label>x-model → info.titulo</label>
+					<input type="text" x-model="info.titulo" placeholder="Título do painel">
+				</div>
+				<div class="field" style="margin-top:10px">
+					<label>x-model → info.descricao</label>
+					<input type="text" x-model="info.descricao" placeholder="Descrição">
+				</div>
+				<div class="field" style="margin-top:10px">
+					<label>x-model → info.categoria</label>
+					<select x-model="info.categoria">
+						<option value="frontend">Frontend</option>
+						<option value="backend">Backend</option>
+						<option value="devops">DevOps</option>
+						<option value="mobile">Mobile</option>
+					</select>
+				</div>
+			</div>
+
+			<div>
+				<div class="section-label">// flags</div>
+				<label class="check-row">
+					<input type="checkbox" x-model="info.ativo">
+					info.ativo (x-if)
+				</label>
+				<div class="radio-group" style="margin-top:12px">
+					<div class="section-label">info.prioridade</div>
+					<label class="check-row"><input type="radio" x-model="info.prioridade" name="prio" value="alta">
+						Alta</label>
+					<label class="check-row"><input type="radio" x-model="info.prioridade" name="prio" value="media">
+						Média</label>
+					<label class="check-row"><input type="radio" x-model="info.prioridade" name="prio" value="baixa">
+						Baixa</label>
+				</div>
+			</div>
+
+			<div>
+				<div class="section-label">// adicionar produto</div>
+				<div class="field">
+					<label>nome</label>
+					<input type="text" id="inp-nome" placeholder="Nome do produto">
+				</div>
+				<div class="field" style="margin-top:8px">
+					<label>categoria</label>
+					<input type="text" id="inp-cat" placeholder="ex: UI, API, DB">
+				</div>
+				<div class="btn-group" style="margin-top:12px">
+					<button class="btn btn-primary" onclick="addProduto()">＋ Adicionar</button>
+					<button class="btn btn-secondary" onclick="addRandom()">⚡ Random</button>
+				</div>
+			</div>
+
+			<div>
+				<div class="section-label">// ações globais</div>
+				<div class="btn-group">
+					<button class="btn btn-cyan" onclick="toggleTodos()">⇄ Toggle todos</button>
+					<button class="btn btn-amber" onclick="shuffleLista()">⟳ Shuffle</button>
+					<button class="btn btn-danger" onclick="limparLista()">✕ Limpar lista</button>
+				</div>
+			</div>
+
+		</aside>
+
+		<!-- ══ MAIN: TARGETS ══ -->
+		<main class="main">
+
+			<!-- Card: Info (x-bind, x-if, x-model) -->
+			<div class="card">
+				<div class="card-header">
+					<div class="card-title">Painel de Informações</div>
+					<span class="card-key">x-target="info"</span>
+				</div>
+				<div class="card-body">
+					<div x-data="info">
+						<div class="info-grid">
+							<div class="info-field">
+								<div class="info-field-label">Título</div>
+								<div class="info-field-value" x-bind="titulo"></div>
+							</div>
+							<div class="info-field">
+								<div class="info-field-label">Categoria</div>
+								<div class="info-field-value" x-bind="categoria"></div>
+							</div>
+							<div class="info-field" style="grid-column: 1 / -1">
+								<div class="info-field-label">Descrição</div>
+								<div class="info-field-value" x-bind="descricao"></div>
+							</div>
+							<div class="info-field">
+								<div class="info-field-label">Prioridade</div>
+								<div class="info-field-value" x-bind="prioridade"></div>
+							</div>
+							<div class="info-field">
+								<div class="info-field-label">Status</div>
+								<div x-if="ativo" class="produto-status status-ativo">● Ativo</div>
+								<div x-if="!ativo" class="produto-status status-inativo">● Inativo</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Card: Lista de Produtos (x-for, x-on, x-if) -->
+			<div class="card">
+				<div class="card-header">
+					<div class="card-title">Lista de Produtos</div>
+					<span class="card-key">x-target="produtos"</span>
+				</div>
+				<div class="card-body">
+					<div x-data="produtos">
+						<div x-for="item in lista">
+							<div class="produto-item">
+								<div>
+									<div class="produto-nome" x-bind="{item.nome}"></div>
+									<div class="produto-cat" x-bind="cat: {item.categoria} · idx: {item.$i}"></div>
+								</div>
+								<div x-if="item.ativo" class="produto-status status-ativo">ativo</div>
+								<div x-if="!item.ativo" class="produto-status status-inativo">inativo</div>
+								<div class="produto-actions">
+									<button class="btn-icon" x-on:click="editarItem(item.$i)" title="Editar">✎</button>
+									<button class="btn-icon" x-on:click="toggleItem(item.$i)" title="Toggle">⇄</button>
+									<button class="btn-icon del" x-on:click="removerItem(item.$i)"
+										title="Remover">✕</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Card: Subitems (loop aninhado) -->
+			<div class="card">
+				<div class="card-header">
+					<div class="card-title">Categorias & Tags</div>
+					<span class="card-key">x-target="categorias" · x-for aninhado</span>
+				</div>
+				<div class="card-body">
+					<div x-data="categorias">
+						<div x-for="cat in lista">
+							<div style="margin-bottom:16px">
+								<div style="font-size:0.8rem; font-weight:600; color: var(--accent2); margin-bottom:6px"
+									x-bind="{cat.nome}"></div>
+								<div class="tag-list">
+									<div x-for="tag in cat.tags">
+										<span class="tag" x-bind="{tag.label}"></span>
+									</div>
+								</div>
+								<div class="divider" style="margin-top:12px"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+		</main>
+
+		<!-- ══ LOG PANEL ══ -->
+		<aside class="log-panel">
+			<div class="log-header">
+				<span class="log-title">// event log</span>
+				<button class="log-clear" onclick="clearLog()">limpar</button>
+			</div>
+			<div class="log-body" id="log-body"></div>
+		</aside>
+
+	</div>
+
+	<!-- Modal de edição -->
+	<div class="modal-overlay" id="modal">
+		<div class="modal">
+			<div class="modal-title">✎ Editar Produto</div>
+			<div class="field">
+				<label>nome</label>
+				<input type="text" id="modal-nome" placeholder="Nome">
+			</div>
+			<div class="field">
+				<label>categoria</label>
+				<input type="text" id="modal-cat" placeholder="Categoria">
+			</div>
+			<div class="modal-actions">
+				<button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+				<button class="btn btn-primary" onclick="salvarModal()">Salvar</button>
+			</div>
+		</div>
+	</div>
+
+	<script>
+
+		// ── Logger ──────────────────────────────────────────────────────────────
+		function log(msg, type = 'info') {
+			const body = document.getElementById('log-body');
+			const now = new Date().toLocaleTimeString('pt-BR', { hour12: false });
+			const el = document.createElement('div');
+			el.className = `log-entry ${type}`;
+			el.innerHTML = `<span class="log-time">${now}</span>${msg}`;
+			body.prepend(el);
+			if (body.children.length > 80) body.lastChild.remove();
+		}
+
+		function clearLog() {
+			document.getElementById('log-body').innerHTML = '';
+		}
+
+		// ── Init ─────────────────────────────────────────────────────────────────
+		proxy.initProxy();
+
+		// ── Info ─────────────────────────────────────────────────────────────────
+		proxy.template.info.titulo = "night-proxy.js";
+		proxy.template.info.descricao = "Reatividade declarativa sem frameworks";
+		proxy.template.info.categoria = "frontend";
+		proxy.template.info.prioridade = "alta";
+		proxy.template.info.ativo = true;
+
+		log('proxy.initProxy() executado', 'success');
+		log('info inicializado', 'info');
+
+		// ── Produtos ─────────────────────────────────────────────────────────────
+		proxy.template.produtos.lista = [
+			{ nome: "night-proxy core", categoria: "reactive", ativo: true },
+			{ nome: "morphdom diffing", categoria: "dom", ativo: true },
+			{ nome: "x-for nested", categoria: "template", ativo: false },
+			{ nome: "x-model binding", categoria: "input", ativo: true },
+		];
+
+		log('produtos.lista inicializado com 4 itens', 'info');
+
+		// ── Categorias ────────────────────────────────────────────────────────────
+		proxy.template.categorias.lista = [
+			{
+				nome: "Diretivas", tags: [
+					{ label: "x-bind" }, { label: "x-for" }, { label: "x-if" },
+					{ label: "x-model" }, { label: "x-on" }, { label: "x-target" }
+				]
+			},
+			{
+				nome: "Recursos", tags: [
+					{ label: "Proxy Recursivo" }, { label: "morphdom" },
+					{ label: "Two-way binding" }, { label: "Loop aninhado" },
+					{ label: "$i index" }
+				]
+			},
+			{
+				nome: "Stack", tags: [
+					{ label: "Vanilla JS" }, { label: "ES6+" }, { label: "Zero deps" }
+				]
+			},
+		];
+
+		log('categorias.lista inicializado', 'info');
+
+		// ── Ações ─────────────────────────────────────────────────────────────────
+		const nomes = ["x-portal", "night-store", "proxy-router", "dark-bind", "reactive-kit", "shadow-dom-helper", "flux-proxy", "nano-state"];
+		const cats = ["UI", "API", "DB", "Auth", "Infra", "Cache", "Queue", "Log"];
+
+		function addProduto() {
+			const nome = document.getElementById('inp-nome').value.trim();
+			const cat = document.getElementById('inp-cat').value.trim();
+			if (!nome) { log('Nome vazio — nada adicionado', 'warn'); return; }
+			proxy.template.produtos.lista.push({ nome, categoria: cat || 'geral', ativo: true });
+			log(`adicionado: "${nome}"`, 'success');
+			document.getElementById('inp-nome').value = '';
+			document.getElementById('inp-cat').value = '';
+		}
+
+		function addRandom() {
+			const nome = nomes[Math.floor(Math.random() * nomes.length)];
+			const cat = cats[Math.floor(Math.random() * cats.length)];
+			proxy.template.produtos.lista.push({ nome, categoria: cat, ativo: Math.random() > 0.4 });
+			log(`random adicionado: "${nome}"`, 'success');
+		}
+
+		function removerItem(idx) {
+			const item = proxy.template.produtos.lista[idx];
+			log(`removido[${idx}]: "${item.nome}"`, 'error');
+			proxy.template.produtos.lista.splice(idx, 1);
+		}
+
+		function toggleItem(idx) {
+			const item = proxy.template.produtos.lista[idx];
+			item.ativo = !item.ativo;
+			log(`toggle[${idx}] "${item.nome}" → ${item.ativo ? 'ativo' : 'inativo'}`, 'warn');
+		}
+
+		function toggleTodos() {
+			const lista = proxy.template.produtos.lista;
+			const algumAtivo = lista.some(i => i.ativo);
+			lista.forEach((_, i) => { lista[i].ativo = !algumAtivo; });
+			log(`todos → ${!algumAtivo ? 'ativo' : 'inativo'}`, 'warn');
+		}
+
+		function shuffleLista() {
+			const arr = [...proxy.template.produtos.lista].sort(() => Math.random() - 0.5);
+			proxy.template.produtos.lista = arr;
+			log('lista embaralhada', 'info');
+		}
+
+		function limparLista() {
+			proxy.template.produtos.lista = [];
+			log('lista limpa', 'error');
+		}
+
+		// ── Modal ─────────────────────────────────────────────────────────────────
+		let _editIdx = null;
+
+		function editarItem(idx) {
+			_editIdx = idx;
+			const item = proxy.template.produtos.lista[idx];
+			document.getElementById('modal-nome').value = item.nome;
+			document.getElementById('modal-cat').value = item.categoria;
+			document.getElementById('modal').classList.add('open');
+			log(`editando[${idx}]: "${item.nome}"`, 'info');
+		}
+
+		function closeModal() {
+			document.getElementById('modal').classList.remove('open');
+			_editIdx = null;
+		}
+
+		function salvarModal() {
+			if (_editIdx === null) return;
+			const nome = document.getElementById('modal-nome').value.trim();
+			const cat = document.getElementById('modal-cat').value.trim();
+			proxy.template.produtos.lista[_editIdx].nome = nome;
+			proxy.template.produtos.lista[_editIdx].categoria = cat;
+			log(`salvo[${_editIdx}]: "${nome}"`, 'success');
+			closeModal();
+		}
+
+		// registrar funções no escopo do componente produtos
+		proxy.template.produtos.editarItem = editarItem;
+		proxy.template.produtos.toggleItem = toggleItem;
+		proxy.template.produtos.removerItem = removerItem;
+
+		document.getElementById('modal').addEventListener('click', function (e) {
+			if (e.target === this) closeModal();
+		});
+
+	</script>
+</body>
+
+</html>
