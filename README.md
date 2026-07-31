@@ -17,30 +17,30 @@ Ou que **um formulário reaja ao que o usuário digita** _(tudo isso sem recarre
 
 Não temos nada contra os grandes frameworks, eles existem por boas razões, resolvem problemas reais e sustentam aplicações enormes. Mas existe um espaço enorme entre "página HTML com PHP" e "SPA completa com React".
 
-## É exatamente esse espaço que o night-proxy.js ocupa.
+## É exatamente esse espaço que o shadow-proxy.js ocupa.
 
 A ideia é simples: um arquivo, uma tag script, e sua página passa a ser reativa. Sem npm. Sem build. Sem opinião sobre a sua stack.
 
 Você escreve os atributos no HTML, popula os dados via JavaScript, e o DOM se atualiza sozinho de forma granular, eficiente, sem re-renders desnecessários com uma única linha:
 
 ```html
-<script src="./assets/js/night-proxy.js"></script>
+<script src="./assets/js/shadow-proxy.js"></script>
 ```
 
 Ou via CDN:
 ```html
-<script src="https://cdn.jsdelivr.net/gh/israel-nogueira/shadow-proxy@refs/heads/no-reflow/assets/js/night-proxy.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/israel-nogueira/shadow-proxy@refs/heads/no-reflow/assets/js/shadow-proxy.min.js"></script>
 ```
 
 Sem npm. Sem build. Sem configuração. Você escreve HTML normal, adiciona alguns atributos, e a página começa a reagir sozinha às mudanças de dados. Funciona em qualquer projeto, PHP, HTML puro, WordPress, Laravel, o que for.
 
 ---
-> ✅ Se você já sabe fazer uma página em HTML, você já sabe usar night-proxy.js.
+> ✅ Se você já sabe fazer uma página em HTML, você já sabe usar shadow-proxy.js.
 ---
 
 ## Por que não Alpine, Vue ou React?
 
-| Característica | NightProxy | Alpine.js | Vue.js (CDN) | React (CDN) |
+| Característica | ShadowProxy | Alpine.js | Vue.js (CDN) | React (CDN) |
 |---|---|---|---|---|
 | Tamanho (minificado) | ~10KB | ~44KB | ~130KB | ~130KB+ |
 | Tamanho (min+gzip) | **~3.6KB** | ~13.5KB | ~34KB | ~45KB |
@@ -59,13 +59,13 @@ Sem npm. Sem build. Sem configuração. Você escreve HTML normal, adiciona algu
 
 ## Para quem quer saber como funciona de verdade
 
-night-proxy.js implementa **reatividade declarativa baseada em Proxy Recursivo** com dependency tracking granular, sem virtual DOM, sem dirty checking, sem re-renders desnecessários.
+shadow-proxy.js implementa **reatividade declarativa baseada em Proxy Recursivo** com dependency tracking granular, sem virtual DOM, sem dirty checking, sem re-renders desnecessários.
 
 ### 🔥 O que isso significa na prática
 
 A maioria das soluções "leves" de reatividade usa uma de duas abordagens ruins: re-renderiza o componente inteiro a cada mudança, ou percorre o DOM em busca de diferenças (dirty checking). Ambas escalam mal.
 
-night-proxy.js faz diferente. Durante o render de cada nó, qualquer leitura de propriedade registra automaticamente uma dependência via `WeakMap`. Quando um valor muda, **apenas os nós que dependem daquela propriedade específica são atualizados** — cirurgicamente, sem tocar no resto.
+shadow-proxy.js faz diferente. Durante o render de cada nó, qualquer leitura de propriedade registra automaticamente uma dependência via `WeakMap`. Quando um valor muda, **apenas os nós que dependem daquela propriedade específica são atualizados** — cirurgicamente, sem tocar no resto.
 
 ### 🛡️ Garantias de performance
 
@@ -99,7 +99,7 @@ e qualquer cenário onde **React ou Vue seria complexidade desnecessária**.
 Um único arquivo. Inclua no `<head>`:
 
 ```html
-<script src="./assets/js/night-proxy.js"></script>
+<script src="./assets/js/shadow-proxy.js"></script>
 ```
 
 Nenhuma dependência externa necessária.
@@ -670,11 +670,11 @@ proxy.onError = function(err) {
 
 ```javascript
 proxy.onError = function(err) {
-    console.error('[night-proxy]', err.type, err);
+    console.error('[shadow-proxy]', err.type, err);
 
     const toast = document.createElement('div');
     toast.style.cssText = 'position:fixed;bottom:16px;right:16px;background:#ef4444;color:#fff;padding:8px 16px;border-radius:6px;font-size:13px;z-index:9999';
-    toast.textContent   = '[night-proxy] ' + err.type + ': ' + err.message;
+    toast.textContent   = '[shadow-proxy] ' + err.type + ': ' + err.message;
     document.body.appendChild(toast);
     setTimeout(() => toast.remove(), 5000);
 };
@@ -777,7 +777,7 @@ Registre funções diretamente no `proxy.template` para usá-las nos eventos sem
 
     // Error handler global
     proxy.onError = function(err) {
-        console.error('[night-proxy]', err.type, err);
+        console.error('[shadow-proxy]', err.type, err);
     };
 
     // Começa com array vazio — sem dados dummy
