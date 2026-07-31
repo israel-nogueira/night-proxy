@@ -1,17 +1,9 @@
-
-
-
-
-
-
-
-
 <p align="center">
     <img src="https://raw.githubusercontent.com/israel-nogueira/night-proxy/master/assets/img/avatar.png" width="650"/>
 </p>
 
 <p align="center">
-    <img src="https://img.shields.io/badge/version-2.5.0-7c3aed?style=flat-square" />
+    <img src="https://img.shields.io/badge/version-2.6.0-7c3aed?style=flat-square" />
     <img src="https://img.shields.io/badge/zero%20dependencies-✓-22c55e?style=flat-square" />
     <img src="https://img.shields.io/badge/no%20build%20tools-✓-06b6d4?style=flat-square" />
     <img src="https://img.shields.io/badge/license-MIT-f59e0b?style=flat-square" />
@@ -25,10 +17,9 @@ Ou que **um formulário reaja ao que o usuário digita** _(tudo isso sem recarre
 
 Não temos nada contra os grandes frameworks, eles existem por boas razões, resolvem problemas reais e sustentam aplicações enormes. Mas existe um espaço enorme entre "página HTML com PHP" e "SPA completa com React".
 
-
 ## É exatamente esse espaço que o night-proxy.js ocupa.
 
-A ideia é simples: um arquivo, uma tag script, e sua página passa a ser reativa. Sem npm. Sem build. Sem opinião sobre a sua stack. 
+A ideia é simples: um arquivo, uma tag script, e sua página passa a ser reativa. Sem npm. Sem build. Sem opinião sobre a sua stack.
 
 Você escreve os atributos no HTML, popula os dados via JavaScript, e o DOM se atualiza sozinho de forma granular, eficiente, sem re-renders desnecessários com uma única linha:
 
@@ -41,11 +32,29 @@ Ou via CDN:
 <script src="https://cdn.jsdelivr.net/gh/israel-nogueira/night-proxy@no-reflow/assets/js/night-proxy.js"></script>
 ```
 
-
 Sem npm. Sem build. Sem configuração. Você escreve HTML normal, adiciona alguns atributos, e a página começa a reagir sozinha às mudanças de dados. Funciona em qualquer projeto, PHP, HTML puro, WordPress, Laravel, o que for.
 
 ---
 > ✅ Se você já sabe fazer uma página em HTML, você já sabe usar night-proxy.js.
+---
+
+## Por que não Alpine, Vue ou React?
+
+| Característica | NightProxy | Alpine.js | Vue.js (CDN) | React (CDN) |
+|---|---|---|---|---|
+| Tamanho (minificado) | ~10KB | ~44KB | ~130KB | ~130KB+ |
+| Tamanho (min+gzip) | **~3.6KB** | ~13.5KB | ~34KB | ~45KB |
+| Build tools | ❌ | ❌ | ❌ | ❌ |
+| Dependências | Zero | Zero | Zero | Zero |
+| Curva de aprendizado | 15 min | 1 hora | 2 dias | 1 semana |
+| Reatividade granular | ✅ | ✅ | ✅ | ✅ |
+| Loop aninhado | ✅ | ✅ | ✅ | ✅ |
+| Two-way binding | ✅ | ✅ | ✅ | ❌ |
+| Arrays vazios reativos | ✅ | ✅ | ✅ | ✅ |
+| Error handler customizável | ✅ | ❌ | ❌ | ❌ |
+| Destroy real (SPA/fetch) | ✅ | ⚠️ | ⚠️ | ✅ |
+| Funciona em PHP puro | ✅ | ✅ | ⚠️ | ❌ |
+
 ---
 
 ## Para quem quer saber como funciona de verdade
@@ -56,7 +65,7 @@ night-proxy.js implementa **reatividade declarativa baseada em Proxy Recursivo**
 
 A maioria das soluções "leves" de reatividade usa uma de duas abordagens ruins: re-renderiza o componente inteiro a cada mudança, ou percorre o DOM em busca de diferenças (dirty checking). Ambas escalam mal.
 
-night-proxy.js faz diferente. Durante o render de cada nó, qualquer leitura de propriedade registra automaticamente uma dependência via `WeakMap`. Quando um valor muda, **apenas os nós que dependem daquela propriedade específica são atualizados!** cirurgicamente, sem tocar no resto.
+night-proxy.js faz diferente. Durante o render de cada nó, qualquer leitura de propriedade registra automaticamente uma dependência via `WeakMap`. Quando um valor muda, **apenas os nós que dependem daquela propriedade específica são atualizados** — cirurgicamente, sem tocar no resto.
 
 ### 🛡️ Garantias de performance
 
@@ -68,16 +77,17 @@ Em testes com 5.000 itens renderizados, um update pontual (`lista[2500].nome = '
 
 ### ⚙️ Diferenciais técnicos
 
-- **Proxy Recursivo**, qualquer nível de aninhamento é rastreado automaticamente, sem necessidade de declarar observers manualmente
-- **Effects com auto-cleanup**, cada nó reativo tem seu próprio Effect que se desregistra e re-registra nas dependências a cada run, evitando memory leaks e renders obsoletos
-- **Lifecycle completo**, `$beforeRender`, `$afterRender`, `$beforeDestroy`, `$afterDestroy` com suporte a eventos DOM nativos (`before-render`, `after-destroy`...)
-- **Destroy real**, limpa effects, event listeners, watchers e store em cascata; essencial para SPAs que trocam conteúdo via fetch
-- **44 testes automatizados**, cobrindo reatividade, granularidade, stress (500 / 1k / 5k itens) e ciclo de vida completo, todos passando
+- **Proxy Recursivo** — qualquer nível de aninhamento é rastreado automaticamente, sem necessidade de declarar observers manualmente
+- **Effects com auto-cleanup** — cada nó reativo tem seu próprio Effect que se desregistra e re-registra nas dependências a cada run, evitando memory leaks e renders obsoletos
+- **Lifecycle completo** — `$beforeRender`, `$afterRender`, `$beforeDestroy`, `$afterDestroy` com suporte a eventos DOM nativos
+- **Destroy real** — limpa effects, event listeners, watchers e store em cascata; essencial para SPAs que trocam conteúdo via fetch
+- **Error handler centralizado** — todos os erros da lib passam por `proxy.onError`, capturável e roteável
+- **Arrays vazios suportados** — templates `x-for` são cacheados antes do primeiro render; não precisa de dados dummy
 
 ### 🤓 Para quem é indicado
 
 Projetos que precisam de reatividade pontual sem o custo de adotar um framework completo.<br>
-Aplicações PHP, páginas com conteúdo dinâmico via fetch, dashboards simples, formulários reativos <br>
+Aplicações PHP, páginas com conteúdo dinâmico via fetch, dashboards simples, formulários reativos<br>
 e qualquer cenário onde **React ou Vue seria complexidade desnecessária**.
 
 **Um arquivo. Sem dependências. Sem opinião sobre sua stack.**
@@ -137,23 +147,27 @@ proxy.template.produto.nome = "Coxinha Supreme";
 
 ### `x-bind="expr"`
 
-Renderiza um valor reativo como texto. Suporta expressão direta ou interpolação com `{}`.
+Renderiza um valor reativo como texto. Suporta expressão direta, interpolação com `{}`, ou texto misturado.
 
 ```html
 <div x-data="produto">
     <h1 x-bind="nome"></h1>
     <p x-bind="Preço: R$ {preco}, Qtd: {qty}"></p>
+    <span x-bind="ID: {id}"></span>
+    <span x-bind="{nome} ({categoria})"></span>
 </div>
+```
 
-<script>
-    proxy.initProxy();
-    proxy.template.produto.nome  = "Coxinha Supreme";
-    proxy.template.produto.preco = 9.90;
-    proxy.template.produto.qty   = 3;
+```javascript
+proxy.initProxy();
+proxy.template.produto.nome      = "Coxinha Supreme";
+proxy.template.produto.preco     = 9.90;
+proxy.template.produto.qty       = 3;
+proxy.template.produto.id        = 42;
+proxy.template.produto.categoria = "Salgado";
 
-    // Qualquer alteração posterior atualiza o DOM automaticamente
-    proxy.template.produto.nome = "Novo nome";
-</script>
+// Qualquer alteração posterior atualiza o DOM automaticamente
+proxy.template.produto.nome = "Novo nome";
 ```
 
 ---
@@ -179,7 +193,9 @@ proxy.template.produto.ativo = false;
 
 ### `x-for="alias in lista"`
 
-Loop reativo e aninhável. Suporta duas sintaxes para declarar o índice com nome:
+Loop reativo e aninhável. Suporta duas sintaxes para declarar o índice com nome.
+
+> ✅ **v2.6.0** — Arrays vazios são totalmente suportados. O template é cacheado antes do primeiro render, então iniciar com `[]` e popular depois funciona naturalmente.
 
 ```html
 <!-- sem índice nomeado, usa $i / $index como fallback -->
@@ -210,6 +226,11 @@ Exemplo com aninhamento e índices nomeados:
 
 ```javascript
 proxy.initProxy();
+
+// Iniciar com array vazio — funciona sem dados dummy
+proxy.template.pedido.itens = [];
+
+// Popular depois — re-render automático
 proxy.template.pedido.itens = [
     {
         nome: "Salgados",
@@ -226,6 +247,19 @@ proxy.template.pedido.itens.push({ nome: "Doces", subitens: [] });
 
 // Update cirúrgico, toca só o nó do item[0], não re-renderiza a lista
 proxy.template.pedido.itens[0].nome = "Salgadinhos";
+```
+
+Exemplo com fetch real:
+
+```javascript
+proxy.initProxy();
+proxy.template.produtos.lista = [];  // começa vazio sem problema
+
+fetch('/api/produtos')
+    .then(r => r.json())
+    .then(data => {
+        proxy.template.produtos.lista = data; // re-render automático
+    });
 ```
 
 ---
@@ -290,7 +324,7 @@ proxy.template.produto.categoria = "a";
 proxy.template.produto.cor = "verde";
 
 // Alterar via input também atualiza o proxy (two-way)
-//, o usuário digita no campo e proxy.template.produto.nome é atualizado automaticamente
+// o usuário digita no campo e proxy.template.produto.nome é atualizado automaticamente
 ```
 
 ---
@@ -362,14 +396,6 @@ Elemento DOM do container `x-data`. Útil para manipulação direta ou para sabe
 <button x-on:click="$root.classList.toggle('ativo')">Toggle classe</button>
 ```
 
-```javascript
-proxy.initProxy();
-
-// $root é o próprio elemento [x-data="..."]
-// Equivale a document.querySelector('[x-data="meu-componente"]')
-// mas sem precisar de querySelector, já está no escopo do x-on
-```
-
 ---
 
 ### `$ref`
@@ -400,7 +426,7 @@ document.querySelector('[x-data="lista"]').addEventListener('item-selecionado', 
 ---
 
 ### `$i` / `$index`
-Índice do item atual no loop. Disponíveis quando nenhum alias de índice foi declarado. Quando um alias é declarado (`item, k in lista`), use o alias, `$i` e `$index` ficam como fallback.
+Índice do item atual no loop. Disponíveis quando nenhum alias de índice foi declarado. Quando um alias é declarado (`item, k in lista`), use o alias; `$i` e `$index` ficam como fallback.
 
 ```html
 <!-- sem alias, usa $i / $index -->
@@ -490,8 +516,6 @@ el.addEventListener('after-render',  () => console.log('depois'));
 
 ---
 
----
-
 ## Destroy
 
 Limpa completamente um componente antes de recarregar via fetch ou ao desmontar a página. O destroy remove todos os effects reativos, event listeners declarados com `x-on`, watchers registrados e a entrada no store interno.
@@ -557,6 +581,8 @@ async function carregarProduto(id) {
 }
 ```
 
+---
+
 ## Watchers
 
 Observa qualquer caminho do store e executa um callback quando o valor muda. Retorna uma função de cancelamento.
@@ -576,6 +602,82 @@ Funciona com caminhos profundos:
 proxy.on('pedido.itens.0.nome', (novo, velho) => {
     console.log('nome do primeiro item mudou');
 });
+```
+
+---
+
+## Error Handling
+
+> ✅ **v2.6.0** — Todos os erros da lib são centralizados em `proxy.onError`. Se não definido, usa `console.error` por padrão.
+
+### Handler customizável
+
+```javascript
+proxy.onError = function(err) {
+    // err = { type, message, timestamp, ...contexto }
+    console.table(err);
+};
+```
+
+### Tipos de erro
+
+| Tipo | Quando ocorre |
+|---|---|
+| `x-for-syntax` | Expressão inválida no `x-for` |
+| `x-on-unsafe` | Expressão bloqueada por segurança no `x-on` |
+| `x-bind-eval` | Falha ao avaliar expressão em `x-bind` ou interpolação |
+| `lifecycle-error` | Hook `$beforeRender`, `$afterRender`, `$beforeDestroy` ou `$afterDestroy` lançou exceção |
+| `watcher-error` | Callback de `proxy.on()` lançou exceção |
+
+### Objeto de erro
+
+```javascript
+{
+    type      : 'x-for-syntax',       // tipo do erro
+    message   : 'Expressão inválida', // mensagem legível
+    timestamp : 1734567890123,        // Date.now()
+    expr      : '(user) in lista',    // expressão que causou o erro (quando aplicável)
+    element   : 'DIV#minha-lista',    // elemento HTML envolvido (quando aplicável)
+    path      : 'minhaLista',         // componente/key (quando aplicável)
+    component : 'minhaLista',         // alias de path em erros de lifecycle
+    message   : 'TypeError: ...',     // mensagem original da exceção (quando aplicável)
+}
+```
+
+### Integrando com Sentry
+
+```javascript
+proxy.onError = function(err) {
+    Sentry.captureException(new Error(err.message), {
+        extra: err
+    });
+};
+```
+
+### Integrando com um endpoint de log
+
+```javascript
+proxy.onError = function(err) {
+    fetch('/api/log-error', {
+        method  : 'POST',
+        headers : { 'Content-Type': 'application/json' },
+        body    : JSON.stringify(err)
+    });
+};
+```
+
+### Exibindo erros na UI (desenvolvimento)
+
+```javascript
+proxy.onError = function(err) {
+    console.error('[night-proxy]', err.type, err);
+
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed;bottom:16px;right:16px;background:#ef4444;color:#fff;padding:8px 16px;border-radius:6px;font-size:13px;z-index:9999';
+    toast.textContent   = '[night-proxy] ' + err.type + ': ' + err.message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 5000);
+};
 ```
 
 ---
@@ -646,12 +748,12 @@ Registre funções diretamente no `proxy.template` para usá-las nos eventos sem
     proxy.template.lista.remover = function(idx) {
         proxy.template.lista.itens.splice(idx, 1);
     };
-</>
+</script>
 ```
 
 ---
 
-## Exemplo completo
+## Exemplo completo com fetch e array vazio
 
 ```html
 <input type="text"     x-model="pedido.cliente" placeholder="Nome do cliente">
@@ -660,6 +762,7 @@ Registre funções diretamente no `proxy.template` para usá-las nos eventos sem
 <div x-data="pedido">
     <h2 x-bind="cliente"></h2>
     <p x-if="confirmado">✅ Pedido confirmado</p>
+    <p x-if="!carregado">Carregando itens...</p>
 
     <div x-for="item, k in itens">
         <strong x-bind="{item.nome}"></strong>
@@ -672,13 +775,24 @@ Registre funções diretamente no `proxy.template` para usá-las nos eventos sem
 <script>
     proxy.initProxy();
 
+    // Error handler global
+    proxy.onError = function(err) {
+        console.error('[night-proxy]', err.type, err);
+    };
+
+    // Começa com array vazio — sem dados dummy
     proxy.template.pedido.cliente    = "João Silva";
     proxy.template.pedido.confirmado = true;
-    proxy.template.pedido.itens      = [
-        { nome: "Coxinha",  qty: 3 },
-        { nome: "Pastel",   qty: 2 },
-        { nome: "Salgado",  qty: 5 },
-    ];
+    proxy.template.pedido.carregado  = false;
+    proxy.template.pedido.itens      = [];
+
+    // Popula via fetch
+    fetch('/api/itens-pedido')
+        .then(r => r.json())
+        .then(data => {
+            proxy.template.pedido.itens    = data;
+            proxy.template.pedido.carregado = true;
+        });
 
     proxy.template.pedido.remover = function(idx) {
         proxy.template.pedido.itens.splice(idx, 1);
@@ -719,7 +833,7 @@ Registre funções diretamente no `proxy.template` para usá-las nos eventos sem
 
 ### Magic Variables (em `x-on`)
 
-| Variable | Descrição |
+| Variável | Descrição |
 |---|---|
 | `$root` | Elemento DOM do container `x-data` |
 | `$ref.nome` | Elemento marcado com `x-ref="nome"` |
@@ -733,17 +847,28 @@ Registre funções diretamente no `proxy.template` para usá-las nos eventos sem
 
 ### API JavaScript
 
-| Método | Descrição |
+| Método / Propriedade | Descrição |
 |---|---|
 | `proxy.initProxy()` | Inicializa o proxy |
 | `proxy.destroy('key')` | Destrói um componente específico |
 | `proxy.destroy()` | Destrói todos os componentes |
 | `proxy.template.key.destroy()` | Shortcut para destruir um componente |
 | `proxy.on(path, fn)` | Observa um caminho, retorna `unsubscribe()` |
+| `proxy.onError = fn` | Handler global de erros da lib |
 | `proxy.template.key.$beforeRender = fn` | Hook antes do render |
 | `proxy.template.key.$afterRender = fn` | Hook após o render |
 | `proxy.template.key.$beforeDestroy = fn` | Hook antes do destroy |
 | `proxy.template.key.$afterDestroy = fn` | Hook após o destroy |
+
+### Tipos de erro (`proxy.onError`)
+
+| Tipo | Origem |
+|---|---|
+| `x-for-syntax` | Sintaxe inválida no `x-for` |
+| `x-on-unsafe` | Expressão bloqueada por segurança |
+| `x-bind-eval` | Falha ao avaliar expressão |
+| `lifecycle-error` | Exceção em hook de lifecycle |
+| `watcher-error` | Exceção em callback de `proxy.on()` |
 
 ---
 

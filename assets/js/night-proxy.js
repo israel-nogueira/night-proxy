@@ -1,5 +1,5 @@
 /*!
- * night-proxy.js v2.5.0
+ * night-proxy.js v2.6.0
  * Reactive DOM binding via Recursive Proxy
  * https://github.com/israel-nogueira/night-proxy
  *
@@ -34,6 +34,8 @@
  * Watchers:
  *   proxy.on('key.prop', (newVal, oldVal) => {})   → watch any deep path
  *
+ * v2.6.0 — Early template cache in initProxy (x-for with empty arrays)
+ *           Centralized error reporting via _reportError + proxy.onError handler
  * v2.3.0 — Granular reactivity (track/trigger)
  * v2.3.1 — Fixes: x-bind granular, _syncModelsForKey, _renderTracked propagation
  * v2.4.0 — Magic vars: $root, $ref, $emit, $this (+parent), $i/$index
@@ -50,6 +52,41 @@ var proxy = (function () {
     const _store = {};
     const _proxies = {};
 
+    // ─── Error reporting ──────────────────────────────────────────────────────
+    // Centraliza todos os erros da lib. Use _reportError() em vez de console.*
+    // O dev pode sobrescrever proxy.onError para capturar/rotear os erros.
+
+    const ERROR_TYPES = {
+        X_FOR_SYNTAX  : 'x-for-syntax',
+        X_ON_UNSAFE   : 'x-on-unsafe',
+        X_BIND_EVAL   : 'x-bind-eval',
+        X_IF_EVAL     : 'x-if-eval',
+        RENDER_ERROR  : 'render-error',
+        MODEL_PATH    : 'model-path',
+        WATCHER_ERROR : 'watcher-error',
+        LIFECYCLE     : 'lifecycle-error',
+        PROXY_TARGET  : 'proxy-target',
+    };
+
+    function _elementId(el) {
+        if (!el || !el.tagName) return 'unknown';
+        return el.tagName + (el.id ? '#' + el.id : '') + (el.className ? '.' + String(el.className).trim().split(/\s+/).join('.') : '');
+    }
+
+    function _reportError(type, message, ctx) {
+        const err = Object.assign({
+            type      : type,
+            message   : message,
+            timestamp : Date.now(),
+        }, ctx || {});
+
+        if (typeof proxy.onError === 'function') {
+            try { proxy.onError(err); } catch (e) { console.error('[night-proxy] onError threw:', e); }
+        } else {
+            console.error('[night-proxy] ' + type + ':', message, err);
+        }
+    }
+
     // ─── Watchers — proxy.on(path, fn) ───────────────────────────────────────
     // Observa qualquer caminho profundo do store. Dispara com (newVal, oldVal).
 
@@ -59,7 +96,7 @@ var proxy = (function () {
         if (newVal === oldVal) return;
         const fns = _watchers[path];
         if (!fns || !fns.size) return;
-        fns.forEach(fn => { try { fn(newVal, oldVal); } catch (e) { console.error('[night-proxy] watcher error:', e); } });
+        fns.forEach(fn => { try { fn(newVal, oldVal); } catch (e) { _reportError(ERROR_TYPES.WATCHER_ERROR, 'Watcher threw', { path: path, message: e.message }); } });
     }
 
     function _registerWatcher(path, fn) {
@@ -203,6 +240,10 @@ var proxy = (function () {
             const values = Object.values(scope);
             return new Function(...keys, `return (${expr})`).call(null, ...values);
         } catch (e) {
+            _reportError(ERROR_TYPES.X_BIND_EVAL, 'Falha ao avaliar expressão', {
+                expr    : expr,
+                message : e.message,
+            });
             return undefined;
         }
     }
@@ -302,7 +343,11 @@ var proxy = (function () {
                 if (el[flag]) continue;
 
                 if (!_safeExpr(expr)) {
-                    console.warn('[night-proxy] unsafe x-on blocked:', expr);
+                    _reportError(ERROR_TYPES.X_ON_UNSAFE, 'Expressão bloqueada por segurança no x-on', {
+                        expr    : expr,
+                        element : _elementId(el),
+                        attr    : attr.name,
+                    });
                     continue;
                 }
 
@@ -367,6 +412,19 @@ var proxy = (function () {
             }
         }
 
+        // ─── Interpolação de atributos com {} ─────────────────────────────────
+        // Qualquer atributo contendo {expr} é interpolado automaticamente.
+        // Ex: class="podium-card {u.classe}"  data-id="{u.ID}"
+        if (node.attributes) {
+            const _SKIP_ATTRS = /^(x-bind|x-if|x-for|x-model|x-on:|x-ref|x-key)/;
+            for (let i = 0; i < node.attributes.length; i++) {
+                const attr = node.attributes[i];
+                if (_SKIP_ATTRS.test(attr.name)) continue;
+                if (!attr.value.includes('{')) continue;
+                node.setAttribute(attr.name, _interpolate(attr.value, scope));
+            }
+        }
+
         if (xFor != null) {
             _renderFor(node, scope, xFor);
             return;
@@ -421,7 +479,11 @@ var proxy = (function () {
         } else if (matchPlain) {
             alias = matchPlain[1]; listExp = matchPlain[2].trim(); indexAlias = null;
         } else {
-            console.error('[night-proxy] x-for syntax error:', expr);
+            _reportError(ERROR_TYPES.X_FOR_SYNTAX, 'Expressão inválida no x-for', {
+                expr    : expr,
+                element : _elementId(node),
+                path    : node.__nightEffect?.key || 'unknown',
+            });
             return;
         }
 
@@ -603,7 +665,7 @@ var proxy = (function () {
 
         targets.forEach(function (target) {
             if (typeof data.$beforeRender === 'function') {
-                try { data.$beforeRender(target); } catch (e) { console.error('[night-proxy] $beforeRender error:', e); }
+                try { data.$beforeRender(target); } catch (e) { _reportError(ERROR_TYPES.LIFECYCLE, '$beforeRender threw', { message: e.message, component: key }); }
             }
             target.dispatchEvent(new CustomEvent('before-render', { bubbles: false }));
 
@@ -639,7 +701,7 @@ var proxy = (function () {
                 _bindEvents(target, scope);
 
                 if (typeof data.$afterRender === 'function') {
-                    try { data.$afterRender(target); } catch (e) { console.error('[night-proxy] $afterRender error:', e); }
+                    try { data.$afterRender(target); } catch (e) { _reportError(ERROR_TYPES.LIFECYCLE, '$afterRender threw', { message: e.message, component: key }); }
                 }
                 target.dispatchEvent(new CustomEvent('after-render', { bubbles: false }));
             });
@@ -740,7 +802,7 @@ var proxy = (function () {
 
             // ── $beforeDestroy ────────────────────────────────────────────────
             if (typeof data.$beforeDestroy === 'function') {
-                try { data.$beforeDestroy(target); } catch (e) { console.error('[night-proxy] $beforeDestroy error:', e); }
+                try { data.$beforeDestroy(target); } catch (e) { _reportError(ERROR_TYPES.LIFECYCLE, '$beforeDestroy threw', { message: e.message, component: key }); }
             }
             target.dispatchEvent(new CustomEvent('before-destroy', { bubbles: false }));
 
@@ -756,7 +818,7 @@ var proxy = (function () {
 
             // ── $afterDestroy ─────────────────────────────────────────────────
             if (typeof data.$afterDestroy === 'function') {
-                try { data.$afterDestroy(target); } catch (e) { console.error('[night-proxy] $afterDestroy error:', e); }
+                try { data.$afterDestroy(target); } catch (e) { _reportError(ERROR_TYPES.LIFECYCLE, '$afterDestroy threw', { message: e.message, component: key }); }
             }
             target.dispatchEvent(new CustomEvent('after-destroy', { bubbles: false }));
         });
@@ -783,8 +845,12 @@ var proxy = (function () {
     return {
 
         name: 'night-proxy.js',
-        version: '2.5.0',
+        version: '2.6.0',
         template: {},
+
+        // proxy.onError = fn({ type, message, timestamp, ...ctx })
+        // Se não definido, usa console.error por padrão.
+        onError: null,
 
         // proxy.on('key.prop', (newVal, oldVal) => {})
         // Retorna função de unsubscribe
@@ -810,6 +876,7 @@ var proxy = (function () {
             document.querySelectorAll('[proxy-target], [x-data]').forEach(function (el) {
                 const key = el.getAttribute('proxy-target') || el.getAttribute('x-data');
                 if (!_store[key]) _store[key] = {};
+                _cacheTemplates(el); // cacheia x-for templates antes de qualquer render (fix: arrays vazios)
             });
 
             self.template = new Proxy(_store, {
