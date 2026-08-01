@@ -228,7 +228,6 @@ var proxy = (function () {
     // ─── Segurança ────────────────────────────────────────────────────────────
 
     const _SAFE_EXPR = /^[a-zA-Z0-9_$.\[\]!<>=&|?:()\s,'"+-]*$/;
-
     function _safeExpr(expr) {
         return _SAFE_EXPR.test(expr.trim());
     }
@@ -576,10 +575,21 @@ var proxy = (function () {
             } 
             else 
             {
-                const wrapper = document.createElement('div');
+                const _WRAPPER_MAP = {
+                    SELECT  : 'select',
+                    TBODY   : 'tbody',
+                    THEAD   : 'thead',
+                    TFOOT   : 'tfoot',
+                    TR      : 'tr',
+                    UL      : 'ul',
+                    OL      : 'ol',
+                    DL      : 'dl',
+                };
+                const wrapper = document.createElement(_WRAPPER_MAP[node.tagName] || 'div');
                 wrapper.innerHTML = template;
                 _cacheTemplates(wrapper);
                 const children = Array.from(wrapper.children);
+
                 if (children.length === 1) {
                     _renderTracked(children[0], scope, rootKey);
                     newNodes.push(children[0]);
