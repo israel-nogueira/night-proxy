@@ -1,7 +1,7 @@
 /*!
- * night-proxy.js v2.6.0
+ * shadow-proxy.js v2.6.0
  * Reactive DOM binding via Recursive Proxy
- * https://github.com/israel-nogueira/night-proxy
+ * https://github.com/israel-nogueira/shadow-proxy
  *
  * Directives:
  *   x-for="item in lista"                    → reactive loop (nestable)
@@ -81,9 +81,9 @@ var proxy = (function () {
         }, ctx || {});
 
         if (typeof proxy.onError === 'function') {
-            try { proxy.onError(err); } catch (e) { console.error('[night-proxy] onError threw:', e); }
+            try { proxy.onError(err); } catch (e) { console.error('[shadow-proxy] onError threw:', e); }
         } else {
-            console.error('[night-proxy] ' + type + ':', message, err);
+            console.error('[shadow-proxy] ' + type + ':', message, err);
         }
     }
 
@@ -301,8 +301,8 @@ var proxy = (function () {
 
     function _initModels() {
         document.querySelectorAll('[x-model]').forEach(function (el) {
-            if (el.__nightModel) return;
-            el.__nightModel = true;
+            if (el.__shadowModel) return;
+            el.__shadowModel = true;
 
             const { key, parts } = _parsePath(el.getAttribute('x-model'));
             const val = _getDeep(parts);
@@ -336,7 +336,7 @@ var proxy = (function () {
                 if (!attr.name.startsWith('x-on:')) continue;
                 const event = attr.name.slice(5);
                 const expr = attr.value;
-                const flag = '__night_' + event;
+                const flag = '__shadow_' + event;
 
                 // if (el[flag]) el.removeEventListener(event, el[flag]);
                 if (el[flag]) continue;
@@ -356,7 +356,7 @@ var proxy = (function () {
                         const values = Object.values(scope);
                         new Function(...keys, 'event', expr).call(null, ...values, e);
                     } catch (err) {
-                        console.error('[night-proxy] x-on error:', err);
+                        console.error('[shadow-proxy] x-on error:', err);
                     }
                 };
                 el.addEventListener(event, el[flag]);
@@ -371,10 +371,10 @@ var proxy = (function () {
     // Updates pontuais chegam direto ao Effect do nó — sem percorrer a lista.
 
     function _renderTracked(node, scope, key) {
-        if (node.__nightEffect) {
-            node.__nightEffect.scope = scope;
-            if (key) node.__nightEffect.key = key;
-            node.__nightEffect.run();
+        if (node.__shadowEffect) {
+            node.__shadowEffect.scope = scope;
+            if (key) node.__shadowEffect.key = key;
+            node.__shadowEffect.run();
             return;
         }
 
@@ -383,7 +383,7 @@ var proxy = (function () {
         });
         effect.scope = scope;
         effect.key = key || null;
-        node.__nightEffect = effect;
+        node.__shadowEffect = effect;
         effect.run();
     }
 
@@ -436,7 +436,7 @@ var proxy = (function () {
 
             if (hasDirective) {
                 // Filho com diretiva ganha Effect próprio — rastreamento granular
-                const parentEffect = node.__nightEffect;
+                const parentEffect = node.__shadowEffect;
                 const rootKey = parentEffect ? parentEffect.key : null;
                 _renderTracked(child, scope, rootKey);
             } else {
@@ -481,17 +481,17 @@ var proxy = (function () {
             _reportError(ERROR_TYPES.X_FOR_SYNTAX, 'Expressão inválida no x-for', {
                 expr    : expr,
                 element : _elementId(node),
-                path    : node.__nightEffect?.key || 'unknown',
+                path    : node.__shadowEffect?.key || 'unknown',
             });
             return;
         }
 
         const list = _evalExpr(listExp, parentScope);
         const xKeyExpr = node.getAttribute('x-key') || null;
-        const template = node.__nightTemplate;
+        const template = node.__shadowTemplate;
 
         // Propaga key do effect pai para os filhos
-        const parentEffect = node.__nightEffect;
+        const parentEffect = node.__shadowEffect;
         const rootKey = parentEffect ? parentEffect.key : null;
 
         // $root do container
@@ -502,13 +502,13 @@ var proxy = (function () {
         // ── Lista vazia ───────────────────────────────────────────────────────
         if (!Array.isArray(list) || list.length === 0) {
             while (node.firstChild) node.removeChild(node.firstChild);
-            node.__nightKeys = [];
+            node.__shadowKeys = [];
             return;
         }
 
         // ── Monta mapa key → nó existente ────────────────────────────────────
         const existingByKey = {};
-        const currentKeys = node.__nightKeys || [];
+        const currentKeys = node.__shadowKeys || [];
 
         currentKeys.forEach(function (key, i) {
             const el = node.children[i];
@@ -563,7 +563,7 @@ var proxy = (function () {
                     if (!el.attributes) return;
                     for (let attr of el.attributes) {
                         if (!attr.name.startsWith('x-on:')) continue;
-                        const flag = '__night_' + attr.name.slice(5);
+                        const flag = '__shadow_' + attr.name.slice(5);
                         if (el[flag]) {
                             el.removeEventListener(attr.name.slice(5), el[flag]);
                             delete el[flag];
@@ -605,7 +605,7 @@ var proxy = (function () {
         currentKeys.forEach(function (key) {
             if (!newKeySet.has(key) && existingByKey[key]) {
                 const el = existingByKey[key];
-                if (el.__nightEffect) el.__nightEffect.cleanup();
+                if (el.__shadowEffect) el.__shadowEffect.cleanup();
                 el.remove();
             }
         });
@@ -622,7 +622,7 @@ var proxy = (function () {
             if (current !== el) node.insertBefore(el, current || null);
         });
 
-        node.__nightKeys = newKeys;
+        node.__shadowKeys = newKeys;
 
         // ── Preenche $this.dom e bind eventos ─────────────────────────────────
         newNodes.forEach(function (el, i) {
@@ -658,7 +658,7 @@ var proxy = (function () {
 
     function _cacheTemplates(root) {
         root.querySelectorAll('[x-for]').forEach(function (el) {
-            if (!el.__nightTemplate) el.__nightTemplate = el.innerHTML;
+            if (!el.__shadowTemplate) el.__shadowTemplate = el.innerHTML;
         });
     }
 
@@ -776,7 +776,7 @@ var proxy = (function () {
             for (let attr of node.attributes) {
                 if (!attr.name.startsWith('x-on:')) continue;
                 const event = attr.name.slice(5);
-                const flag = '__night_' + event;
+                const flag = '__shadow_' + event;
                 if (node[flag]) {
                     node.removeEventListener(event, node[flag]);
                     delete node[flag];
@@ -785,14 +785,14 @@ var proxy = (function () {
         }
 
         // Cleanup effect granular
-        if (node.__nightEffect) {
-            node.__nightEffect.cleanup();
-            delete node.__nightEffect;
+        if (node.__shadowEffect) {
+            node.__shadowEffect.cleanup();
+            delete node.__shadowEffect;
         }
 
-        // Remove x-model listeners (marca interna __nightModel)
-        if (node.__nightModel) {
-            delete node.__nightModel;
+        // Remove x-model listeners (marca interna __shadowModel)
+        if (node.__shadowModel) {
+            delete node.__shadowModel;
         }
 
         // Recursivo nos filhos
@@ -820,11 +820,11 @@ var proxy = (function () {
             Array.from(target.children).forEach(_destroyNode);
 
             // ── Limpa o próprio target ────────────────────────────────────────
-            if (target.__nightEffect) {
-                target.__nightEffect.cleanup();
-                delete target.__nightEffect;
+            if (target.__shadowEffect) {
+                target.__shadowEffect.cleanup();
+                delete target.__shadowEffect;
             }
-            delete target.__nightKeys;
+            delete target.__shadowKeys;
 
             // ── $afterDestroy ─────────────────────────────────────────────────
             if (typeof data.$afterDestroy === 'function') {
@@ -854,7 +854,7 @@ var proxy = (function () {
 
     return {
 
-        name: 'night-proxy.js',
+        name: 'shadow-proxy.js',
         version: '2.6.0',
         template: {},
 

@@ -475,7 +475,7 @@ Em loops profundamente aninhados, `$this.parent` é especialmente útil via JS:
 
 ```javascript
 document.querySelector('[x-data="lista"]').addEventListener('meu-evento', e => {
-    const ctx = e.target.__nightThis;
+    const ctx = e.target.__shadowThis;
     console.log(ctx.index, ctx.parent.index, ctx.parent.parent.index);
 });
 ```
