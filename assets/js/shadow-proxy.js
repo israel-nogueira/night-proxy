@@ -137,7 +137,6 @@ var proxy = (function () {
 
         const list = [...effects];
         if (list.length === 1) {
-            // Update cirúrgico — roda síncrono, sem microtask
             const e = list[0];
             e.scheduled = false;
             e.run();
@@ -147,6 +146,7 @@ var proxy = (function () {
         }
         return true;
     }
+
 
     // ─── Effect ───────────────────────────────────────────────────────────────
 
@@ -266,8 +266,19 @@ var proxy = (function () {
     }
 
     function _setDeep(parts, value) {
-        let obj = _store;
-        for (let i = 0; i < parts.length - 1; i++) {
+        // Navega pelo PROXY para disparar o setter reativo
+        let obj = _proxies[parts[0]];
+        if (!obj) {
+            // fallback proxy-target
+            obj = _store;
+            for (let i = 0; i < parts.length - 1; i++) {
+                obj = obj[parts[i]];
+                if (obj == null) return;
+            }
+            obj[parts[parts.length - 1]] = value;
+            return;
+        }
+        for (let i = 1; i < parts.length - 1; i++) {
             obj = obj[parts[i]];
             if (obj == null) return;
         }
@@ -283,9 +294,33 @@ var proxy = (function () {
         return obj;
     }
 
+
+    function _resolveModel(el) {
+        const modelAttr = el.getAttribute('x-model');
+        const {
+            parts
+        } = _parsePath(modelAttr);
+        const container = el.closest('[x-data],[proxy-target]');
+        if (!container) return {
+            key: parts[0],
+            parts
+        };
+        const key = container.getAttribute('x-data') || container.getAttribute('proxy-target');
+        const isXData = container.hasAttribute('x-data');
+        // com x-data o store fica em _store[key], então prefixa
+        const fullParts = isXData ? [key, ...parts] : parts;
+        return {
+            key,
+            parts: fullParts
+        };
+    }
+
     function _syncModelsForKey(key) {
         document.querySelectorAll('[x-model]').forEach(function (el) {
-            const { key: elKey, parts } = _parsePath(el.getAttribute('x-model'));
+            const {
+                key: elKey,
+                parts
+            } = _resolveModel(el);
             if (elKey !== key) return;
             const val = _getDeep(parts);
             if (el.type === 'checkbox') {
@@ -304,18 +339,35 @@ var proxy = (function () {
             if (el.__shadowModel) return;
             el.__shadowModel = true;
 
-            const { key, parts } = _parsePath(el.getAttribute('x-model'));
-            const val = _getDeep(parts);
+            const {
+                key,
+                parts
+            } = _resolveModel(el);
 
-            if (el.type === 'checkbox') el.checked = !!val;
-            else if (el.type === 'radio') el.checked = (el.value === String(val));
-            else el.value = val == null ? '' : val;
+            const effect = _createEffect(function () {
+                let obj = _proxies[parts[0]];
+                for (let i = 1; i < parts.length - 1; i++) {
+                    if (obj == null) return;
+                    obj = obj[parts[i]];
+                }
+                const v = obj == null ? undefined : obj[parts[parts.length - 1]];
+
+                if (el.type === 'checkbox') {
+                    el.checked = !!v;
+                } else if (el.type === 'radio') {
+                    el.checked = (el.value === String(v));
+                } else {
+                    const str = v == null ? '' : String(v);
+                    if (el.value !== str) el.value = str;
+                }
+            });
+            effect.key = key;
+            el.__shadowEffect = effect;
+            effect.run();
 
             function _onInput() {
                 const v = el.type === 'checkbox' ? el.checked : el.value;
                 _setDeep(parts, v);
-                _applyTarget(key);
-                _syncModelsForKey(key);
             }
 
             el.addEventListener('input', _onInput);
@@ -388,7 +440,6 @@ var proxy = (function () {
     }
 
     // _renderNodeRaw: executa o render dentro do Effect ativo.
-    // Propaga _renderTracked para todos os filhos com diretivas reativas.
     function _renderNodeRaw(node, scope) {
         if (node.nodeType === Node.TEXT_NODE) return;
 
@@ -411,9 +462,6 @@ var proxy = (function () {
             }
         }
 
-        // ─── Interpolação de atributos com {} ─────────────────────────────────
-        // Qualquer atributo contendo {expr} é interpolado automaticamente.
-        // Ex: class="podium-card {u.classe}"  data-id="{u.ID}"
         if (node.attributes) {
             const _SKIP_ATTRS = /^(x-bind|x-if|x-for|x-model|x-on:|x-ref|x-key)/;
             for (let i = 0; i < node.attributes.length; i++) {
@@ -430,14 +478,21 @@ var proxy = (function () {
         }
 
         for (let child of node.children) {
-            const hasDirective = child.hasAttribute('x-bind')
-                || child.hasAttribute('x-if')
-                || child.hasAttribute('x-for');
+            const hasDirective = child.hasAttribute('x-bind') ||
+                child.hasAttribute('x-if') ||
+                child.hasAttribute('x-for');
 
             if (hasDirective) {
-                // Filho com diretiva ganha Effect próprio — rastreamento granular
-                const parentEffect = node.__shadowEffect;
-                const rootKey = parentEffect ? parentEffect.key : null;
+                // ✅ Sobe na árvore para encontrar o rootKey mais próximo
+                let rootKey = null;
+                let ancestor = node;
+                while (ancestor) {
+                    if (ancestor.__shadowEffect && ancestor.__shadowEffect.key) {
+                        rootKey = ancestor.__shadowEffect.key;
+                        break;
+                    }
+                    ancestor = ancestor.parentElement;
+                }
                 _renderTracked(child, scope, rootKey);
             } else {
                 _renderNodeRaw(child, scope);
@@ -668,6 +723,7 @@ var proxy = (function () {
         const targets = document.querySelectorAll(
             '[proxy-target="' + key + '"], [x-data="' + key + '"]'
         );
+
         if (!targets.length) return;
 
         const data = _store[key];
@@ -689,9 +745,9 @@ var proxy = (function () {
                 target.dispatchEvent(new CustomEvent(name, { bubbles: true, detail: detail || {} }));
             };
 
-            const baseScope = target.hasAttribute('x-data')
-                ? data
-                : { [key]: data };
+        const baseScope = target.hasAttribute('x-data')
+            ? (_proxies[key] || data)   // ✅ usa o proxy para rastrear dependências
+            : { [key]: data };
 
             const scope = Object.assign(baseScope, {
                 $root: target,
@@ -869,9 +925,7 @@ var proxy = (function () {
         },
 
         bindEvents: _bindEvents,
-
-        // proxy.destroy('produto')  → destrói apenas 1 key
-        // proxy.destroy()           → destrói tudo
+        initModels: _initModels,
         destroy: function (key) {
             if (key) {
                 _destroyKey(key);
@@ -917,7 +971,6 @@ var proxy = (function () {
                 }
             });
 
-            _initModels();
         }
     };
 
