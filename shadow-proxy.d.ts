@@ -39,7 +39,7 @@ export interface ShadowProxyComponent {
   $beforeDestroy?: (el: Element) => void;
   /** Called after this component is destroyed. */
   $afterDestroy?: (el: Element) => void;
-  /** Destroys this component (same as `proxy.destroy(key)`). */
+  /** Destroys this component (same as `shadowProxy.destroy(key)`). */
   destroy(): void;
   /** Any reactive data property. */
   [key: string]: any;
@@ -55,12 +55,12 @@ export interface ShadowProxy {
   readonly version: string;
 
   /**
-   * Reactive store proxy. Access via `proxy.template.<key>`.
+   * Reactive store proxy. Access via `shadowProxy.template.<key>`.
    * Any assignment triggers a re-render of the matching `[x-data]` element.
    *
    * @example
-   * proxy.template.app.title = 'Hello';
-   * proxy.template.list.items = [{ name: 'A' }, { name: 'B' }];
+   * shadowProxy.template.app.title = 'Hello';
+   * shadowProxy.template.list.items = [{ name: 'A' }, { name: 'B' }];
    */
   template: { [key: string]: ShadowProxyComponent };
 
@@ -68,7 +68,7 @@ export interface ShadowProxy {
    * Global error handler. If set, replaces the default `console.error`.
    *
    * @example
-   * proxy.onError = (err) => {
+   * shadowProxy.onError = (err) => {
    *   console.warn('[myapp]', err.type, err.message, err);
    * };
    */
@@ -79,16 +79,16 @@ export interface ShadowProxy {
    *
    * Must be called once after the DOM is ready. Scans all `[proxy-target]`
    * and `[x-data]` elements, caches `x-for` templates and sets up the
-   * root Proxy in `proxy.template`.
+   * root Proxy in `shadowProxy.template`.
    *
    * Can be called again after `destroy()` to reinitialize components
    * (e.g. SPA navigation without page reload).
    *
    * @example
    * document.addEventListener('DOMContentLoaded', () => {
-   *   proxy.initProxy();
-   *   proxy.initModels();
-   *   proxy.template.app.title = 'Hello world';
+   *   shadowProxy.initProxy();
+   *   shadowProxy.initModels();
+   *   shadowProxy.template.app.title = 'Hello world';
    * });
    */
   initProxy(): void;
@@ -103,8 +103,8 @@ export interface ShadowProxy {
    * `<input type="radio">` and `<select>`.
    *
    * @example
-   * proxy.initProxy();
-   * proxy.initModels();
+   * shadowProxy.initProxy();
+   * shadowProxy.initModels();
    */
   initModels(): void;
 
@@ -120,7 +120,7 @@ export interface ShadowProxy {
    *
    * @example
    * const container = document.querySelector('[x-data="feed"]');
-   * proxy.bindEvents(container, proxy.template.feed, 'feed');
+   * shadowProxy.bindEvents(container, shadowProxy.template.feed, 'feed');
    */
   bindEvents(root: Element, scope: object, key?: string): void;
 
@@ -136,7 +136,7 @@ export interface ShadowProxy {
    * @returns     Unsubscribe function — call it to stop watching.
    *
    * @example
-   * const unsub = proxy.on('cart.items', (next, prev) => {
+   * const unsub = shadowProxy.on('cart.items', (next, prev) => {
    *   console.log('items changed', next);
    * });
    *
@@ -157,29 +157,29 @@ export interface ShadowProxy {
    * @param key Component key to destroy. If omitted, destroys **all** components.
    *
    * @example
-   * proxy.destroy('myComponent');
+   * shadowProxy.destroy('myComponent');
    *
    * // Or via shortcut on the template:
-   * proxy.template.myComponent.destroy();
+   * shadowProxy.template.myComponent.destroy();
    *
    * // Destroy everything (e.g. page transition):
-   * proxy.destroy();
+   * shadowProxy.destroy();
    */
   destroy(key?: string): void;
 }
 
 // ─── Global export ────────────────────────────────────────────────────────────
 
-declare const proxy: ShadowProxy;
+declare const shadowProxy: ShadowProxy;
 
-export { proxy };
-export default proxy;
+export { shadowProxy };
+export default shadowProxy;
 
 // ─── Augment browser global ───────────────────────────────────────────────────
 
 declare global {
   interface Window {
-    proxy: ShadowProxy;
+    shadowProxy: ShadowProxy;
   }
   const proxy: ShadowProxy;
 }

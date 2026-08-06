@@ -1,5 +1,5 @@
 /*!
- * shadow-proxy v2.7.1
+ * shadow-proxy v2.7.2
  * Reactive DOM binding via Recursive Proxy
  * https://github.com/israel-nogueira/shadow-proxy
  *
@@ -26,35 +26,41 @@
  *   $this.parent           → $this of parent loop (chainable)
  *
  * Lifecycle hooks (per component key):
- *   proxy.template.key.$beforeRender = fn    → called before every render
- *   proxy.template.key.$afterRender  = fn    → called after every render
+ *   shadowProxy.template.key.$beforeRender = fn    → called before every render
+ *   shadowProxy.template.key.$afterRender  = fn    → called after every render
  *   el.addEventListener('before-render', fn) → same via DOM event
  *   el.addEventListener('after-render', fn)  → same via DOM event
  *
  * Watchers:
- *   proxy.on('key.prop', (newVal, oldVal) => {})   → watch any deep path
+ *   shadowProxy.on('key.prop', (newVal, oldVal) => {})   → watch any deep path
  *
- * v2.7.1 — Early template cache in initProxy (x-for with empty arrays)
- *           Centralized error reporting via _reportError + proxy.onError handler
+ * v2.7.2 — structuredClone in _snapshotAncestors (deep watcher oldVal fix)
+ *           textarea support in x-model
+ *           Renamed global export proxy → shadowProxy (collision-safe)
+ * v2.7.1 —  Early template cache in initProxy (x-for with empty arrays)
+ *           Centralized error reporting via _reportError + shadowProxy.onError handler
  * v2.3.0 — Granular reactivity (track/trigger)
  * v2.3.1 — Fixes: x-bind granular, _syncModelsForKey, _renderTracked propagation
  * v2.4.0 — Magic vars: $root, $ref, $emit, $this (+parent), $i/$index
  *           Named index alias: "item, k in lista" / "item in lista as k"
  *           Lifecycle hooks: $beforeRender / $afterRender (template + DOM event)
- *           Watchers: proxy.on(path, fn)
+ *           Watchers: shadowProxy.on(path, fn)
  *           Surgical trigger: single-effect updates run synchronously
  */
 
-var proxy = (function () {
+var shadowProxy = (function () {
 
     'use strict';
 
     const _store = {};
     const _proxies = {};
 
+    // Symbol privado ao módulo — substitui a string '__isProxy' (spoofável)
+    const _PROXY_SYM = Symbol('shadowProxy');
+
     // ─── Error reporting ──────────────────────────────────────────────────────
     // Centraliza todos os erros da lib. Use _reportError() em vez de console.*
-    // O dev pode sobrescrever proxy.onError para capturar/rotear os erros.
+    // O dev pode sobrescrever shadowProxy.onError para capturar/rotear os erros.
 
     const ERROR_TYPES = {
         X_FOR_SYNTAX  : 'x-for-syntax',
@@ -81,14 +87,14 @@ var proxy = (function () {
             timestamp : Date.now(),
         }, ctx || {});
 
-        if (typeof proxy.onError === 'function') {
-            try { proxy.onError(err); } catch (e) { console.error('[shadow-proxy] onError threw:', e); }
+        if (typeof shadowProxy.onError === 'function') {
+            try { shadowProxy.onError(err); } catch (e) { console.error('[shadow-proxy] onError threw:', e); }
         } else {
             console.error('[shadow-proxy] ' + type + ':', message, err);
         }
     }
 
-    // ─── Watchers — proxy.on(path, fn) ───────────────────────────────────────
+    // ─── Watchers — shadowProxy.on(path, fn) ───────────────────────────────────────
     // Observa qualquer caminho profundo do store. Dispara com (newVal, oldVal).
 
     const _watchers = {};   // { 'key.prop.sub': Set<fn> }
@@ -117,13 +123,27 @@ var proxy = (function () {
     // Retorna Map<ancestorPath, oldVal> para uso posterior no _notifyWatchers.
     function _snapshotAncestors(path) {
         const snapshots = new Map();
+        if (Object.keys(_watchers).length === 0) return snapshots; // sem watchers registrados, nada a capturar
         let idx = path.lastIndexOf('.');
         while (idx !== -1) {
             const ancestorPath = path.slice(0, idx);
             if (_watchers[ancestorPath] && _watchers[ancestorPath].size) {
                 const val = _getDeep(ancestorPath.split('.'));
-                // Cópia rasa para objetos — referência simples seria igual após mutação in-place
-                snapshots.set(ancestorPath, (val && typeof val === 'object') ? Object.assign({}, val) : val);
+                let snapshot;
+                if (val && typeof val === 'object') {
+                    try {
+                        snapshot = structuredClone(val);
+                    } catch (e) {
+                        try {
+                            snapshot = Object.assign(Array.isArray(val) ? [] : {}, val);
+                        } catch (e2) {
+                            snapshot = val;
+                        }
+                    }
+                } else {
+                    snapshot = val;
+                }
+                snapshots.set(ancestorPath, snapshot);
             }
             idx = ancestorPath.lastIndexOf('.');
         }
@@ -320,6 +340,7 @@ var proxy = (function () {
     ]);
 
     // Identificadores sempre bloqueados independente do scope
+    // adiciona bloqueio a métodos de introspecção de protótipo ───
     const _BLOCKED_IDS = new Set([
         'constructor', 'prototype', '__proto__', '__defineGetter__', '__defineSetter__',
         'eval', 'Function', 'fetch', 'XMLHttpRequest', 'WebSocket', 'Worker',
@@ -330,6 +351,10 @@ var proxy = (function () {
         'import', 'require', 'module', 'exports', 'process', '__dirname', '__filename',
         'Reflect', 'Proxy', 'Symbol', 'WeakMap', 'WeakSet', 'WeakRef',
         'atob', 'btoa', 'open', 'close', 'postMessage',
+        // fix: bypass via Object.getPrototypeOf(obj) contornava o blocklist de
+        // 'constructor'/'prototype'/'__proto__' pois usava nome de método diferente
+        'getPrototypeOf', 'setPrototypeOf', 'getOwnPropertyDescriptor',
+        'getOwnPropertyDescriptors', 'defineProperty', 'defineProperties', 'create',
     ]);
 
     // Tokenizer mínimo
@@ -894,19 +919,17 @@ var proxy = (function () {
         return { key: parts[0], parts };
     }
 
+    // _setDeep — remove fallback que escrevia direto em _store sem passar pelo proxy ───
     function _setDeep(parts, value) {
-        // Navega pelo PROXY para disparar o setter reativo
-        let obj = _proxies[parts[0]];
-        if (!obj) {
-            // fallback proxy-target
-            obj = _store;
-            for (let i = 0; i < parts.length - 1; i++) {
-                obj = obj[parts[i]];
-                if (obj == null) return;
-            }
-            obj[parts[parts.length - 1]] = value;
-            return;
+        // Garante que o proxy do key existe antes de navegar — mesma lógica
+        // usada no `get` trap de initProxy(). Elimina o fallback antigo que
+        // gravava direto em _store e pulava o set trap (sem _trigger/watchers).
+        if (!_proxies[parts[0]]) {
+            if (!_store[parts[0]]) _store[parts[0]] = {};
+            _proxies[parts[0]] = _makeProxy(_store[parts[0]], parts[0]);
         }
+
+        let obj = _proxies[parts[0]];
         for (let i = 1; i < parts.length - 1; i++) {
             obj = obj[parts[i]];
             if (obj == null) return;
@@ -954,6 +977,9 @@ var proxy = (function () {
                 el.checked = !!val;
             } else if (el.type === 'radio') {
                 el.checked = (el.value === String(val));
+            } else if (el.tagName === 'TEXTAREA') {
+                const str = val == null ? '' : String(val);
+                if (el.value !== str) el.value = str;
             } else {
                 const str = val == null ? '' : String(val);
                 if (el.value !== str) el.value = str;
@@ -961,8 +987,9 @@ var proxy = (function () {
         });
     }
 
-    function _initModels() {
-        document.querySelectorAll('[x-model]').forEach(function (el) {
+    function _initModels(root) {
+        var _root = (root && root.nodeType === Node.ELEMENT_NODE) ? root : document;
+        _root.querySelectorAll('[x-model]').forEach(function (el) {
             if (el.__shadowModel) return;
             el.__shadowModel = true;
 
@@ -986,6 +1013,9 @@ var proxy = (function () {
                     el.checked = !!v;
                 } else if (el.type === 'radio') {
                     el.checked = (el.value === String(v));
+                } else if (el.tagName === 'TEXTAREA') {
+                    const str = v == null ? '' : String(v);
+                    if (el.value !== str) el.value = str;
                 } else {
                     const str = v == null ? '' : String(v);
                     if (el.value !== str) el.value = str;
@@ -1024,7 +1054,7 @@ var proxy = (function () {
             const aliasVal = scope[parts[0]];
 
             // Não é um alias de loop (proxy de item) → deixa pro _initModels padrão
-            if (!aliasVal || typeof aliasVal !== 'object' || !aliasVal.__isProxy) return;
+            if (!aliasVal || typeof aliasVal !== 'object' || !aliasVal[_PROXY_SYM]) return;
 
             const subParts = parts.slice(1);
             if (!subParts.length) return;
@@ -1062,6 +1092,9 @@ var proxy = (function () {
                     el.checked = !!v;
                 } else if (el.type === 'radio') {
                     el.checked = (el.value === String(v));
+                } else if (el.tagName === 'TEXTAREA') {
+                    const str = v == null ? '' : String(v);
+                    if (el.value !== str) el.value = str;
                 } else {
                     const str = v == null ? '' : String(v);
                     if (el.value !== str) el.value = str;
@@ -1146,7 +1179,7 @@ var proxy = (function () {
                         // Props do scope de loop/contexto
                         Object.keys(scope).forEach(function (k) {
                             const v = scope[k];
-                            if (v && typeof v === 'object' && v.__isProxy) {
+                            if (v && typeof v === 'object' && v[_PROXY_SYM]) {
                                 Object.defineProperty($s, k, {
                                     configurable: true, enumerable: true,
                                     get() { return v; },
@@ -1328,10 +1361,6 @@ var proxy = (function () {
     // ─── x-for ────────────────────────────────────────────────────────────────
 
     function _renderFor(node, parentScope, expr) {
-        // Suporta:
-        //   "item in lista"
-        //   "item, k in lista"
-        //   "item in lista as k"
         let alias, indexAlias, listExp;
 
         const matchAs = expr.match(/^\s*(\w+)\s+in\s+(.+?)\s+as\s+(\w+)\s*$/);
@@ -1356,19 +1385,15 @@ var proxy = (function () {
         const list = _evalExpr(listExp, parentScope);
         const xKeyExpr = node.getAttribute('x-key') || null;
         const template = node.__shadowTemplate;
-        // Evita custo de querySelectorAll por item quando o template não usa x-model
         const templateHasModel = !!template && template.indexOf('x-model') !== -1;
 
-        // Propaga key do effect pai para os filhos
         const parentEffect = node.__shadowEffect;
         const rootKey = parentEffect ? parentEffect.key : null;
 
-        // $root do container
         const rootEl = rootKey
-            ? document.querySelector('[x-data="' + rootKey + '"]')
+            ? document.querySelector('[x-data="' + CSS.escape(rootKey) + '"]')
             : null;
 
-        // ── Lista vazia ───────────────────────────────────────────────────────
         if (!Array.isArray(list) || list.length === 0) {
             (node.__shadowGroups || []).forEach(function (g) {
                 g.nodes.forEach(function (el) {
@@ -1381,11 +1406,6 @@ var proxy = (function () {
             return;
         }
 
-        // ── Monta mapa key → grupo de nós existente ──────────────────────────
-        // Um item pode gerar mais de 1 nó-raiz (template multi-filho). Por isso
-        // o reuso é feito por GRUPO (node.__shadowGroups), não por índice flat
-        // em node.children — indexar por i quebrava a partir do 2º item quando
-        // cada item ocupa mais de 1 posição no DOM.
         const existingByKey = {};
         const prevGroups = node.__shadowGroups || [];
         const currentKeys = prevGroups.map(function (g) { return g.key; });
@@ -1397,12 +1417,11 @@ var proxy = (function () {
         const newKeys = [];
         const newNodes = [];
         const newScopes = [];
-        const newThis = [];        // $this de cada item
-        const newNodeGroups = [];  // nós DOM pertencentes a cada item (1+ por item)
+        const newThis = [];
+        const newNodeGroups = [];
 
         list.forEach(function (item, index) {
-            // Preserva o proxy do item
-            const rawItem = (item && item.__isProxy) ? item : _makeProxy(
+            const rawItem = (item && item[_PROXY_SYM]) ? item : _makeProxy(
                 (item && item.__raw) ? item.__raw : item,
                 rootKey || ''
             );
@@ -1413,16 +1432,14 @@ var proxy = (function () {
                 }
             });
 
-            // $this do item — dom será preenchido após criação do nó
             const parentThis = parentScope.$this || null;
             const itemThis = {
                 index: index,
-                dom: null,   // preenchido abaixo
+                dom: null,
                 data: item,
                 parent: parentThis
             };
 
-            // Monta scope com alias, indexAlias, $i, $index, $this
             const scope = Object.assign({}, parentScope, {
                 [alias]: itemWithIndex,
                 $i: index,
@@ -1439,7 +1456,6 @@ var proxy = (function () {
             if (existingByKey[key]) {
                 const groupNodes = existingByKey[key];
                 groupNodes.forEach(function (existingEl) {
-                    // ✅ Limpa TODOS os flags x-on para forçar rebind com scope atualizado
                     [existingEl, ...existingEl.querySelectorAll('*')].forEach(el => {
                         if (!el.attributes) return;
                         for (let attr of el.attributes) {
@@ -1455,9 +1471,7 @@ var proxy = (function () {
                 });
                 newNodes.push(...groupNodes);
                 newNodeGroups.push(groupNodes);
-            } 
-            else 
-            {
+            } else {
                 const _WRAPPER_MAP = {
                     SELECT  : 'select',
                     TBODY   : 'tbody',
@@ -1502,11 +1516,16 @@ var proxy = (function () {
             if (!newNodeSet.has(child)) child.remove();
         });
 
-        // ── Reordena no DOM ───────────────────────────────────────────────────
-        newNodes.forEach(function (el, i) {
-            const current = node.children[i];
-            if (current !== el) node.insertBefore(el, current || null);
+        // ── Insere/reordena via DocumentFragment — único reflow para novos e reordenados ──
+        const needsReorder = newNodes.some(function (el, i) {
+            return node.children[i] !== el;
         });
+
+        if (needsReorder) {
+            const frag = document.createDocumentFragment();
+            newNodes.forEach(function (el) { frag.appendChild(el); });
+            node.appendChild(frag);
+        }
 
         node.__shadowKeys = newKeys;
         node.__shadowGroups = newKeys.map(function (key, i) {
@@ -1514,13 +1533,6 @@ var proxy = (function () {
         });
 
         // ── Preenche $this.dom e bind eventos ─────────────────────────────────
-        // Agrupado por ITEM (newNodeGroups), não por nó — um item pode gerar
-        // vários nós raiz (template multi-filho), e todos devem usar o MESMO
-        // scope/$this daquele item, não do índice seguinte por acaso.
-        //
-        // $ref calculado UMA VEZ fora do loop de itens — antes rodava um
-        // querySelectorAll('[x-ref]') completo POR ITEM (O(n²) numa lista
-        // de N itens, já que x-ref não muda entre itens do mesmo x-for).
         const $ref = {};
         if (rootEl) {
             rootEl.querySelectorAll('[x-ref]').forEach(function (refEl) {
@@ -1532,7 +1544,6 @@ var proxy = (function () {
             if (!newThis[i]) return;
             newThis[i].dom = nodes[0] || null;
 
-            // $emit — dispara CustomEvent no $root
             const $emit = function (name, detail) {
                 if (!rootEl) return;
                 rootEl.dispatchEvent(new CustomEvent(name, {
@@ -1656,7 +1667,7 @@ var proxy = (function () {
         const basePath = _path || key;
         return new Proxy(data, {
             get(target, prop, receiver) {
-                if (prop === '__isProxy') return true;
+                if (prop === _PROXY_SYM) return true;
                 if (prop === '__raw') return target;
 
                 if (typeof prop === 'string' && prop !== '__nid') {
@@ -1664,7 +1675,7 @@ var proxy = (function () {
                 }
 
                 const val = Reflect.get(target, prop, receiver);
-                if (val !== null && typeof val === 'object' && !val.__isProxy) {
+                if (val !== null && typeof val === 'object' && !val[_PROXY_SYM]) {
                     return _getNestedProxy(val, key, basePath + '.' + prop);
                 }
                 return val;
@@ -1756,7 +1767,7 @@ var proxy = (function () {
         _pendingKeys.delete(key);
 
         const targets = document.querySelectorAll(
-            '[proxy-target="' + key + '"], [x-data="' + key + '"]'
+            '[proxy-target="' + CSS.escape(key) + '"], [x-data="' + CSS.escape(key) + '"]'
         );
 
         targets.forEach(function (target) {
@@ -1803,7 +1814,7 @@ var proxy = (function () {
             }));
         });
 
-        // Limpa store e proxy do key (isso já basta — o getter de proxy.template
+        // Limpa store e proxy do key (isso já basta — o getter de shadowProxy.template
         // recria vazio se alguém acessar depois, não precisa de limpeza extra aqui)
         delete _store[key];
         delete _proxies[key];
@@ -1838,8 +1849,8 @@ var proxy = (function () {
      *   <span x-bind="titulo"></span>
      * </div>
      * <script>
-     *   proxy.initProxy();
-     *   proxy.template.meuComponente.titulo = 'Olá!';
+     *   shadowProxy.initProxy();
+     *   shadowProxy.template.meuComponente.titulo = 'Olá!';
      * </script>
      * ```
      */
@@ -1849,24 +1860,24 @@ var proxy = (function () {
         name: 'shadow-proxy',
 
         /** @type {string} Versão semântica atual. */
-        version: '2.7.1',
+        version: '2.7.2',
 
         /**
          * Proxy raiz que expõe os stores de cada componente.
          *
-         * Acesse via `proxy.template.<key>` para ler ou escrever props reativas.
+         * Acesse via `shadowProxy.template.<key>` para ler ou escrever props reativas.
          * Cada acesso retorna um Proxy reativo — atribuições disparam re-render.
          *
          * Atalho de destruição disponível por componente:
          * ```js
-         * proxy.template.meuComponente.destroy();
+         * shadowProxy.template.meuComponente.destroy();
          * ```
          *
          * @type {Object.<string, Object>}
          *
          * @example
-         * proxy.template.lista.itens = [{ nome: 'A' }, { nome: 'B' }];
-         * proxy.template.form.titulo = 'Novo título';
+         * shadowProxy.template.lista.itens = [{ nome: 'A' }, { nome: 'B' }];
+         * shadowProxy.template.form.titulo = 'Novo título';
          */
         template: {},
 
@@ -1890,7 +1901,7 @@ var proxy = (function () {
          * }) => void) | null}
          *
          * @example
-         * proxy.onError = function (err) {
+         * shadowProxy.onError = function (err) {
          *   console.warn('[meu-app]', err.type, err.message, err);
          * };
          */
@@ -1908,7 +1919,7 @@ var proxy = (function () {
          * @returns {() => void} Função de unsubscribe — chame para parar de observar.
          *
          * @example
-         * const unsub = proxy.on('carrinho.itens', (novo, antigo) => {
+         * const unsub = shadowProxy.on('carrinho.itens', (novo, antigo) => {
          *   console.log('itens mudaram', novo);
          * });
          *
@@ -1937,7 +1948,7 @@ var proxy = (function () {
          * @example
          * // Uso manual após injeção de HTML dinâmico:
          * const container = document.querySelector('[x-data="feed"]');
-         * proxy.bindEvents(container, proxy.template.feed, 'feed');
+         * shadowProxy.bindEvents(container, shadowProxy.template.feed, 'feed');
          */
         bindEvents: _bindEvents,
 
@@ -1953,8 +1964,8 @@ var proxy = (function () {
          * @returns {void}
          *
          * @example
-         * proxy.initProxy();
-         * proxy.initModels();
+         * shadowProxy.initProxy();
+         * shadowProxy.initModels();
          */
         initModels: _initModels,
 
@@ -1973,13 +1984,13 @@ var proxy = (function () {
          *
          * @example
          * // Destrói apenas um componente:
-         * proxy.destroy('meuComponente');
+         * shadowProxy.destroy('meuComponente');
          *
          * // Ou via atalho no próprio template:
-         * proxy.template.meuComponente.destroy();
+         * shadowProxy.template.meuComponente.destroy();
          *
          * // Destrói tudo (ex: troca de página):
-         * proxy.destroy();
+         * shadowProxy.destroy();
          */
         destroy: function (key) {
             if (key) {
@@ -1994,7 +2005,7 @@ var proxy = (function () {
          *
          * Deve ser chamado uma vez após o DOM estar pronto.
          * Varre todos os elementos `[proxy-target]` e `[x-data]`, cacheia
-         * os templates de `x-for` e configura o Proxy raiz em `proxy.template`.
+         * os templates de `x-for` e configura o Proxy raiz em `shadowProxy.template`.
          *
          * Pode ser chamado novamente após `destroy()` para reinicializar
          * componentes (ex: navegação via fetch sem reload de página).
@@ -2003,11 +2014,11 @@ var proxy = (function () {
          *
          * @example
          * document.addEventListener('DOMContentLoaded', function () {
-         *   proxy.initProxy();
-         *   proxy.initModels();
+         *   shadowProxy.initProxy();
+         *   shadowProxy.initModels();
          *
-         *   proxy.template.app.titulo   = 'Olá mundo';
-         *   proxy.template.app.lista    = [{ nome: 'Item 1' }];
+         *   shadowProxy.template.app.titulo   = 'Olá mundo';
+         *   shadowProxy.template.app.lista    = [{ nome: 'Item 1' }];
          * });
          */
         initProxy: function () {

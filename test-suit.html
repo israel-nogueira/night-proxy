@@ -495,6 +495,7 @@
 			<button class="sec-btn-math" x-on:click="out = String(Math.round(1.9))">math</button>
 			<button class="sec-btn-ternary" x-on:click="out = out === 'antes' ? 'ternario-ok' : 'fail'">ternary</button>
 			<button class="sec-btn-logical" x-on:click="out = out || 'logical-ok'">logical</button>
+			<button class="sec-btn-getproto" x-on:click="out = Object.getPrototypeOf(out)">getproto</button>
 		</div>
 
 		<!-- segurança — retry de bind -->
@@ -506,6 +507,12 @@
 		<!-- x-model destroy -->
 		<div x-data="t_model_destroy">
 			<input type="text" x-model="t_model_destroy.nome">
+		</div>
+
+		<!-- x-model órfão (fora de qualquer x-data), usado no teste do fallback de _setDeep pós-destroy -->
+		<input type="text" class="mf-orphan-input" x-model="t_setdeep_fallback.val">
+		<div x-data="t_setdeep_fallback">
+			<span class="mf-out" x-bind="val"></span>
 		</div>
 
 		<!-- __nid -->
@@ -657,7 +664,7 @@
 
 	<!-- ═══════════════ UI ═══════════════ -->
 	<h1>shadow-proxy<span>.js</span> — Test Suite</h1>
-	<p class="subtitle">v2.7.1 · testes automatizados de reatividade, segurança e edge cases</p>
+	<p class="subtitle">v2.7.2 · testes automatizados de reatividade, segurança e edge cases</p>
 
 	<div class="controls">
 		<button onclick="runAll()">▶ Rodar todos</button>
@@ -810,8 +817,8 @@
 		//  INIT
 		// ══════════════════════════════════════════════════════════════
 
-		proxy.initProxy();
-		proxy.initModels();
+		shadowProxy.initProxy();
+		shadowProxy.initModels();
 
 		// ══════════════════════════════════════════════════════════════
 		//  HELPERS DE ACESSO AO DOM
@@ -859,7 +866,7 @@
 			{
 				name: 'Texto simples',
 				fn: async () => {
-					proxy.template.t_bind.titulo = 'hello';
+					shadowProxy.template.t_bind.titulo = 'hello';
 					await wait(20);
 					assert(T('[x-data="t_bind"] .titulo').textContent.trim() === 'hello', 'esperado "hello"');
 				}
@@ -867,7 +874,7 @@
 			{
 				name: 'Número',
 				fn: async () => {
-					proxy.template.t_bind.count = 42;
+					shadowProxy.template.t_bind.count = 42;
 					await wait(20);
 					assert(T('[x-data="t_bind"] .count').textContent.trim() === '42', 'esperado "42"');
 				}
@@ -875,9 +882,9 @@
 			{
 				name: 'Atualização reativa',
 				fn: async () => {
-					proxy.template.t_bind.titulo = 'antes';
+					shadowProxy.template.t_bind.titulo = 'antes';
 					await wait(10);
-					proxy.template.t_bind.titulo = 'depois';
+					shadowProxy.template.t_bind.titulo = 'depois';
 					await wait(20);
 					assert(T('[x-data="t_bind"] .titulo').textContent.trim() === 'depois', 'esperado "depois"');
 				}
@@ -885,7 +892,7 @@
 			{
 				name: 'Valor null renderiza vazio',
 				fn: async () => {
-					proxy.template.t_bind.nulo = null;
+					shadowProxy.template.t_bind.nulo = null;
 					await wait(20);
 					assert(T('[x-data="t_bind"] .nulo').textContent.trim() === '', 'esperado vazio');
 				}
@@ -893,7 +900,7 @@
 			{
 				name: 'Valor undefined renderiza vazio',
 				fn: async () => {
-					proxy.template.t_bind.undef = undefined;
+					shadowProxy.template.t_bind.undef = undefined;
 					await wait(20);
 					assert(T('[x-data="t_bind"] .undef').textContent.trim() === '', 'esperado vazio');
 				}
@@ -901,7 +908,7 @@
 			{
 				name: 'Valor 0 renderiza "0" (não vazio)',
 				fn: async () => {
-					proxy.template.t_bind.zero = 0;
+					shadowProxy.template.t_bind.zero = 0;
 					await wait(20);
 					assert(T('[x-data="t_bind"] .zero').textContent.trim() === '0', 'esperado "0"');
 				}
@@ -909,7 +916,7 @@
 			{
 				name: 'Valor false renderiza "false"',
 				fn: async () => {
-					proxy.template.t_bind.boolFalse = false;
+					shadowProxy.template.t_bind.boolFalse = false;
 					await wait(20);
 					assert(T('[x-data="t_bind"] .bool-false').textContent.trim() === 'false', 'esperado "false"');
 				}
@@ -917,7 +924,7 @@
 			{
 				name: 'Valor true renderiza "true"',
 				fn: async () => {
-					proxy.template.t_bind.boolTrue = true;
+					shadowProxy.template.t_bind.boolTrue = true;
 					await wait(20);
 					assert(T('[x-data="t_bind"] .bool-true').textContent.trim() === 'true', 'esperado "true"');
 				}
@@ -925,7 +932,7 @@
 			{
 				name: 'Interpolação em atributo href',
 				fn: async () => {
-					proxy.template.t_bind.linkHref = '/pagina/1';
+					shadowProxy.template.t_bind.linkHref = '/pagina/1';
 					await wait(20);
 					assert(T('[x-data="t_bind"] .href-link').getAttribute('href') === '/pagina/1', 'href errado');
 				}
@@ -933,7 +940,7 @@
 			{
 				name: 'Interpolação em atributo data-*',
 				fn: async () => {
-					proxy.template.t_bind.dataId = '99';
+					shadowProxy.template.t_bind.dataId = '99';
 					await wait(20);
 					assert(T('[x-data="t_bind"] .data-val').getAttribute('data-id') === '99', 'data-id errado');
 				}
@@ -941,7 +948,7 @@
 			{
 				name: 'x-bind em elemento aninhado fora de x-for',
 				fn: async () => {
-					proxy.template.t_bind.nested = 'aninhado';
+					shadowProxy.template.t_bind.nested = 'aninhado';
 					await wait(20);
 					assert(T('[x-data="t_bind"] .nested-span').textContent.trim() === 'aninhado', 'nested errado');
 				}
@@ -955,7 +962,7 @@
 			{
 				name: 'Render inicial',
 				fn: async () => {
-					proxy.template.t_lista.lista = [{ nome: 'Alpha' }, { nome: 'Beta' }, { nome: 'Gamma' }];
+					shadowProxy.template.t_lista.lista = [{ nome: 'Alpha' }, { nome: 'Beta' }, { nome: 'Gamma' }];
 					await wait(20);
 					assert(listItems().length === 3, `esperado 3, got ${listItems().length}`);
 					assert(listItems()[0].textContent.trim() === 'Alpha', 'item[0] errado');
@@ -965,9 +972,9 @@
 			{
 				name: 'push — adiciona no fim',
 				fn: async () => {
-					proxy.template.t_lista.lista = [{ nome: 'A' }, { nome: 'B' }];
+					shadowProxy.template.t_lista.lista = [{ nome: 'A' }, { nome: 'B' }];
 					await wait(20);
-					proxy.template.t_lista.lista.push({ nome: 'C' });
+					shadowProxy.template.t_lista.lista.push({ nome: 'C' });
 					await wait(20);
 					assert(listItems().length === 3, 'esperado 3');
 					assert(listItems()[2].textContent.trim() === 'C', 'item[2] errado');
@@ -976,9 +983,9 @@
 			{
 				name: 'unshift — adiciona no início',
 				fn: async () => {
-					proxy.template.t_lista.lista = [{ nome: 'B' }, { nome: 'C' }];
+					shadowProxy.template.t_lista.lista = [{ nome: 'B' }, { nome: 'C' }];
 					await wait(20);
-					proxy.template.t_lista.lista.unshift({ nome: 'A' });
+					shadowProxy.template.t_lista.lista.unshift({ nome: 'A' });
 					await wait(20);
 					assert(listItems().length === 3, 'esperado 3');
 					assert(listItems()[0].textContent.trim() === 'A', 'item[0] deveria ser A');
@@ -987,9 +994,9 @@
 			{
 				name: 'pop — remove do fim',
 				fn: async () => {
-					proxy.template.t_lista.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }];
+					shadowProxy.template.t_lista.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }];
 					await wait(20);
-					proxy.template.t_lista.lista.pop();
+					shadowProxy.template.t_lista.lista.pop();
 					await wait(20);
 					assert(listItems().length === 2, 'esperado 2');
 					assert(listItems()[1].textContent.trim() === 'B', 'último deve ser B');
@@ -998,9 +1005,9 @@
 			{
 				name: 'shift — remove do início',
 				fn: async () => {
-					proxy.template.t_lista.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }];
+					shadowProxy.template.t_lista.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }];
 					await wait(20);
-					proxy.template.t_lista.lista.shift();
+					shadowProxy.template.t_lista.lista.shift();
 					await wait(20);
 					assert(listItems().length === 2, 'esperado 2');
 					assert(listItems()[0].textContent.trim() === 'B', 'primeiro deve ser B');
@@ -1009,9 +1016,9 @@
 			{
 				name: 'splice — remove do início',
 				fn: async () => {
-					proxy.template.t_lista.lista = [{ nome: 'X' }, { nome: 'Y' }, { nome: 'Z' }];
+					shadowProxy.template.t_lista.lista = [{ nome: 'X' }, { nome: 'Y' }, { nome: 'Z' }];
 					await wait(20);
-					proxy.template.t_lista.lista.splice(0, 1);
+					shadowProxy.template.t_lista.lista.splice(0, 1);
 					await wait(20);
 					assert(listItems().length === 2, `esperado 2, got ${listItems().length}`);
 					assert(listItems()[0].textContent.trim() === 'Y', 'item[0] deveria ser Y');
@@ -1020,9 +1027,9 @@
 			{
 				name: 'splice — remove do meio',
 				fn: async () => {
-					proxy.template.t_lista.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }];
+					shadowProxy.template.t_lista.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }];
 					await wait(20);
-					proxy.template.t_lista.lista.splice(1, 1);
+					shadowProxy.template.t_lista.lista.splice(1, 1);
 					await wait(20);
 					assert(listItems().length === 2, 'esperado 2');
 					assert(listItems()[1].textContent.trim() === 'C', 'item[1] deveria ser C');
@@ -1031,9 +1038,9 @@
 			{
 				name: 'sort — reordena',
 				fn: async () => {
-					proxy.template.t_lista.lista = [{ nome: 'C' }, { nome: 'A' }, { nome: 'B' }];
+					shadowProxy.template.t_lista.lista = [{ nome: 'C' }, { nome: 'A' }, { nome: 'B' }];
 					await wait(20);
-					proxy.template.t_lista.lista.sort((a, b) => a.nome.localeCompare(b.nome));
+					shadowProxy.template.t_lista.lista.sort((a, b) => a.nome.localeCompare(b.nome));
 					await wait(20);
 					assert(listItems()[0].textContent.trim() === 'A', 'item[0] deveria ser A');
 					assert(listItems()[2].textContent.trim() === 'C', 'item[2] deveria ser C');
@@ -1042,9 +1049,9 @@
 			{
 				name: 'reverse — inverte',
 				fn: async () => {
-					proxy.template.t_lista.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }];
+					shadowProxy.template.t_lista.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }];
 					await wait(20);
-					proxy.template.t_lista.lista.reverse();
+					shadowProxy.template.t_lista.lista.reverse();
 					await wait(20);
 					assert(listItems()[0].textContent.trim() === 'C', 'item[0] deveria ser C');
 				}
@@ -1052,9 +1059,9 @@
 			{
 				name: 'lista = [] — limpa tudo sem nós órfãos',
 				fn: async () => {
-					proxy.template.t_lista.lista = [{ nome: 'A' }, { nome: 'B' }];
+					shadowProxy.template.t_lista.lista = [{ nome: 'A' }, { nome: 'B' }];
 					await wait(20);
-					proxy.template.t_lista.lista = [];
+					shadowProxy.template.t_lista.lista = [];
 					await wait(20);
 					assert(listItems().length === 0, `esperado 0, got ${listItems().length}`);
 					const container = T('[x-data="t_lista"] [x-for]');
@@ -1064,9 +1071,9 @@
 			{
 				name: 'Shuffle — reordena corretamente',
 				fn: async () => {
-					proxy.template.t_lista.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }, { nome: 'D' }];
+					shadowProxy.template.t_lista.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }, { nome: 'D' }];
 					await wait(20);
-					proxy.template.t_lista.lista = [{ nome: 'C' }, { nome: 'A' }, { nome: 'D' }, { nome: 'B' }];
+					shadowProxy.template.t_lista.lista = [{ nome: 'C' }, { nome: 'A' }, { nome: 'D' }, { nome: 'B' }];
 					await wait(20);
 					assert(listItems()[0].textContent.trim() === 'C', 'item[0] deveria ser C');
 					assert(listItems()[3].textContent.trim() === 'B', 'item[3] deveria ser B');
@@ -1075,9 +1082,9 @@
 			{
 				name: 'Atualiza item específico (lista[1].nome)',
 				fn: async () => {
-					proxy.template.t_lista.lista = [{ nome: 'Antes' }, { nome: 'Meio' }, { nome: 'Fim' }];
+					shadowProxy.template.t_lista.lista = [{ nome: 'Antes' }, { nome: 'Meio' }, { nome: 'Fim' }];
 					await wait(20);
-					proxy.template.t_lista.lista[1].nome = 'Mudou';
+					shadowProxy.template.t_lista.lista[1].nome = 'Mudou';
 					await wait(20);
 					assert(listItems()[1].textContent.trim() === 'Mudou', 'item[1] não atualizou');
 				}
@@ -1091,7 +1098,7 @@
 			{
 				name: 'Alias "item, k in lista" renderiza índice correto',
 				fn: async () => {
-					proxy.template.t_for_idx.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }];
+					shadowProxy.template.t_for_idx.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }];
 					await wait(20);
 					const items = TA('[x-data="t_for_idx"] .idx-item');
 					assert(items[0].textContent.trim() === '0:A', `item[0] errado: ${items[0].textContent.trim()}`);
@@ -1101,7 +1108,7 @@
 			{
 				name: 'Alias "item in lista as k" renderiza índice correto',
 				fn: async () => {
-					proxy.template.t_for_as.lista = [{ nome: 'X' }, { nome: 'Y' }];
+					shadowProxy.template.t_for_as.lista = [{ nome: 'X' }, { nome: 'Y' }];
 					await wait(20);
 					const items = TA('[x-data="t_for_as"] .as-item');
 					assert(items[0].textContent.trim() === '0:X', `item[0] errado: ${items[0].textContent.trim()}`);
@@ -1111,7 +1118,7 @@
 			{
 				name: '$i disponível no escopo sem alias',
 				fn: async () => {
-					proxy.template.t_for_i.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }];
+					shadowProxy.template.t_for_i.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }];
 					await wait(20);
 					const items = TA('[x-data="t_for_i"] .i-item');
 					assert(items[0].textContent.trim() === '0', `$i[0] errado: ${items[0].textContent.trim()}`);
@@ -1121,10 +1128,10 @@
 			{
 				name: 'x-key — reutiliza nó existente (não recria)',
 				fn: async () => {
-					proxy.template.t_for_key.lista = [{ id: 1, nome: 'A' }, { id: 2, nome: 'B' }];
+					shadowProxy.template.t_for_key.lista = [{ id: 1, nome: 'A' }, { id: 2, nome: 'B' }];
 					await wait(20);
 					const before = TA('[x-data="t_for_key"] .key-item')[0];
-					proxy.template.t_for_key.lista[0].nome = 'A2';
+					shadowProxy.template.t_for_key.lista[0].nome = 'A2';
 					await wait(20);
 					const after = TA('[x-data="t_for_key"] .key-item')[0];
 					assert(before === after, 'nó foi recriado em vez de reutilizado');
@@ -1134,7 +1141,7 @@
 			{
 				name: 'x-for com multi-filho renderiza todos os filhos',
 				fn: async () => {
-					proxy.template.t_for_multi.lista = [{ a: 'X1', b: 'Y1' }, { a: 'X2', b: 'Y2' }];
+					shadowProxy.template.t_for_multi.lista = [{ a: 'X1', b: 'Y1' }, { a: 'X2', b: 'Y2' }];
 					await wait(20);
 					const as = TA('[x-data="t_for_multi"] .mf-a');
 					const bs = TA('[x-data="t_for_multi"] .mf-b');
@@ -1153,7 +1160,7 @@
 			{
 				name: 'Render inicial com subitens',
 				fn: async () => {
-					proxy.template.t_nested.lista = [
+					shadowProxy.template.t_nested.lista = [
 						{ nome: 'Cat A', tags: [{ label: 'tag1' }, { label: 'tag2' }] },
 						{ nome: 'Cat B', tags: [{ label: 'tag3' }] },
 					];
@@ -1165,7 +1172,7 @@
 			{
 				name: 'Nomes das categorias corretos',
 				fn: async () => {
-					proxy.template.t_nested.lista = [
+					shadowProxy.template.t_nested.lista = [
 						{ nome: 'Frutas', tags: [{ label: 'maçã' }] },
 						{ nome: 'Verduras', tags: [{ label: 'alface' }, { label: 'couve' }] },
 					];
@@ -1177,7 +1184,7 @@
 			{
 				name: 'Tags corretas por categoria',
 				fn: async () => {
-					proxy.template.t_nested.lista = [
+					shadowProxy.template.t_nested.lista = [
 						{ nome: 'X', tags: [{ label: 'alpha' }, { label: 'beta' }] },
 						{ nome: 'Y', tags: [{ label: 'gamma' }] },
 					];
@@ -1191,9 +1198,9 @@
 			{
 				name: 'Adicionar tag em cat existente',
 				fn: async () => {
-					proxy.template.t_nested.lista = [{ nome: 'Cat', tags: [{ label: 'A' }] }];
+					shadowProxy.template.t_nested.lista = [{ nome: 'Cat', tags: [{ label: 'A' }] }];
 					await wait(30);
-					proxy.template.t_nested.lista[0].tags.push({ label: 'B' });
+					shadowProxy.template.t_nested.lista[0].tags.push({ label: 'B' });
 					await wait(30);
 					assert(nestedTags().length === 2, `esperado 2, got ${nestedTags().length}`);
 					assert(nestedTags()[1].textContent.trim() === 'B', 'tag[1] errado');
@@ -1202,12 +1209,12 @@
 			{
 				name: 'Remover categoria',
 				fn: async () => {
-					proxy.template.t_nested.lista = [
+					shadowProxy.template.t_nested.lista = [
 						{ nome: 'A', tags: [{ label: 'x' }] },
 						{ nome: 'B', tags: [{ label: 'y' }] },
 					];
 					await wait(30);
-					proxy.template.t_nested.lista.splice(0, 1);
+					shadowProxy.template.t_nested.lista.splice(0, 1);
 					await wait(30);
 					assert(nestedCats().length === 1, `esperado 1, got ${nestedCats().length}`);
 					assert(nestedCats()[0].textContent.trim() === 'B', 'cat restante errado');
@@ -1222,7 +1229,7 @@
 			{
 				name: 'Mostra ativo / oculta inativo',
 				fn: async () => {
-					proxy.template.t_if.lista = [{ nome: 'A', ativo: true }, { nome: 'B', ativo: false }];
+					shadowProxy.template.t_if.lista = [{ nome: 'A', ativo: true }, { nome: 'B', ativo: false }];
 					await wait(20);
 					const ativos = ifAtivos().filter(e => e.style.display !== 'none');
 					const inativos = ifInativos().filter(e => e.style.display !== 'none');
@@ -1233,9 +1240,9 @@
 			{
 				name: 'Toggle reativo',
 				fn: async () => {
-					proxy.template.t_if.lista = [{ nome: 'X', ativo: true }];
+					shadowProxy.template.t_if.lista = [{ nome: 'X', ativo: true }];
 					await wait(20);
-					proxy.template.t_if.lista[0].ativo = false;
+					shadowProxy.template.t_if.lista[0].ativo = false;
 					await wait(20);
 					assert(ifAtivos()[0].style.display === 'none', 'ativo deveria estar oculto');
 					assert(ifInativos()[0].style.display !== 'none', 'inativo deveria estar visível');
@@ -1244,7 +1251,7 @@
 			{
 				name: 'Valor 0 é falsy → oculta',
 				fn: async () => {
-					proxy.template.t_if_falsy.val_zero = 0;
+					shadowProxy.template.t_if_falsy.val_zero = 0;
 					await wait(20);
 					assert(T('[x-data="t_if_falsy"] .if-zero').style.display === 'none', 'esperado oculto');
 				}
@@ -1252,7 +1259,7 @@
 			{
 				name: 'String vazia é falsy → oculta',
 				fn: async () => {
-					proxy.template.t_if_falsy.val_empty = '';
+					shadowProxy.template.t_if_falsy.val_empty = '';
 					await wait(20);
 					assert(T('[x-data="t_if_falsy"] .if-empty').style.display === 'none', 'esperado oculto');
 				}
@@ -1260,7 +1267,7 @@
 			{
 				name: 'null é falsy → oculta',
 				fn: async () => {
-					proxy.template.t_if_falsy.val_null = null;
+					shadowProxy.template.t_if_falsy.val_null = null;
 					await wait(20);
 					assert(T('[x-data="t_if_falsy"] .if-null').style.display === 'none', 'esperado oculto');
 				}
@@ -1268,11 +1275,11 @@
 			{
 				name: 'Expressão && funciona',
 				fn: async () => {
-					proxy.template.t_if_falsy.val_a = true;
-					proxy.template.t_if_falsy.val_b = true;
+					shadowProxy.template.t_if_falsy.val_a = true;
+					shadowProxy.template.t_if_falsy.val_b = true;
 					await wait(20);
 					assert(T('[x-data="t_if_falsy"] .if-and').style.display !== 'none', 'esperado visível');
-					proxy.template.t_if_falsy.val_b = false;
+					shadowProxy.template.t_if_falsy.val_b = false;
 					await wait(20);
 					assert(T('[x-data="t_if_falsy"] .if-and').style.display === 'none', 'esperado oculto');
 				}
@@ -1280,11 +1287,11 @@
 			{
 				name: 'Expressão || funciona',
 				fn: async () => {
-					proxy.template.t_if_falsy.val_a = false;
-					proxy.template.t_if_falsy.val_b = true;
+					shadowProxy.template.t_if_falsy.val_a = false;
+					shadowProxy.template.t_if_falsy.val_b = true;
 					await wait(20);
 					assert(T('[x-data="t_if_falsy"] .if-or').style.display !== 'none', 'esperado visível');
-					proxy.template.t_if_falsy.val_b = false;
+					shadowProxy.template.t_if_falsy.val_b = false;
 					await wait(20);
 					assert(T('[x-data="t_if_falsy"] .if-or').style.display === 'none', 'esperado oculto');
 				}
@@ -1298,19 +1305,19 @@
 			{
 				name: 'Input text → proxy',
 				fn: async () => {
-					proxy.template.t_model.nome = '';
+					shadowProxy.template.t_model.nome = '';
 					await wait(10);
 					const input = T('[x-data="t_model"] input[type="text"]');
 					input.value = 'digitado';
 					input.dispatchEvent(new Event('input'));
 					await wait(10);
-					assert(proxy.template.t_model.nome === 'digitado', `got "${proxy.template.t_model.nome}"`);
+					assert(shadowProxy.template.t_model.nome === 'digitado', `got "${shadowProxy.template.t_model.nome}"`);
 				}
 			},
 			{
 				name: 'Proxy → input text',
 				fn: async () => {
-					proxy.template.t_model.nome = 'do proxy';
+					shadowProxy.template.t_model.nome = 'do proxy';
 					await wait(10);
 					const input = T('[x-data="t_model"] input[type="text"]');
 					assert(input.value === 'do proxy', `got "${input.value}"`);
@@ -1319,7 +1326,7 @@
 			{
 				name: 'Dois inputs na mesma prop ficam em sync',
 				fn: async () => {
-					proxy.template.t_model.nome = 'sync';
+					shadowProxy.template.t_model.nome = 'sync';
 					await wait(10);
 					const i1 = T('[x-data="t_model"] input[type="text"]');
 					const i2 = T('[x-data="t_model"] .input2');
@@ -1330,19 +1337,19 @@
 			{
 				name: 'Checkbox → proxy',
 				fn: async () => {
-					proxy.template.t_model.ativo = false;
+					shadowProxy.template.t_model.ativo = false;
 					await wait(10);
 					const cb = T('[x-data="t_model"] input[type="checkbox"]');
 					cb.checked = true;
 					cb.dispatchEvent(new Event('change'));
 					await wait(10);
-					assert(proxy.template.t_model.ativo === true, 'esperado true');
+					assert(shadowProxy.template.t_model.ativo === true, 'esperado true');
 				}
 			},
 			{
 				name: 'Proxy → checkbox',
 				fn: async () => {
-					proxy.template.t_model.ativo = true;
+					shadowProxy.template.t_model.ativo = true;
 					await wait(10);
 					assert(T('[x-data="t_model"] input[type="checkbox"]').checked === true, 'esperado checked');
 				}
@@ -1350,19 +1357,19 @@
 			{
 				name: 'Radio → proxy',
 				fn: async () => {
-					proxy.template.t_model.cor = 'red';
+					shadowProxy.template.t_model.cor = 'red';
 					await wait(10);
 					const radio = T('[x-data="t_model"] input[value="blue"]');
 					radio.checked = true;
 					radio.dispatchEvent(new Event('change'));
 					await wait(10);
-					assert(proxy.template.t_model.cor === 'blue', `esperado "blue", got "${proxy.template.t_model.cor}"`);
+					assert(shadowProxy.template.t_model.cor === 'blue', `esperado "blue", got "${shadowProxy.template.t_model.cor}"`);
 				}
 			},
 			{
 				name: 'Proxy → radio',
 				fn: async () => {
-					proxy.template.t_model.cor = 'red';
+					shadowProxy.template.t_model.cor = 'red';
 					await wait(10);
 					assert(T('[x-data="t_model"] input[value="red"]').checked === true, 'radio red deveria estar checked');
 					assert(T('[x-data="t_model"] input[value="blue"]').checked === false, 'radio blue deveria estar unchecked');
@@ -1371,19 +1378,19 @@
 			{
 				name: 'Select → proxy',
 				fn: async () => {
-					proxy.template.t_model.opcao = 'a';
+					shadowProxy.template.t_model.opcao = 'a';
 					await wait(10);
 					const sel = T('[x-data="t_model"] select');
 					sel.value = 'b';
 					sel.dispatchEvent(new Event('change'));
 					await wait(10);
-					assert(proxy.template.t_model.opcao === 'b', `esperado "b", got "${proxy.template.t_model.opcao}"`);
+					assert(shadowProxy.template.t_model.opcao === 'b', `esperado "b", got "${shadowProxy.template.t_model.opcao}"`);
 				}
 			},
 			{
 				name: 'Proxy → select',
 				fn: async () => {
-					proxy.template.t_model.opcao = 'b';
+					shadowProxy.template.t_model.opcao = 'b';
 					await wait(10);
 					assert(T('[x-data="t_model"] select').value === 'b', 'select deveria ser "b"');
 				}
@@ -1391,13 +1398,13 @@
 			{
 				name: 'Path profundo (obj.sub.nome)',
 				fn: async () => {
-					proxy.template.t_model_deep.user = { nome: '' };
+					shadowProxy.template.t_model_deep.user = { nome: '' };
 					await wait(10);
 					const input = T('[x-data="t_model_deep"] input');
 					input.value = 'deep';
 					input.dispatchEvent(new Event('input'));
 					await wait(10);
-					assert(proxy.template.t_model_deep.user.nome === 'deep', `esperado "deep", got "${proxy.template.t_model_deep.user.nome}"`);
+					assert(shadowProxy.template.t_model_deep.user.nome === 'deep', `esperado "deep", got "${shadowProxy.template.t_model_deep.user.nome}"`);
 				}
 			},
 		]);
@@ -1409,29 +1416,29 @@
 			{
 				name: 'click atualiza prop reativa',
 				fn: async () => {
-					proxy.template.t_on.contador = 0;
+					shadowProxy.template.t_on.contador = 0;
 					await wait(20);
 					T('[x-data="t_on"] .btn-click').click();
 					await wait(20);
-					assert(proxy.template.t_on.contador === 1, `esperado 1, got ${proxy.template.t_on.contador}`);
+					assert(shadowProxy.template.t_on.contador === 1, `esperado 1, got ${shadowProxy.template.t_on.contador}`);
 				}
 			},
 			{
 				name: 'múltiplos clicks acumulam',
 				fn: async () => {
-					proxy.template.t_on.contador = 0;
+					shadowProxy.template.t_on.contador = 0;
 					await wait(20);
 					T('[x-data="t_on"] .btn-click').click();
 					T('[x-data="t_on"] .btn-click').click();
 					T('[x-data="t_on"] .btn-click').click();
 					await wait(20);
-					assert(proxy.template.t_on.contador === 3, `esperado 3, got ${proxy.template.t_on.contador}`);
+					assert(shadowProxy.template.t_on.contador === 3, `esperado 3, got ${shadowProxy.template.t_on.contador}`);
 				}
 			},
 			{
 				name: 'x-on DOM reflete atualização da prop',
 				fn: async () => {
-					proxy.template.t_on.contador = 0;
+					shadowProxy.template.t_on.contador = 0;
 					await wait(20);
 					T('[x-data="t_on"] .btn-click').click();
 					await wait(20);
@@ -1441,7 +1448,7 @@
 			{
 				name: '$emit dispara CustomEvent no $root',
 				fn: async () => {
-					proxy.template.t_on.contador = 0;
+					shadowProxy.template.t_on.contador = 0;
 					await wait(20);
 					let fired = false, detail = null;
 					const root = T('[x-data="t_on"]');
@@ -1455,20 +1462,20 @@
 			{
 				name: 'Múltiplos eventos no mesmo elemento (click + mouseenter)',
 				fn: async () => {
-					proxy.template.t_on.multi = '';
+					shadowProxy.template.t_on.multi = '';
 					await wait(20);
 					T('[x-data="t_on"] .btn-multi-a').dispatchEvent(new MouseEvent('mouseenter'));
 					await wait(20);
-					assert(proxy.template.t_on.multi === 'enter', `esperado "enter", got "${proxy.template.t_on.multi}"`);
+					assert(shadowProxy.template.t_on.multi === 'enter', `esperado "enter", got "${shadowProxy.template.t_on.multi}"`);
 					T('[x-data="t_on"] .btn-multi-a').click();
 					await wait(20);
-					assert(proxy.template.t_on.multi === 'click', `esperado "click", got "${proxy.template.t_on.multi}"`);
+					assert(shadowProxy.template.t_on.multi === 'click', `esperado "click", got "${shadowProxy.template.t_on.multi}"`);
 				}
 			},
 			{
 				name: '$ref acessa elemento marcado com x-ref',
 				fn: async () => {
-					proxy.template.t_ref.dummy = 1;
+					shadowProxy.template.t_ref.dummy = 1;
 					await wait(20);
 					T('[x-data="t_ref"] .btn-ref').click();
 					await wait(20);
@@ -1478,7 +1485,7 @@
 			{
 				name: '$this.index disponível dentro de x-for',
 				fn: async () => {
-					proxy.template.t_on_this.lista = [{ id: 1, nome: 'A' }, { id: 2, nome: 'B' }, { id: 3, nome: 'C' }];
+					shadowProxy.template.t_on_this.lista = [{ id: 1, nome: 'A' }, { id: 2, nome: 'B' }, { id: 3, nome: 'C' }];
 					await wait(20);
 					const btns = TA('[x-data="t_on_this"] .btn-this');
 					btns[1].click();
@@ -1490,7 +1497,7 @@
 			{
 				name: 'Modificação via x-on dentro de x-for é reativa no DOM',
 				fn: async () => {
-					proxy.template.t_on_this.lista = [{ id: 10, nome: 'Original' }];
+					shadowProxy.template.t_on_this.lista = [{ id: 10, nome: 'Original' }];
 					await wait(20);
 					TA('[x-data="t_on_this"] .btn-this')[0].click();
 					await wait(20);
@@ -1506,111 +1513,121 @@
 			{
 				name: 'Bloqueia constructor.constructor (RCE)',
 				fn: async () => {
-					proxy.template.t_security.out = 'intacto';
+					shadowProxy.template.t_security.out = 'intacto';
 					await wait(20);
 					secBtn('sec-btn-rce').click();
 					await wait(20);
-					assert(proxy.template.t_security.out === 'intacto', `RCE vazou! out="${proxy.template.t_security.out}"`);
+					assert(shadowProxy.template.t_security.out === 'intacto', `RCE vazou! out="${shadowProxy.template.t_security.out}"`);
 				}
 			},
 			{
 				name: 'Bloqueia eval',
 				fn: async () => {
-					proxy.template.t_security.out = 'intacto';
+					shadowProxy.template.t_security.out = 'intacto';
 					await wait(20);
 					secBtn('sec-btn-eval').click();
 					await wait(20);
-					assert(proxy.template.t_security.out === 'intacto', 'eval vazou');
+					assert(shadowProxy.template.t_security.out === 'intacto', 'eval vazou');
 				}
 			},
 			{
 				name: 'Bloqueia fetch',
 				fn: async () => {
-					proxy.template.t_security.out = 'intacto';
+					shadowProxy.template.t_security.out = 'intacto';
 					await wait(20);
 					secBtn('sec-btn-fetch').click();
 					await wait(20);
-					assert(proxy.template.t_security.out === 'intacto', 'fetch vazou');
+					assert(shadowProxy.template.t_security.out === 'intacto', 'fetch vazou');
 				}
 			},
 			{
 				name: 'Bloqueia window',
 				fn: async () => {
-					proxy.template.t_security.out = 'intacto';
+					shadowProxy.template.t_security.out = 'intacto';
 					await wait(20);
 					secBtn('sec-btn-window').click();
 					await wait(20);
-					assert(proxy.template.t_security.out === 'intacto', 'window vazou');
+					assert(shadowProxy.template.t_security.out === 'intacto', 'window vazou');
 				}
 			},
 			{
 				name: 'Bloqueia setTimeout',
 				fn: async () => {
-					proxy.template.t_security.out = 'intacto';
+					shadowProxy.template.t_security.out = 'intacto';
 					await wait(20);
 					secBtn('sec-btn-settimeout').click();
 					await wait(20);
-					assert(proxy.template.t_security.out === 'intacto', 'setTimeout vazou');
+					assert(shadowProxy.template.t_security.out === 'intacto', 'setTimeout vazou');
 				}
 			},
 			{
 				name: 'Bloqueia __proto__',
 				fn: async () => {
-					proxy.template.t_security.out = 'intacto';
+					shadowProxy.template.t_security.out = 'intacto';
 					await wait(20);
 					secBtn('sec-btn-proto').click();
 					await wait(20);
-					assert(proxy.template.t_security.out === 'intacto', '__proto__ vazou');
+					assert(shadowProxy.template.t_security.out === 'intacto', '__proto__ vazou');
 				}
 			},
 			{
 				name: 'Bloqueia arrow function (=>)',
 				fn: async () => {
-					proxy.template.t_security.out = 'intacto';
+					shadowProxy.template.t_security.out = 'intacto';
 					await wait(20);
 					secBtn('sec-btn-arrow').click();
 					await wait(20);
-					assert(proxy.template.t_security.out === 'intacto', 'arrow fn vazou');
+					assert(shadowProxy.template.t_security.out === 'intacto', 'arrow fn vazou');
 				}
 			},
 			{
 				name: 'Libera expressão segura (simples)',
 				fn: async () => {
-					proxy.template.t_security.out = 'antes';
+					shadowProxy.template.t_security.out = 'antes';
 					await wait(20);
 					secBtn('sec-btn-safe').click();
 					await wait(20);
-					assert(proxy.template.t_security.out === 'clicked-safe', `esperado "clicked-safe", got "${proxy.template.t_security.out}"`);
+					assert(shadowProxy.template.t_security.out === 'clicked-safe', `esperado "clicked-safe", got "${shadowProxy.template.t_security.out}"`);
 				}
 			},
 			{
 				name: 'Libera Math.round via x-on',
 				fn: async () => {
-					proxy.template.t_security.out = 'antes';
+					shadowProxy.template.t_security.out = 'antes';
 					await wait(20);
 					secBtn('sec-btn-math').click();
 					await wait(20);
-					assert(proxy.template.t_security.out === '2', `esperado "2", got "${proxy.template.t_security.out}"`);
+					assert(shadowProxy.template.t_security.out === '2', `esperado "2", got "${shadowProxy.template.t_security.out}"`);
 				}
 			},
 			{
 				name: 'Libera operador ternário',
 				fn: async () => {
-					proxy.template.t_security.out = 'antes';
+					shadowProxy.template.t_security.out = 'antes';
 					await wait(20);
 					secBtn('sec-btn-ternary').click();
 					await wait(20);
-					assert(proxy.template.t_security.out === 'ternario-ok', `esperado "ternario-ok", got "${proxy.template.t_security.out}"`);
+					assert(shadowProxy.template.t_security.out === 'ternario-ok', `esperado "ternario-ok", got "${shadowProxy.template.t_security.out}"`);
 				}
 			},
 			{
 				name: 'Libera operador lógico ||',
 				fn: async () => {
-					proxy.template.t_security.out = '';
+					shadowProxy.template.t_security.out = '';
 					await wait(20);
 					secBtn('sec-btn-logical').click();
 					await wait(20);
-					assert(proxy.template.t_security.out === 'logical-ok', `esperado "logical-ok", got "${proxy.template.t_security.out}"`);
+					assert(shadowProxy.template.t_security.out === 'logical-ok', `esperado "logical-ok", got "${shadowProxy.template.t_security.out}"`);
+				}
+			},
+			{
+				name: 'Bloqueia Object.getPrototypeOf (bypass do blocklist por nome)',
+				fn: async () => {
+					shadowProxy.template.t_security.out = 'intacto';
+					await wait(20);
+					secBtn('sec-btn-getproto').click();
+					await wait(20);
+					assert(shadowProxy.template.t_security.out === 'intacto', `getPrototypeOf vazou! out=${JSON.stringify(shadowProxy.template.t_security.out)}`);
 				}
 			},
 			{
@@ -1618,11 +1635,11 @@
 				fn: async () => {
 					// t_sec_retry não tem retryVal no store ainda
 					await wait(20);
-					proxy.template.t_sec_retry.retryVal = 'pendente';
+					shadowProxy.template.t_sec_retry.retryVal = 'pendente';
 					await wait(30); // aguarda retry de bind
 					T('[x-data="t_sec_retry"] .btn-retry').click();
 					await wait(20);
-					assert(proxy.template.t_sec_retry.retryVal === 'ok', `esperado "ok", got "${proxy.template.t_sec_retry.retryVal}"`);
+					assert(shadowProxy.template.t_sec_retry.retryVal === 'ok', `esperado "ok", got "${shadowProxy.template.t_sec_retry.retryVal}"`);
 				}
 			},
 		]);
@@ -1634,11 +1651,11 @@
 			{
 				name: 'Watcher em prop primitiva dispara',
 				fn: async () => {
-					proxy.template.t_watch_deep.obj = { sub: { prop: 'a' } };
+					shadowProxy.template.t_watch_deep.obj = { sub: { prop: 'a' } };
 					await wait(20);
 					let fired = 0, got = null;
-					const unsub = proxy.on('t_watch_deep.obj', v => { fired++; got = v; });
-					proxy.template.t_watch_deep.obj.sub.prop = 'b';
+					const unsub = shadowProxy.on('t_watch_deep.obj', v => { fired++; got = v; });
+					shadowProxy.template.t_watch_deep.obj.sub.prop = 'b';
 					await wait(20);
 					unsub();
 					assert(fired >= 1, `esperado >= 1 fire, got ${fired}`);
@@ -1647,11 +1664,11 @@
 			{
 				name: 'oldVal correto em watcher de primitivo',
 				fn: async () => {
-					proxy.template.t_batch.a = 'inicial';
+					shadowProxy.template.t_batch.a = 'inicial';
 					await wait(20);
 					let oldCap = null;
-					const unsub = proxy.on('t_batch.a', (n, o) => { oldCap = o; });
-					proxy.template.t_batch.a = 'novo';
+					const unsub = shadowProxy.on('t_batch.a', (n, o) => { oldCap = o; });
+					shadowProxy.template.t_batch.a = 'novo';
 					await wait(20);
 					unsub();
 					assert(oldCap === 'inicial', `oldVal errado: "${oldCap}"`);
@@ -1660,11 +1677,11 @@
 			{
 				name: 'Watcher deep — borbulha do filho pro pai',
 				fn: async () => {
-					proxy.template.t_watch_deep.obj = { sub: { prop: 'inicial' } };
+					shadowProxy.template.t_watch_deep.obj = { sub: { prop: 'inicial' } };
 					await wait(20);
 					let fired = 0, lastVal = null;
-					const unsub = proxy.on('t_watch_deep.obj', v => { fired++; lastVal = v; });
-					proxy.template.t_watch_deep.obj.sub.prop = 'mudou';
+					const unsub = shadowProxy.on('t_watch_deep.obj', v => { fired++; lastVal = v; });
+					shadowProxy.template.t_watch_deep.obj.sub.prop = 'mudou';
 					await wait(20);
 					unsub();
 					assert(fired === 1, `esperado 1, got ${fired}`);
@@ -1675,12 +1692,12 @@
 			{
 				name: 'Múltiplos watchers no mesmo path disparam todos',
 				fn: async () => {
-					proxy.template.t_batch.b = 'x';
+					shadowProxy.template.t_batch.b = 'x';
 					await wait(20);
 					let c1 = 0, c2 = 0;
-					const u1 = proxy.on('t_batch.b', () => c1++);
-					const u2 = proxy.on('t_batch.b', () => c2++);
-					proxy.template.t_batch.b = 'y';
+					const u1 = shadowProxy.on('t_batch.b', () => c1++);
+					const u2 = shadowProxy.on('t_batch.b', () => c2++);
+					shadowProxy.template.t_batch.b = 'y';
 					await wait(20);
 					u1(); u2();
 					assert(c1 === 1, `watcher1: esperado 1, got ${c1}`);
@@ -1690,11 +1707,11 @@
 			{
 				name: 'Watcher não dispara se valor não mudou',
 				fn: async () => {
-					proxy.template.t_batch.c = 'igual';
+					shadowProxy.template.t_batch.c = 'igual';
 					await wait(20);
 					let fired = 0;
-					const unsub = proxy.on('t_batch.c', () => fired++);
-					proxy.template.t_batch.c = 'igual'; // mesmo valor
+					const unsub = shadowProxy.on('t_batch.c', () => fired++);
+					shadowProxy.template.t_batch.c = 'igual'; // mesmo valor
 					await wait(20);
 					unsub();
 					assert(fired === 0, `esperado 0 fires, got ${fired}`);
@@ -1703,14 +1720,14 @@
 			{
 				name: 'Unsubscribe para watcher corretamente',
 				fn: async () => {
-					proxy.template.t_batch.a = 'v1';
+					shadowProxy.template.t_batch.a = 'v1';
 					await wait(20);
 					let fired = 0;
-					const unsub = proxy.on('t_batch.a', () => fired++);
-					proxy.template.t_batch.a = 'v2';
+					const unsub = shadowProxy.on('t_batch.a', () => fired++);
+					shadowProxy.template.t_batch.a = 'v2';
 					await wait(20);
 					unsub();
-					proxy.template.t_batch.a = 'v3';
+					shadowProxy.template.t_batch.a = 'v3';
 					await wait(20);
 					assert(fired === 1, `esperado 1, got ${fired} — unsubscribe falhou`);
 				}
@@ -1725,10 +1742,10 @@
 				name: '$beforeRender é chamado com o elemento',
 				fn: async () => {
 					let calledWith = null;
-					proxy.template.t_lifecycle.$beforeRender = el => { calledWith = el; };
-					proxy.template.t_lifecycle.msg = 'br';
+					shadowProxy.template.t_lifecycle.$beforeRender = el => { calledWith = el; };
+					shadowProxy.template.t_lifecycle.msg = 'br';
 					await wait(20);
-					delete proxy.template.t_lifecycle.$beforeRender;
+					delete shadowProxy.template.t_lifecycle.$beforeRender;
 					assert(calledWith instanceof Element, '$beforeRender não recebeu Element');
 				}
 			},
@@ -1736,30 +1753,30 @@
 				name: '$afterRender é chamado com o elemento',
 				fn: async () => {
 					let calledWith = null;
-					proxy.template.t_lifecycle.$afterRender = el => { calledWith = el; };
-					proxy.template.t_lifecycle.msg = 'ar';
+					shadowProxy.template.t_lifecycle.$afterRender = el => { calledWith = el; };
+					shadowProxy.template.t_lifecycle.msg = 'ar';
 					await wait(20);
-					delete proxy.template.t_lifecycle.$afterRender;
+					delete shadowProxy.template.t_lifecycle.$afterRender;
 					assert(calledWith instanceof Element, '$afterRender não recebeu Element');
 				}
 			},
 			{
 				name: 'Erro em $beforeRender não quebra o render',
 				fn: async () => {
-					proxy.template.t_lifecycle.$beforeRender = () => { throw new Error('erro proposital'); };
-					proxy.template.t_lifecycle.msg = 'sobreviveu';
+					shadowProxy.template.t_lifecycle.$beforeRender = () => { throw new Error('erro proposital'); };
+					shadowProxy.template.t_lifecycle.msg = 'sobreviveu';
 					await wait(20);
-					delete proxy.template.t_lifecycle.$beforeRender;
+					delete shadowProxy.template.t_lifecycle.$beforeRender;
 					assert(T('[x-data="t_lifecycle"] .lc-out').textContent.trim() === 'sobreviveu', 'render quebrou');
 				}
 			},
 			{
 				name: 'Erro em $afterRender não quebra o render',
 				fn: async () => {
-					proxy.template.t_lifecycle.$afterRender = () => { throw new Error('erro proposital'); };
-					proxy.template.t_lifecycle.msg = 'sobreviveu2';
+					shadowProxy.template.t_lifecycle.$afterRender = () => { throw new Error('erro proposital'); };
+					shadowProxy.template.t_lifecycle.msg = 'sobreviveu2';
 					await wait(20);
-					delete proxy.template.t_lifecycle.$afterRender;
+					delete shadowProxy.template.t_lifecycle.$afterRender;
 					assert(T('[x-data="t_lifecycle"] .lc-out').textContent.trim() === 'sobreviveu2', 'render quebrou');
 				}
 			},
@@ -1772,7 +1789,7 @@
 					const ha = () => order.push('after');
 					el.addEventListener('before-render', hb);
 					el.addEventListener('after-render', ha);
-					proxy.template.t_lifecycle.msg = 'order-test';
+					shadowProxy.template.t_lifecycle.msg = 'order-test';
 					await wait(30);
 					el.removeEventListener('before-render', hb);
 					el.removeEventListener('after-render', ha);
@@ -1789,33 +1806,33 @@
 		// ─────────────────────────────────────────────
 		group('💣 destroy — lifecycle', [
 			{
-				name: 'proxy.destroy(key) — limpa store',
+				name: 'shadowProxy.destroy(key) — limpa store',
 				fn: async () => {
-					proxy.template.t_destroy_a.lista = [{ nome: 'X' }, { nome: 'Y' }];
+					shadowProxy.template.t_destroy_a.lista = [{ nome: 'X' }, { nome: 'Y' }];
 					await wait(20);
-					proxy.destroy('t_destroy_a');
+					shadowProxy.destroy('t_destroy_a');
 					await wait(10);
-					assert(!proxy.template.t_destroy_a.lista, 'store deveria estar limpo');
+					assert(!shadowProxy.template.t_destroy_a.lista, 'store deveria estar limpo');
 				}
 			},
 			{
-				name: 'proxy.template.key.destroy() — shortcut funciona',
+				name: 'shadowProxy.template.key.destroy() — shortcut funciona',
 				fn: async () => {
-					proxy.template.t_destroy_b.titulo = 'antes';
+					shadowProxy.template.t_destroy_b.titulo = 'antes';
 					await wait(10);
-					proxy.template.t_destroy_b.destroy();
+					shadowProxy.template.t_destroy_b.destroy();
 					await wait(10);
-					assert(!proxy.template.t_destroy_b.titulo, 'store deveria estar limpo');
+					assert(!shadowProxy.template.t_destroy_b.titulo, 'store deveria estar limpo');
 				}
 			},
 			{
 				name: '$beforeDestroy hook é chamado',
 				fn: async () => {
-					proxy.template.t_destroy_a.lista = [{ nome: 'Hook' }];
+					shadowProxy.template.t_destroy_a.lista = [{ nome: 'Hook' }];
 					await wait(10);
 					let called = false;
-					proxy.template.t_destroy_a.$beforeDestroy = () => { called = true; };
-					proxy.destroy('t_destroy_a');
+					shadowProxy.template.t_destroy_a.$beforeDestroy = () => { called = true; };
+					shadowProxy.destroy('t_destroy_a');
 					await wait(10);
 					assert(called, '$beforeDestroy não foi chamado');
 				}
@@ -1823,11 +1840,11 @@
 			{
 				name: '$afterDestroy hook é chamado',
 				fn: async () => {
-					proxy.template.t_destroy_b.titulo = 'after-test';
+					shadowProxy.template.t_destroy_b.titulo = 'after-test';
 					await wait(10);
 					let called = false;
-					proxy.template.t_destroy_b.$afterDestroy = () => { called = true; };
-					proxy.destroy('t_destroy_b');
+					shadowProxy.template.t_destroy_b.$afterDestroy = () => { called = true; };
+					shadowProxy.destroy('t_destroy_b');
 					await wait(10);
 					assert(called, '$afterDestroy não foi chamado');
 				}
@@ -1835,13 +1852,13 @@
 			{
 				name: 'Evento before-destroy dispara no elemento',
 				fn: async () => {
-					proxy.template.t_destroy_a.lista = [{ nome: 'Ev' }];
+					shadowProxy.template.t_destroy_a.lista = [{ nome: 'Ev' }];
 					await wait(10);
 					let fired = false;
 					const el = T('[x-data="t_destroy_a"]');
 					const h = () => { fired = true; };
 					el.addEventListener('before-destroy', h);
-					proxy.destroy('t_destroy_a');
+					shadowProxy.destroy('t_destroy_a');
 					await wait(10);
 					el.removeEventListener('before-destroy', h);
 					assert(fired, 'before-destroy não disparou');
@@ -1850,13 +1867,13 @@
 			{
 				name: 'Evento after-destroy dispara no elemento',
 				fn: async () => {
-					proxy.template.t_destroy_b.titulo = 'ev2';
+					shadowProxy.template.t_destroy_b.titulo = 'ev2';
 					await wait(10);
 					let fired = false;
 					const el = T('[x-data="t_destroy_b"]');
 					const h = () => { fired = true; };
 					el.addEventListener('after-destroy', h);
-					proxy.destroy('t_destroy_b');
+					shadowProxy.destroy('t_destroy_b');
 					await wait(10);
 					el.removeEventListener('after-destroy', h);
 					assert(fired, 'after-destroy não disparou');
@@ -1865,26 +1882,26 @@
 			{
 				name: 'Após destroy, x-on não responde mais',
 				fn: async () => {
-					proxy.template.t_destroy_on.val = 0;
+					shadowProxy.template.t_destroy_on.val = 0;
 					await wait(20);
-					proxy.destroy('t_destroy_on');
+					shadowProxy.destroy('t_destroy_on');
 					await wait(10);
 					T('[x-data="t_destroy_on"] .btn-don').click();
 					await wait(20);
 					// val continua 0 pois o store foi limpo e o listener removido
-					assert(!proxy.template.t_destroy_on.val, 'x-on respondeu após destroy');
+					assert(!shadowProxy.template.t_destroy_on.val, 'x-on respondeu após destroy');
 				}
 			},
 			{
 				name: 'Watcher removido após destroy — não dispara mais',
 				fn: async () => {
-					proxy.template.t_destroy_a.lista = [];
+					shadowProxy.template.t_destroy_a.lista = [];
 					await wait(10);
 					let watchCount = 0;
-					proxy.on('t_destroy_a.lista', () => { watchCount++; });
-					proxy.destroy('t_destroy_a');
+					shadowProxy.on('t_destroy_a.lista', () => { watchCount++; });
+					shadowProxy.destroy('t_destroy_a');
 					await wait(10);
-					proxy.template.t_destroy_a.lista = [{ nome: 'pós-destroy' }];
+					shadowProxy.template.t_destroy_a.lista = [{ nome: 'pós-destroy' }];
 					await wait(10);
 					assert(watchCount === 0, `watcher disparou ${watchCount}x após destroy`);
 				}
@@ -1892,13 +1909,13 @@
 			{
 				name: 'Ciclo destroy → reinit → reativa normalmente',
 				fn: async () => {
-					proxy.template.t_destroy_b.titulo = 'original';
+					shadowProxy.template.t_destroy_b.titulo = 'original';
 					await wait(10);
-					proxy.destroy('t_destroy_b');
+					shadowProxy.destroy('t_destroy_b');
 					await wait(10);
-					proxy.initProxy();
+					shadowProxy.initProxy();
 					await wait(10);
-					proxy.template.t_destroy_b.titulo = 'reativado';
+					shadowProxy.template.t_destroy_b.titulo = 'reativado';
 					await wait(20);
 					assert(T('[x-data="t_destroy_b"] .destroy-b-titulo').textContent.trim() === 'reativado',
 						`esperado "reativado", got "${T('[x-data="t_destroy_b"] .destroy-b-titulo').textContent.trim()}"`);
@@ -1907,16 +1924,16 @@
 			{
 				name: 'destroy() sem key destrói todos os componentes',
 				fn: async () => {
-					proxy.template.t_iso_a.val = 'A';
-					proxy.template.t_iso_b.val = 'B';
+					shadowProxy.template.t_iso_a.val = 'A';
+					shadowProxy.template.t_iso_b.val = 'B';
 					await wait(20);
-					proxy.destroy();
+					shadowProxy.destroy();
 					await wait(10);
-					assert(!proxy.template.t_iso_a.val, 't_iso_a não foi destruído');
-					assert(!proxy.template.t_iso_b.val, 't_iso_b não foi destruído');
+					assert(!shadowProxy.template.t_iso_a.val, 't_iso_a não foi destruído');
+					assert(!shadowProxy.template.t_iso_b.val, 't_iso_b não foi destruído');
 					// reinit para não quebrar testes seguintes
-					proxy.initProxy();
-					proxy.initModels();
+					shadowProxy.initProxy();
+					shadowProxy.initModels();
 				}
 			},
 		]);
@@ -1928,13 +1945,13 @@
 			{
 				name: 'destroy() remove listeners de input/change',
 				fn: async () => {
-					proxy.template.t_model_destroy.nome = 'x';
+					shadowProxy.template.t_model_destroy.nome = 'x';
 					await wait(10);
 					const input = modelDestroyInput();
 					const calls = [];
 					const orig = input.removeEventListener.bind(input);
 					input.removeEventListener = (type, fn) => { calls.push(type); orig(type, fn); };
-					proxy.destroy('t_model_destroy');
+					shadowProxy.destroy('t_model_destroy');
 					await wait(10);
 					input.removeEventListener = orig;
 					assert(calls.includes('input'), 'removeEventListener("input") não foi chamado');
@@ -1951,8 +1968,8 @@
 				name: 'Popular lista dispara watcher só 1x',
 				fn: async () => {
 					let fireCount = 0;
-					const unsub = proxy.on('t_nid.lista', () => { fireCount++; });
-					proxy.template.t_nid.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }];
+					const unsub = shadowProxy.on('t_nid.lista', () => { fireCount++; });
+					shadowProxy.template.t_nid.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }];
 					await wait(30);
 					unsub();
 					assert(fireCount === 1, `esperado 1, got ${fireCount} — __nid vazando`);
@@ -1968,9 +1985,9 @@
 			{
 				name: '3 props no mesmo tick → 1 render',
 				fn: async () => {
-					proxy.template.t_batch.a = '1';
-					proxy.template.t_batch.b = '2';
-					proxy.template.t_batch.c = '3';
+					shadowProxy.template.t_batch.a = '1';
+					shadowProxy.template.t_batch.b = '2';
+					shadowProxy.template.t_batch.c = '3';
 					await wait(20);
 
 					const el = batchOut();
@@ -1984,9 +2001,9 @@
 						configurable: true
 					});
 
-					proxy.template.t_batch.a = 'X';
-					proxy.template.t_batch.b = 'Y';
-					proxy.template.t_batch.c = 'Z';
+					shadowProxy.template.t_batch.a = 'X';
+					shadowProxy.template.t_batch.b = 'Y';
+					shadowProxy.template.t_batch.c = 'Z';
 					await wait(20);
 
 					assert(renderCount === 1, `esperado 1 render, got ${renderCount}`);
@@ -2002,7 +2019,7 @@
 			{
 				name: 'Atribuição com mesmo valor não dispara render',
 				fn: async () => {
-					proxy.template.t_batch.a = 'fixo';
+					shadowProxy.template.t_batch.a = 'fixo';
 					await wait(20);
 					const el = T('[x-data="t_batch"] .batch-a');
 					let renders = 0;
@@ -2014,7 +2031,7 @@
 						},
 						configurable: true
 					});
-					proxy.template.t_batch.a = 'fixo'; // mesmo valor
+					shadowProxy.template.t_batch.a = 'fixo'; // mesmo valor
 					await wait(20);
 					assert(renders === 0, `esperado 0 renders, got ${renders}`);
 				}
@@ -2022,10 +2039,10 @@
 			{
 				name: 'Deletar prop dispara render',
 				fn: async () => {
-					proxy.template.t_bind.titulo = 'deletar-me';
+					shadowProxy.template.t_bind.titulo = 'deletar-me';
 					await wait(20);
 					assert(T('[x-data="t_bind"] .titulo').textContent.trim() === 'deletar-me', 'pré-condição falhou');
-					delete proxy.template.t_bind.titulo;
+					delete shadowProxy.template.t_bind.titulo;
 					await wait(20);
 					assert(T('[x-data="t_bind"] .titulo').textContent.trim() === '', 'DOM não reagiu ao delete');
 				}
@@ -2033,9 +2050,9 @@
 			{
 				name: 'Substituir objeto inteiro dispara render',
 				fn: async () => {
-					proxy.template.t_watch_deep.obj = { sub: { prop: 'v1' } };
+					shadowProxy.template.t_watch_deep.obj = { sub: { prop: 'v1' } };
 					await wait(20);
-					proxy.template.t_watch_deep.obj = { sub: { prop: 'v2' } };
+					shadowProxy.template.t_watch_deep.obj = { sub: { prop: 'v2' } };
 					await wait(20);
 					assert(wdOut().textContent.trim() === 'v2', `esperado "v2", got "${wdOut().textContent.trim()}"`);
 				}
@@ -2043,10 +2060,10 @@
 			{
 				name: 'Proxy aninhado 3+ níveis é reativo',
 				fn: async () => {
-					proxy.template.t_proxy_int.obj = { level1: { level2: { val: 'deep' } } };
+					shadowProxy.template.t_proxy_int.obj = { level1: { level2: { val: 'deep' } } };
 					await wait(20);
 					assert(T('[x-data="t_proxy_int"] .pi-out').textContent.trim() === 'deep', 'nível 3 não renderizou');
-					proxy.template.t_proxy_int.obj.level1.level2.val = 'mais-deep';
+					shadowProxy.template.t_proxy_int.obj.level1.level2.val = 'mais-deep';
 					await wait(20);
 					assert(T('[x-data="t_proxy_int"] .pi-out').textContent.trim() === 'mais-deep', 'nível 3 não atualizou');
 				}
@@ -2054,9 +2071,9 @@
 			{
 				name: 'Array dentro de objeto aninhado é reativo',
 				fn: async () => {
-					proxy.template.t_nested.lista = [{ nome: 'X', tags: [{ label: 'inicio' }] }];
+					shadowProxy.template.t_nested.lista = [{ nome: 'X', tags: [{ label: 'inicio' }] }];
 					await wait(30);
-					proxy.template.t_nested.lista[0].tags[0].label = 'fim';
+					shadowProxy.template.t_nested.lista[0].tags[0].label = 'fim';
 					await wait(30);
 					assert(nestedTags()[0].textContent.trim() === 'fim', 'array aninhado não atualizou');
 				}
@@ -2064,7 +2081,7 @@
 			{
 				name: 'Dois componentes isolados não interferem',
 				fn: async () => {
-					proxy.template.t_iso_a.val = 'somente-A';
+					shadowProxy.template.t_iso_a.val = 'somente-A';
 					await wait(20);
 					assert(T('[x-data="t_iso_a"] .iso-a-out').textContent.trim() === 'somente-A', 'iso_a errado');
 					assert(T('[x-data="t_iso_b"] .iso-b-out').textContent.trim() !== 'somente-A', 'iso_b foi contaminado');
@@ -2073,11 +2090,11 @@
 			{
 				name: 'initProxy() chamado duas vezes é idempotente',
 				fn: async () => {
-					proxy.template.t_bind.titulo = 'idem';
+					shadowProxy.template.t_bind.titulo = 'idem';
 					await wait(10);
-					proxy.initProxy(); // segunda chamada
+					shadowProxy.initProxy(); // segunda chamada
 					await wait(10);
-					proxy.template.t_bind.titulo = 'idem2';
+					shadowProxy.template.t_bind.titulo = 'idem2';
 					await wait(20);
 					assert(T('[x-data="t_bind"] .titulo').textContent.trim() === 'idem2', 'idempotência falhou');
 				}
@@ -2091,7 +2108,7 @@
 			{
 				name: 'Update pontual toca apenas 1 nó (de 500)',
 				fn: async () => {
-					proxy.template.t_stress.lista = Array.from({ length: 500 }, (_, i) => ({ nome: `G${i}` }));
+					shadowProxy.template.t_stress.lista = Array.from({ length: 500 }, (_, i) => ({ nome: `G${i}` }));
 					await wait(50);
 
 					let renderCount = 0;
@@ -2107,7 +2124,7 @@
 						});
 					});
 
-					proxy.template.t_stress.lista[100].nome = 'Cirúrgico';
+					shadowProxy.template.t_stress.lista[100].nome = 'Cirúrgico';
 					await wait(20);
 
 					assert(renderCount === 1, `esperado 1 nó, got ${renderCount}`);
@@ -2117,7 +2134,7 @@
 			{
 				name: '10 updates aleatórios tocam exatamente 10 nós',
 				fn: async () => {
-					proxy.template.t_stress.lista = Array.from({ length: 500 }, (_, i) => ({ nome: `H${i}` }));
+					shadowProxy.template.t_stress.lista = Array.from({ length: 500 }, (_, i) => ({ nome: `H${i}` }));
 					await wait(50);
 
 					let renderCount = 0;
@@ -2133,7 +2150,7 @@
 					});
 
 					[10, 50, 100, 150, 200, 250, 300, 350, 400, 450].forEach(i => {
-						proxy.template.t_stress.lista[i].nome = `U${i}`;
+						shadowProxy.template.t_stress.lista[i].nome = `U${i}`;
 					});
 					await wait(20);
 
@@ -2150,7 +2167,7 @@
 				name: 'Render inicial < 300ms',
 				fn: async () => {
 					const t0 = performance.now();
-					proxy.template.t_stress.lista = Array.from({ length: 500 }, (_, i) => ({ nome: `Item ${i}` }));
+					shadowProxy.template.t_stress.lista = Array.from({ length: 500 }, (_, i) => ({ nome: `Item ${i}` }));
 					await wait(50);
 					const ms = performance.now() - t0;
 					assert(stressItems().length === 500, `esperado 500, got ${stressItems().length}`);
@@ -2161,7 +2178,7 @@
 				name: 'Update único < 100ms',
 				fn: async () => {
 					const t0 = performance.now();
-					proxy.template.t_stress.lista[250].nome = 'Atualizado';
+					shadowProxy.template.t_stress.lista[250].nome = 'Atualizado';
 					await wait(50);
 					assert(performance.now() - t0 < 100, 'lento demais');
 				}
@@ -2170,7 +2187,7 @@
 				name: '10 updates sequenciais < 200ms',
 				fn: async () => {
 					const t0 = performance.now();
-					for (let i = 0; i < 10; i++) proxy.template.t_stress.lista[i].nome = `Up${i}`;
+					for (let i = 0; i < 10; i++) shadowProxy.template.t_stress.lista[i].nome = `Up${i}`;
 					await wait(100);
 					assert(performance.now() - t0 < 200, 'lento demais');
 				}
@@ -2178,9 +2195,9 @@
 			{
 				name: 'Limpa para 0',
 				fn: async () => {
-					proxy.template.t_stress.lista = Array.from({ length: 200 }, (_, i) => ({ nome: `X${i}` }));
+					shadowProxy.template.t_stress.lista = Array.from({ length: 200 }, (_, i) => ({ nome: `X${i}` }));
 					await wait(50);
-					proxy.template.t_stress.lista = [];
+					shadowProxy.template.t_stress.lista = [];
 					await wait(30);
 					assert(stressItems().length === 0, `esperado 0, got ${stressItems().length}`);
 				}
@@ -2195,7 +2212,7 @@
 				name: 'Render inicial < 500ms',
 				fn: async () => {
 					const t0 = performance.now();
-					proxy.template.t_stress1k.lista = Array.from({ length: 1000 }, (_, i) => ({ nome: `K${i}` }));
+					shadowProxy.template.t_stress1k.lista = Array.from({ length: 1000 }, (_, i) => ({ nome: `K${i}` }));
 					await wait(100);
 					const ms = performance.now() - t0;
 					assert(stress1kItems().length === 1000, `esperado 1000, got ${stress1kItems().length}`);
@@ -2207,7 +2224,7 @@
 				fn: async () => {
 					await wait(20);
 					const t0 = performance.now();
-					proxy.template.t_stress1k.lista[500].nome = 'Frame';
+					shadowProxy.template.t_stress1k.lista[500].nome = 'Frame';
 					assert(performance.now() - t0 < 16, 'lento demais');
 				}
 			},
@@ -2216,7 +2233,7 @@
 				fn: async () => {
 					const t0 = performance.now();
 					for (let i = 0; i < 100; i++) {
-						proxy.template.t_stress1k.lista[Math.floor(Math.random() * 1000)].nome = `R${i}`;
+						shadowProxy.template.t_stress1k.lista[Math.floor(Math.random() * 1000)].nome = `R${i}`;
 					}
 					await wait(50);
 					assert(performance.now() - t0 < 100, 'lento demais');
@@ -2232,7 +2249,7 @@
 				name: 'Render inicial < 1500ms',
 				fn: async () => {
 					const t0 = performance.now();
-					proxy.template.t_stress5k.lista = Array.from({ length: 5000 }, (_, i) => ({ nome: `Big${i}` }));
+					shadowProxy.template.t_stress5k.lista = Array.from({ length: 5000 }, (_, i) => ({ nome: `Big${i}` }));
 					await wait(300);
 					const ms = performance.now() - t0;
 					assert(stress5kItems().length === 5000, `esperado 5000, got ${stress5kItems().length}`);
@@ -2244,7 +2261,7 @@
 				fn: async () => {
 					await wait(20);
 					const t0 = performance.now();
-					proxy.template.t_stress5k.lista[2500].nome = 'Ponto';
+					shadowProxy.template.t_stress5k.lista[2500].nome = 'Ponto';
 					assert(performance.now() - t0 < 16, 'lento demais');
 				}
 			},
@@ -2252,7 +2269,7 @@
 				name: 'Limpa para 0 < 500ms',
 				fn: async () => {
 					const t0 = performance.now();
-					proxy.template.t_stress5k.lista = [];
+					shadowProxy.template.t_stress5k.lista = [];
 					await wait(200);
 					const ms = performance.now() - t0;
 					assert(stress5kItems().length === 0, `esperado 0, got ${stress5kItems().length}`);
@@ -2270,9 +2287,9 @@
 				fn: async () => {
 					const make = (p, n) => Array.from({ length: n }, (_, i) => ({ nome: `${p}${i}` }));
 					const t0 = performance.now();
-					proxy.template.t_multi_a.lista = make('A', 200);
-					proxy.template.t_multi_b.lista = make('B', 200);
-					proxy.template.t_multi_c.lista = make('C', 200);
+					shadowProxy.template.t_multi_a.lista = make('A', 200);
+					shadowProxy.template.t_multi_b.lista = make('B', 200);
+					shadowProxy.template.t_multi_c.lista = make('C', 200);
 					await wait(100);
 					const ms = performance.now() - t0;
 					assert(multiAItems().length === 200, `A: ${multiAItems().length}`);
@@ -2285,9 +2302,9 @@
 				name: '3 listas — updates simultâneos < 50ms',
 				fn: async () => {
 					const t0 = performance.now();
-					proxy.template.t_multi_a.lista[50].nome = 'Xa';
-					proxy.template.t_multi_b.lista[50].nome = 'Xb';
-					proxy.template.t_multi_c.lista[50].nome = 'Xc';
+					shadowProxy.template.t_multi_a.lista[50].nome = 'Xa';
+					shadowProxy.template.t_multi_b.lista[50].nome = 'Xb';
+					shadowProxy.template.t_multi_c.lista[50].nome = 'Xc';
 					await wait(20);
 					const ms = performance.now() - t0;
 					assert(multiAItems()[50].textContent.trim() === 'Xa', 'A[50] errado');
@@ -2318,15 +2335,15 @@
 						span.setAttribute('x-bind', `{${i} + 1000}`);
 						container.appendChild(span);
 					}
-					proxy.initProxy();
-					proxy.template.t_lru.dummy = 1;
+					shadowProxy.initProxy();
+					shadowProxy.template.t_lru.dummy = 1;
 					await wait(300);
 					const spans = TA('[x-data="t_lru"] .lru-span');
 					assert(spans.length === 600, `esperado 600, got ${spans.length}`);
 					assert(spans[0].textContent.trim() === '1000', `spans[0]: "${spans[0].textContent.trim()}"`);
 					assert(spans[599].textContent.trim() === '1599', `spans[599]: "${spans[599].textContent.trim()}"`);
 
-					proxy.template.t_lru.dummy = 2;
+					shadowProxy.template.t_lru.dummy = 2;
 					await wait(150);
 					assert(spans[0].textContent.trim() === '1000', 'spans[0] quebrou após eviction');
 					assert(spans[599].textContent.trim() === '1599', 'spans[599] quebrou após eviction');
@@ -2341,7 +2358,7 @@
 			{
 				name: 'x-if filtra tag dentro do loop interno',
 				fn: async () => {
-					proxy.template.t_nested_if.lista = [
+					shadowProxy.template.t_nested_if.lista = [
 						{ nome: 'Cat', tags: [{ label: 'visivel', ativo: true }, { label: 'oculta', ativo: false }] },
 					];
 					await wait(30);
@@ -2353,7 +2370,7 @@
 			{
 				name: 'Mudar item do loop externo não re-renderiza loop interno inteiro',
 				fn: async () => {
-					proxy.template.t_nested_if.lista = [
+					shadowProxy.template.t_nested_if.lista = [
 						{ nome: 'CatX', tags: [{ label: 'A', ativo: true }, { label: 'B', ativo: true }] },
 					];
 					await wait(30);
@@ -2368,7 +2385,7 @@
 							configurable: true
 						});
 					});
-					proxy.template.t_nested_if.lista[0].nome = 'CatY';
+					shadowProxy.template.t_nested_if.lista[0].nome = 'CatY';
 					await wait(20);
 					assert(niCats()[0].textContent.trim() === 'CatY', 'nome da categoria não atualizou');
 					assert(renderCount === 0, `loop interno foi tocado (${renderCount}x) — deveria ser granular`);
@@ -2377,13 +2394,13 @@
 			{
 				name: 'x-if individual em item de x-for não afeta os demais',
 				fn: async () => {
-					proxy.template.t_if_item.lista = [
+					shadowProxy.template.t_if_item.lista = [
 						{ id: 1, nome: 'Um', show: true },
 						{ id: 2, nome: 'Dois', show: true },
 						{ id: 3, nome: 'Três', show: true },
 					];
 					await wait(20);
-					proxy.template.t_if_item.lista[1].show = false;
+					shadowProxy.template.t_if_item.lista[1].show = false;
 					await wait(20);
 					const items = ifiItems();
 					assert(items[1].style.display === 'none', 'item[1] deveria estar oculto');
@@ -2400,7 +2417,7 @@
 			{
 				name: 'Click no item 0 muta apenas o item 0',
 				fn: async () => {
-					proxy.template.t_multi_root.lista = [
+					shadowProxy.template.t_multi_root.lista = [
 						{ id: 1, nome: 'A' }, { id: 2, nome: 'B' }, { id: 3, nome: 'C' },
 					];
 					await wait(20);
@@ -2415,7 +2432,7 @@
 			{
 				name: 'Click no item do meio muta apenas o item do meio',
 				fn: async () => {
-					proxy.template.t_multi_root.lista = [
+					shadowProxy.template.t_multi_root.lista = [
 						{ id: 1, nome: 'A' }, { id: 2, nome: 'B' }, { id: 3, nome: 'C' },
 					];
 					await wait(20);
@@ -2430,7 +2447,7 @@
 			{
 				name: 'Click no último item muta apenas o último',
 				fn: async () => {
-					proxy.template.t_multi_root.lista = [
+					shadowProxy.template.t_multi_root.lista = [
 						{ id: 1, nome: 'A' }, { id: 2, nome: 'B' }, { id: 3, nome: 'C' },
 					];
 					await wait(20);
@@ -2445,7 +2462,7 @@
 			{
 				name: '$this.index correto em cada nó do grupo multi-filho',
 				fn: async () => {
-					proxy.template.t_multi_root.lista = [
+					shadowProxy.template.t_multi_root.lista = [
 						{ id: 10, nome: 'X' }, { id: 20, nome: 'Y' }, { id: 30, nome: 'Z' },
 					];
 					await wait(20);
@@ -2464,7 +2481,7 @@
 			{
 				name: '$emit com objeto multi-chave',
 				fn: async () => {
-					proxy.template.t_on_literal.contador = 7;
+					shadowProxy.template.t_on_literal.contador = 7;
 					await wait(20);
 					let detail = null;
 					const root = T('[x-data="t_on_literal"]');
@@ -2478,7 +2495,7 @@
 			{
 				name: 'x-on com array literal — push funciona',
 				fn: async () => {
-					proxy.template.t_on_literal.lista = [];
+					shadowProxy.template.t_on_literal.lista = [];
 					await wait(20);
 					T('[x-data="t_on_literal"] .ol-btn-push').click();
 					await wait(20);
@@ -2500,33 +2517,33 @@
 			{
 				name: 'Ternário dentro de objeto literal funciona',
 				fn: async () => {
-					proxy.template.t_on_literal.flag = true;
+					shadowProxy.template.t_on_literal.flag = true;
 					await wait(20);
 					T('[x-data="t_on_literal"] .ol-btn-tern-obj').click();
 					await wait(20);
-					const out = proxy.template.t_on_literal.out;
+					const out = shadowProxy.template.t_on_literal.out;
 					assert(out === '{"val":"a"}', `esperado {"val":"a"}, got "${out}"`);
 				}
 			},
 			{
 				name: 'Identificador bloqueado escondido como valor de objeto continua bloqueado',
 				fn: async () => {
-					proxy.template.t_on_literal.out = 'intacto';
-					proxy.template.t_on_literal.flag = true;
+					shadowProxy.template.t_on_literal.out = 'intacto';
+					shadowProxy.template.t_on_literal.flag = true;
 					await wait(20);
 					T('[x-data="t_on_literal"] .ol-btn-tern-obj-block').click();
 					await wait(20);
-					assert(proxy.template.t_on_literal.out === 'intacto', `bloqueio vazou: "${proxy.template.t_on_literal.out}"`);
+					assert(shadowProxy.template.t_on_literal.out === 'intacto', `bloqueio vazou: "${shadowProxy.template.t_on_literal.out}"`);
 				}
 			},
 			{
 				name: 'Ternário fora de objeto continua funcionando (braceDepth não quebrou)',
 				fn: async () => {
-					proxy.template.t_on_literal.flag = true;
+					shadowProxy.template.t_on_literal.flag = true;
 					await wait(20);
 					T('[x-data="t_on_literal"] .ol-btn-tern').click();
 					await wait(20);
-					assert(proxy.template.t_on_literal.out === 'sim', `esperado "sim", got "${proxy.template.t_on_literal.out}"`);
+					assert(shadowProxy.template.t_on_literal.out === 'sim', `esperado "sim", got "${shadowProxy.template.t_on_literal.out}"`);
 				}
 			},
 		]);
@@ -2538,10 +2555,10 @@
 			{
 				name: 'href muda 2x em sequência',
 				fn: async () => {
-					proxy.template.t_attr_multi.ahref = '/um';
+					shadowProxy.template.t_attr_multi.ahref = '/um';
 					await wait(20);
 					assert(T('[x-data="t_attr_multi"] .am-href').getAttribute('href') === '/um', '1ª mudança falhou');
-					proxy.template.t_attr_multi.ahref = '/dois';
+					shadowProxy.template.t_attr_multi.ahref = '/dois';
 					await wait(20);
 					assert(T('[x-data="t_attr_multi"] .am-href').getAttribute('href') === '/dois', `2ª mudança falhou, got "${T('[x-data="t_attr_multi"] .am-href').getAttribute('href')}"`);
 				}
@@ -2549,9 +2566,9 @@
 			{
 				name: 'src muda 2x em sequência',
 				fn: async () => {
-					proxy.template.t_attr_multi.asrc = '/img1.png';
+					shadowProxy.template.t_attr_multi.asrc = '/img1.png';
 					await wait(20);
-					proxy.template.t_attr_multi.asrc = '/img2.png';
+					shadowProxy.template.t_attr_multi.asrc = '/img2.png';
 					await wait(20);
 					assert(T('[x-data="t_attr_multi"] .am-src').getAttribute('src') === '/img2.png', `esperado /img2.png, got "${T('[x-data="t_attr_multi"] .am-src').getAttribute('src')}"`);
 				}
@@ -2559,9 +2576,9 @@
 			{
 				name: 'title muda 2x em sequência',
 				fn: async () => {
-					proxy.template.t_attr_multi.atitle = 'primeiro';
+					shadowProxy.template.t_attr_multi.atitle = 'primeiro';
 					await wait(20);
-					proxy.template.t_attr_multi.atitle = 'segundo';
+					shadowProxy.template.t_attr_multi.atitle = 'segundo';
 					await wait(20);
 					assert(T('[x-data="t_attr_multi"] .am-title').getAttribute('title') === 'segundo', `esperado "segundo", got "${T('[x-data="t_attr_multi"] .am-title').getAttribute('title')}"`);
 				}
@@ -2569,12 +2586,12 @@
 			{
 				name: 'Atributo com múltiplas interpolações (data-info="{a}-{b}")',
 				fn: async () => {
-					proxy.template.t_attr_multi.a = '1';
-					proxy.template.t_attr_multi.b = '2';
+					shadowProxy.template.t_attr_multi.a = '1';
+					shadowProxy.template.t_attr_multi.b = '2';
 					await wait(20);
 					assert(T('[x-data="t_attr_multi"] .am-multi').getAttribute('data-info') === '1-2', `esperado "1-2", got "${T('[x-data="t_attr_multi"] .am-multi').getAttribute('data-info')}"`);
-					proxy.template.t_attr_multi.a = '3';
-					proxy.template.t_attr_multi.b = '4';
+					shadowProxy.template.t_attr_multi.a = '3';
+					shadowProxy.template.t_attr_multi.b = '4';
 					await wait(20);
 					assert(T('[x-data="t_attr_multi"] .am-multi').getAttribute('data-info') === '3-4', `2ª mudança falhou, got "${T('[x-data="t_attr_multi"] .am-multi').getAttribute('data-info')}"`);
 				}
@@ -2582,7 +2599,7 @@
 			{
 				name: 'class="{expr}" dinâmico (atributo único) atualiza',
 				fn: async () => {
-					proxy.template.t_attr_multi.aclass = 'ativo';
+					shadowProxy.template.t_attr_multi.aclass = 'ativo';
 					await wait(20);
 					assert(document.getElementById('am-class').getAttribute('class') === 'ativo', `esperado "ativo", got "${document.getElementById('am-class').getAttribute('class')}"`);
 				}
@@ -2593,7 +2610,7 @@
 					// O parser HTML descarta o 2º atributo `class` duplicado na mesma tag,
 					// então "{divClass}" nunca chega a virar template interpolável.
 					// Este teste documenta o comportamento real, não corrige o markup.
-					proxy.template.t_bind.divClass = 'nova-classe';
+					shadowProxy.template.t_bind.divClass = 'nova-classe';
 					await wait(20);
 					const cls = T('[x-data="t_bind"] .cls-div').getAttribute('class');
 					assert(cls === 'cls-div', `comportamento mudou! esperado apenas "cls-div" (bug de markup), got "${cls}"`);
@@ -2608,13 +2625,13 @@
 			{
 				name: 'destroy() + initProxy() — dados antigos não vazam pro novo',
 				fn: async () => {
-					proxy.template.t_destroy_recreate.valor = 'antigo';
+					shadowProxy.template.t_destroy_recreate.valor = 'antigo';
 					await wait(10);
-					proxy.destroy('t_destroy_recreate');
+					shadowProxy.destroy('t_destroy_recreate');
 					await wait(10);
-					proxy.initProxy();
+					shadowProxy.initProxy();
 					await wait(10);
-					assert(!proxy.template.t_destroy_recreate.valor, `valor vazou: "${proxy.template.t_destroy_recreate.valor}"`);
+					assert(!shadowProxy.template.t_destroy_recreate.valor, `valor vazou: "${shadowProxy.template.t_destroy_recreate.valor}"`);
 				}
 			},
 			{
@@ -2623,38 +2640,38 @@
 					let errCaught = null;
 					const onErr = (e) => { errCaught = e.error || e; };
 					window.addEventListener('error', onErr);
-					proxy.template.t_destroy_pending.valor = 'pendente'; // agenda _scheduleApply, sem await
-					proxy.destroy('t_destroy_pending'); // destrói antes do microtask rodar
+					shadowProxy.template.t_destroy_pending.valor = 'pendente'; // agenda _scheduleApply, sem await
+					shadowProxy.destroy('t_destroy_pending'); // destrói antes do microtask rodar
 					await wait(30);
 					window.removeEventListener('error', onErr);
 					assert(!errCaught, `erro lançado: ${errCaught && errCaught.message}`);
-					assert(!proxy.template.t_destroy_pending.valor, 'store deveria estar limpo após destroy');
+					assert(!shadowProxy.template.t_destroy_pending.valor, 'store deveria estar limpo após destroy');
 				}
 			},
 			{
 				name: 'x-on de elemento destruído não dispara mais',
 				fn: async () => {
-					proxy.template.t_destroy_on2.val = 0;
+					shadowProxy.template.t_destroy_on2.val = 0;
 					await wait(20);
 					const btn = T('[x-data="t_destroy_on2"] .d2-btn');
-					proxy.destroy('t_destroy_on2');
+					shadowProxy.destroy('t_destroy_on2');
 					await wait(10);
 					btn.click();
 					await wait(20);
-					assert(!proxy.template.t_destroy_on2.val, `x-on ainda respondeu: ${proxy.template.t_destroy_on2.val}`);
+					assert(!shadowProxy.template.t_destroy_on2.val, `x-on ainda respondeu: ${shadowProxy.template.t_destroy_on2.val}`);
 				}
 			},
 			{
 				name: 'watcher registrado antes do destroy para de disparar depois',
 				fn: async () => {
-					proxy.template.t_destroy_recreate.valor = 'a';
+					shadowProxy.template.t_destroy_recreate.valor = 'a';
 					await wait(10);
 					let fired = 0;
-					proxy.on('t_destroy_recreate.valor', () => { fired++; });
-					proxy.destroy('t_destroy_recreate');
+					shadowProxy.on('t_destroy_recreate.valor', () => { fired++; });
+					shadowProxy.destroy('t_destroy_recreate');
 					await wait(10);
-					proxy.initProxy();
-					proxy.template.t_destroy_recreate.valor = 'b';
+					shadowProxy.initProxy();
+					shadowProxy.template.t_destroy_recreate.valor = 'b';
 					await wait(10);
 					assert(fired === 0, `watcher disparou ${fired}x após destroy`);
 				}
@@ -2668,20 +2685,20 @@
 			{
 				name: 'Array de primitivos com x-model por índice',
 				fn: async () => {
-					proxy.template.t_model_arr.itens = ['a', 'b', 'c'];
+					shadowProxy.template.t_model_arr.itens = ['a', 'b', 'c'];
 					await wait(20);
 					const i1 = T('[x-data="t_model_arr"] .ma-1');
 					i1.value = 'editado';
 					i1.dispatchEvent(new Event('input'));
 					await wait(20);
-					assert(proxy.template.t_model_arr.itens[1] === 'editado', `esperado "editado", got "${proxy.template.t_model_arr.itens[1]}"`);
-					assert(proxy.template.t_model_arr.itens[0] === 'a', 'itens[0] não deveria mudar');
+					assert(shadowProxy.template.t_model_arr.itens[1] === 'editado', `esperado "editado", got "${shadowProxy.template.t_model_arr.itens[1]}"`);
+					assert(shadowProxy.template.t_model_arr.itens[0] === 'a', 'itens[0] não deveria mudar');
 				}
 			},
 			{
 				name: 'Dois inputs no mesmo path — editar um reflete no outro',
 				fn: async () => {
-					proxy.template.t_model.nome = 'inicial';
+					shadowProxy.template.t_model.nome = 'inicial';
 					await wait(10);
 					const i1 = T('[x-data="t_model"] input[type="text"]');
 					const i2 = T('[x-data="t_model"] .input2');
@@ -2694,7 +2711,7 @@
 			{
 				name: 'x-model dentro de x-for (item.valor) — cobertura de limite conhecido',
 				fn: async () => {
-					proxy.template.t_model_for.lista = [{ valor: 'a' }, { valor: 'b' }];
+					shadowProxy.template.t_model_for.lista = [{ valor: 'a' }, { valor: 'b' }];
 					await wait(20);
 					const input = T('[x-data="t_model_for"] .mf-input');
 					input.value = 'editado-loop';
@@ -2703,16 +2720,16 @@
 					// x-model só resolve paths a partir do key do container x-data;
 					// "item.valor" (alias do loop) não é resolvido para lista[0].valor.
 					// Este teste documenta se o gap ainda existe.
-					assert(proxy.template.t_model_for.lista[0].valor === 'editado-loop',
-						`x-model dentro de x-for não propagou — valor continua "${proxy.template.t_model_for.lista[0].valor}"`);
+					assert(shadowProxy.template.t_model_for.lista[0].valor === 'editado-loop',
+						`x-model dentro de x-for não propagou — valor continua "${shadowProxy.template.t_model_for.lista[0].valor}"`);
 				}
 			},
 			{
 				name: 'Checkboxes independentes no mesmo objeto',
 				fn: async () => {
-					proxy.template.t_model_checks.optA = false;
-					proxy.template.t_model_checks.optB = true;
-					proxy.template.t_model_checks.optC = false;
+					shadowProxy.template.t_model_checks.optA = false;
+					shadowProxy.template.t_model_checks.optB = true;
+					shadowProxy.template.t_model_checks.optC = false;
 					await wait(20);
 					const a = T('[x-data="t_model_checks"] .mc-a');
 					const b = T('[x-data="t_model_checks"] .mc-b');
@@ -2723,8 +2740,29 @@
 					a.checked = true;
 					a.dispatchEvent(new Event('change'));
 					await wait(20);
-					assert(proxy.template.t_model_checks.optA === true, 'optA não propagou pro proxy');
-					assert(proxy.template.t_model_checks.optB === true, 'optB não deveria ter mudado');
+					assert(shadowProxy.template.t_model_checks.optA === true, 'optA não propagou pro proxy');
+					assert(shadowProxy.template.t_model_checks.optB === true, 'optB não deveria ter mudado');
+				}
+			},
+			{
+				name: 'x-model órfão pós-destroy: escrita passa pelo proxy e dispara watcher (fallback fix)',
+				fn: async () => {
+					shadowProxy.template.t_setdeep_fallback.val = 'inicial';
+					await wait(20);
+					shadowProxy.destroy('t_setdeep_fallback');
+					await wait(10);
+					shadowProxy.initProxy(); // recria o [x-data], mas _proxies[key] só é recriado sob demanda
+					let fired = null;
+					const unsub = shadowProxy.on('t_setdeep_fallback.val', (novo) => { fired = novo; });
+					const input = T('.mf-orphan-input'); // sobrevive ao destroy por estar FORA do container destruído
+					input.value = 'digitado-apos-destroy';
+					input.dispatchEvent(new Event('input'));
+					await wait(20);
+					unsub();
+					assert(fired === 'digitado-apos-destroy',
+						`watcher não disparou — escrita ainda caindo no fallback direto em _store (bypassa reatividade). fired=${JSON.stringify(fired)}`);
+					assert(shadowProxy.template.t_setdeep_fallback.val === 'digitado-apos-destroy',
+						`valor final incorreto: "${shadowProxy.template.t_setdeep_fallback.val}"`);
 				}
 			},
 		]);
@@ -2736,10 +2774,10 @@
 			{
 				name: 'Trocar a key de um item existente recria o nó',
 				fn: async () => {
-					proxy.template.t_key_edge.lista = [{ id: 1, nome: 'A' }];
+					shadowProxy.template.t_key_edge.lista = [{ id: 1, nome: 'A' }];
 					await wait(20);
 					const before = keItems()[0];
-					proxy.template.t_key_edge.lista = [{ id: 2, nome: 'A2' }];
+					shadowProxy.template.t_key_edge.lista = [{ id: 2, nome: 'A2' }];
 					await wait(20);
 					const after = keItems()[0];
 					assert(before !== after, 'nó deveria ter sido recriado com a nova key');
@@ -2752,9 +2790,9 @@
 					let errCaught = null;
 					const onErr = (e) => { errCaught = e.error || e; };
 					window.addEventListener('error', onErr);
-					proxy.template.t_key_edge.lista = [{ id: 9, nome: 'X' }, { id: 9, nome: 'Y' }];
+					shadowProxy.template.t_key_edge.lista = [{ id: 9, nome: 'X' }, { id: 9, nome: 'Y' }];
 					await wait(20);
-					proxy.template.t_key_edge.lista = [{ id: 9, nome: 'X2' }, { id: 9, nome: 'Y2' }];
+					shadowProxy.template.t_key_edge.lista = [{ id: 9, nome: 'X2' }, { id: 9, nome: 'Y2' }];
 					await wait(20);
 					window.removeEventListener('error', onErr);
 					assert(!errCaught, `exceção não tratada com keys duplicadas: ${errCaught && errCaught.message}`);
@@ -2764,11 +2802,11 @@
 			{
 				name: 'Reordenar lista mantendo keys — nós são movidos, não recriados',
 				fn: async () => {
-					proxy.template.t_key_edge.lista = [{ id: 1, nome: 'A' }, { id: 2, nome: 'B' }, { id: 3, nome: 'C' }];
+					shadowProxy.template.t_key_edge.lista = [{ id: 1, nome: 'A' }, { id: 2, nome: 'B' }, { id: 3, nome: 'C' }];
 					await wait(20);
 					const nodesBefore = keItems();
 					const nodeA = nodesBefore[0], nodeB = nodesBefore[1], nodeC = nodesBefore[2];
-					proxy.template.t_key_edge.lista = [{ id: 3, nome: 'C' }, { id: 1, nome: 'A' }, { id: 2, nome: 'B' }];
+					shadowProxy.template.t_key_edge.lista = [{ id: 3, nome: 'C' }, { id: 1, nome: 'A' }, { id: 2, nome: 'B' }];
 					await wait(20);
 					const nodesAfter = keItems();
 					assert(nodesAfter[0] === nodeC, 'nó C deveria ter sido movido, não recriado');
@@ -2785,8 +2823,8 @@
 			{
 				name: 'Trocar lista 2x no mesmo tick — só a 2ª prevalece',
 				fn: async () => {
-					proxy.template.t_race.lista = [{ nome: 'primeira' }];
-					proxy.template.t_race.lista = [{ nome: 'segunda' }, { nome: 'segunda2' }];
+					shadowProxy.template.t_race.lista = [{ nome: 'primeira' }];
+					shadowProxy.template.t_race.lista = [{ nome: 'segunda' }, { nome: 'segunda2' }];
 					await wait(30);
 					assert(raceItems().length === 2, `esperado 2 itens, got ${raceItems().length}`);
 					assert(raceItems()[0].textContent.trim() === 'segunda', `conteúdo errado: "${raceItems()[0].textContent.trim()}"`);
@@ -2795,7 +2833,7 @@
 			{
 				name: 'Múltiplos sets no mesmo componente no mesmo tick — 1 render',
 				fn: async () => {
-					proxy.template.t_race2.val = 'inicial';
+					shadowProxy.template.t_race2.val = 'inicial';
 					await wait(20);
 					const el = T('[x-data="t_race2"] .race2-out');
 					let renders = 0;
@@ -2807,9 +2845,9 @@
 						},
 						configurable: true
 					});
-					proxy.template.t_race2.val = 'v1';
-					proxy.template.t_race2.val = 'v2';
-					proxy.template.t_race2.val = 'v3';
+					shadowProxy.template.t_race2.val = 'v1';
+					shadowProxy.template.t_race2.val = 'v2';
+					shadowProxy.template.t_race2.val = 'v3';
 					await wait(20);
 					assert(renders === 1, `esperado 1 render, got ${renders}`);
 					assert(el.textContent.trim() === 'v3', `conteúdo final errado: "${el.textContent.trim()}"`);
@@ -2818,11 +2856,11 @@
 			{
 				name: 'set → delete → set do mesmo prop no mesmo tick',
 				fn: async () => {
-					proxy.template.t_race3.val = 'x';
+					shadowProxy.template.t_race3.val = 'x';
 					await wait(20);
-					proxy.template.t_race3.val = 'y';
-					delete proxy.template.t_race3.val;
-					proxy.template.t_race3.val = 'z';
+					shadowProxy.template.t_race3.val = 'y';
+					delete shadowProxy.template.t_race3.val;
+					shadowProxy.template.t_race3.val = 'z';
 					await wait(20);
 					assert(T('[x-data="t_race3"] .race3-out').textContent.trim() === 'z',
 						`esperado "z", got "${T('[x-data="t_race3"] .race3-out').textContent.trim()}"`);
@@ -2837,14 +2875,14 @@
 			{
 				name: 'Mesma expressão em 2 componentes não colide',
 				fn: async () => {
-					proxy.template.t_lru_a.compartilhado = 'valor-A';
-					proxy.template.t_lru_b.compartilhado = 'valor-B';
+					shadowProxy.template.t_lru_a.compartilhado = 'valor-A';
+					shadowProxy.template.t_lru_b.compartilhado = 'valor-B';
 					await wait(20);
 					assert(T('[x-data="t_lru_a"] .lru-a-out').textContent.trim() === 'valor-A',
 						`t_lru_a errado: "${T('[x-data="t_lru_a"] .lru-a-out').textContent.trim()}"`);
 					assert(T('[x-data="t_lru_b"] .lru-b-out').textContent.trim() === 'valor-B',
 						`t_lru_b errado: "${T('[x-data="t_lru_b"] .lru-b-out').textContent.trim()}"`);
-					proxy.template.t_lru_a.compartilhado = 'valor-A2';
+					shadowProxy.template.t_lru_a.compartilhado = 'valor-A2';
 					await wait(20);
 					assert(T('[x-data="t_lru_b"] .lru-b-out').textContent.trim() === 'valor-B',
 						'mudança em t_lru_a vazou pro t_lru_b');
@@ -2860,10 +2898,10 @@
 				name: 'x-for com expressão inválida dispara onError e não trava o resto',
 				fn: async () => {
 					let captured = null;
-					proxy.onError = (err) => { captured = err; };
-					proxy.template.t_err_for.outro = 'sobrevivi';
+					shadowProxy.onError = (err) => { captured = err; };
+					shadowProxy.template.t_err_for.outro = 'sobrevivi';
 					await wait(20);
-					proxy.onError = null;
+					shadowProxy.onError = null;
 					assert(captured && captured.type === 'x-for-syntax', `onError não disparou com tipo certo: ${JSON.stringify(captured)}`);
 					assert(T('[x-data="t_err_for"] .ef-sibling').textContent.trim() === 'sobrevivi', 'sibling não renderizou');
 				}
@@ -2872,10 +2910,10 @@
 				name: 'x-bind com exceção em runtime não quebra render dos irmãos',
 				fn: async () => {
 					let captured = null;
-					proxy.onError = (err) => { captured = err; };
-					proxy.template.t_err_bind.bom = 'ok-irmao';
+					shadowProxy.onError = (err) => { captured = err; };
+					shadowProxy.template.t_err_bind.bom = 'ok-irmao';
 					await wait(20);
-					proxy.onError = null;
+					shadowProxy.onError = null;
 					assert(T('[x-data="t_err_bind"] .eb-good').textContent.trim() === 'ok-irmao', 'irmão não renderizou após erro no vizinho');
 					assert(T('[x-data="t_err_bind"] .eb-bad').textContent.trim() === '', 'nó com erro deveria renderizar vazio, não travar');
 				}
