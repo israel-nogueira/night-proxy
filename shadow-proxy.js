@@ -1,5 +1,5 @@
 /*!
- * shadow-proxy v2.7.0
+ * shadow-proxy v2.7.1
  * Reactive DOM binding via Recursive Proxy
  * https://github.com/israel-nogueira/shadow-proxy
  *
@@ -34,7 +34,7 @@
  * Watchers:
  *   proxy.on('key.prop', (newVal, oldVal) => {})   → watch any deep path
  *
- * v2.7.0 — Early template cache in initProxy (x-for with empty arrays)
+ * v2.7.1 — Early template cache in initProxy (x-for with empty arrays)
  *           Centralized error reporting via _reportError + proxy.onError handler
  * v2.3.0 — Granular reactivity (track/trigger)
  * v2.3.1 — Fixes: x-bind granular, _syncModelsForKey, _renderTracked propagation
@@ -1849,7 +1849,7 @@ var proxy = (function () {
         name: 'shadow-proxy',
 
         /** @type {string} Versão semântica atual. */
-        version: '2.7.0',
+        version: '2.7.1',
 
         /**
          * Proxy raiz que expõe os stores de cada componente.
