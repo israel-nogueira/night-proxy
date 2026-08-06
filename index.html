@@ -4,7 +4,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>shadow-proxy.js — Reatividade sem framework</title>
+	<title>shadow-proxy — Reatividade sem framework</title>
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 
 
@@ -12,8 +12,8 @@
 	<meta property="og:type" content="website" />
 	<meta property="og:url" content="https://shadow-proxy.pages.dev"/>
 	<meta name="twitter:url" content="https://shadow-proxy.pages.dev"/>
-	<meta property="og:title" content="shadow-proxy.js — Reatividade sem framework" />
-	<meta name="twitter:title" content="shadow-proxy.js — Reatividade sem framework" />
+	<meta property="og:title" content="shadow-proxy — Reatividade sem framework" />
+	<meta name="twitter:title" content="shadow-proxy — Reatividade sem framework" />
 	<meta property="og:image" content="https://raw.githubusercontent.com/israel-nogueira/shadow-proxy/refs/heads/no-reflow/assets/img/ogimage.png" />
 	<meta name="twitter:image" content="https://raw.githubusercontent.com/israel-nogueira/shadow-proxy/refs/heads/no-reflow/assets/img/ogimage.png" />
 	<meta property="og:image:width" content="1200" />
@@ -1364,7 +1364,7 @@
 	<nav>
 		<a href="#" class="nav-logo" onclick="showPage('home')">
 			<span class="dot"></span>
-			shadow-proxy.js
+			shadow-proxy
 		</a>
 		<div class="nav-links">
 			<a href="#" class="active" onclick="showPage('home'); setActive(this)">Início</a>
@@ -1372,7 +1372,7 @@
 			<a href="https://github.com/israel-nogueira/shadow-proxy" target="_blank">GitHub</a>
 		</div>
 		<div class="nav-right">
-			<span class="nav-badge">v2.6.0</span>
+			<span class="nav-badge">v2.7.0</span>
 			<a href="https://cdn.jsdelivr.net/gh/israel-nogueira/shadow-proxy@refs/heads/no-reflow/assets/js/shadow-proxy.min.js"
 				class="nav-gh" download>
 				↓ Download
@@ -1491,7 +1491,7 @@
 		<section class="section" id="exemplos">
 			<div class="section-eyebrow">// exemplos interativos</div>
 			<h2 class="section-title">Veja <em>funcionando</em> agora</h2>
-			<p class="section-sub">Cada exemplo abaixo está rodando de verdade com shadow-proxy.js. Edite, clique,
+			<p class="section-sub">Cada exemplo abaixo está rodando de verdade com shadow-proxy. Edite, clique,
 				experimente.</p>
 
 			<!-- EXEMPLO 1: x-bind + x-if + x-model -->
@@ -1644,7 +1644,7 @@
 		<section class="section">
 			<div class="section-eyebrow">// por que usar</div>
 			<h2 class="section-title">Tudo que você precisa,<br><em>nada que você não precisa</em></h2>
-			<p class="section-sub">shadow-proxy.js entrega reatividade real sem as abstrações desnecessárias dos grandes
+			<p class="section-sub">shadow-proxy entrega reatividade real sem as abstrações desnecessárias dos grandes
 				frameworks.</p>
 
 			<div class="features-grid">
@@ -1694,7 +1694,7 @@
 			<div class="section-eyebrow">// comparação</div>
 			<h2 class="section-title">Por que não <em>Alpine, Vue ou React?</em></h2>
 			<p class="section-sub">Existe um espaço enorme entre "página HTML com PHP" e "SPA completa com React".
-				shadow-proxy.js ocupa exatamente esse espaço.</p>
+				shadow-proxy ocupa exatamente esse espaço.</p>
 
 			<div class="table-wrap">
 				<table class="comp-table">
@@ -1808,7 +1808,7 @@
 		</section>
 
 		<footer class="footer">
-			<span>shadow-proxy.js v2.6.0 — MIT License</span>
+			<span>shadow-proxy v2.7.0 — MIT License</span>
 			<span>
 				Feito por <a href="https://github.com/israel-nogueira" target="_blank">@israel-nogueira</a>
 			</span>
@@ -1889,7 +1889,7 @@
 
 		// ── TAREFAS ──────────────────────────────────────────────────────────────────
 		proxy.template.tarefas.lista = [
-			{ texto: "Aprender shadow-proxy.js", done: false },
+			{ texto: "Aprender shadow-proxy", done: false },
 			{ texto: "Remover o Vue do projeto", done: false },
 			{ texto: "Fazer café ☕", done: true },
 		];
@@ -1980,7 +1980,7 @@
 
 			'inicio-rapido': `
 <h1>Início rápido</h1>
-<p>shadow-proxy.js é uma lib de reatividade declarativa baseada em Proxy Recursivo. Um arquivo. Sem npm. Sem build. Funciona em qualquer projeto PHP, HTML, WordPress, Laravel.</p>
+<p>shadow-proxy é uma lib de reatividade declarativa baseada em Proxy Recursivo. Um arquivo. Sem npm. Sem build. Funciona em qualquer projeto PHP, HTML, WordPress, Laravel.</p>
 
 <h2>Instalação</h2>
 <p>Inclua o script no <code style="font-family:var(--mono);color:var(--cyan)">&lt;head&gt;</code>:</p>
@@ -2015,7 +2015,7 @@
 
 			'como-funciona': `
 <h1>Como funciona</h1>
-<p>shadow-proxy.js implementa <strong>reatividade declarativa baseada em Proxy Recursivo</strong> com dependency tracking granular, sem virtual DOM, sem dirty checking.</p>
+<p>shadow-proxy implementa <strong>reatividade declarativa baseada em Proxy Recursivo</strong> com dependency tracking granular, sem virtual DOM, sem dirty checking.</p>
 
 <h2>Dependency Tracking</h2>
 <p>Durante o render de cada nó, qualquer leitura de propriedade registra automaticamente uma dependência via <code style="font-family:var(--mono);color:var(--cyan)">WeakMap</code>. Quando um valor muda, apenas os nós que dependem daquela propriedade específica são atualizados — cirurgicamente.</p>
@@ -2037,7 +2037,7 @@
 </div>
 
 <h2>Sem Virtual DOM</h2>
-<p>Ao contrário do React e Vue, shadow-proxy.js não usa Virtual DOM nem dirty checking. Cada nó tem seu próprio Effect que se desregistra e re-registra nas dependências a cada run, evitando memory leaks e renders obsoletos.</p>
+<p>Ao contrário do React e Vue, shadow-proxy não usa Virtual DOM nem dirty checking. Cada nó tem seu próprio Effect que se desregistra e re-registra nas dependências a cada run, evitando memory leaks e renders obsoletos.</p>
 `,
 
 			'x-data': `
@@ -2103,7 +2103,7 @@
 </div>
 
 <div class="callout green">
-  <strong>v2.6.0</strong> — Arrays vazios são totalmente suportados. Inicie com <code style="font-family:var(--mono)">[]</code> e popule depois com fetch, sem dados dummy.
+  <strong>v2.7.0</strong> — Arrays vazios são totalmente suportados. Inicie com <code style="font-family:var(--mono)">[]</code> e popule depois com fetch, sem dados dummy.
 </div>
 
 <h2>Loop aninhado</h2>
@@ -2302,7 +2302,7 @@ document.<span class="t-fn">querySelector</span>(<span class="t-str">'[x-data="p
 
 			'spa-fetch': `
 <h1>SPA com fetch</h1>
-<p>shadow-proxy.js tem destroy real — essencial para SPAs que trocam conteúdo via fetch.</p>
+<p>shadow-proxy tem destroy real — essencial para SPAs que trocam conteúdo via fetch.</p>
 <div class="docs-code">
   <div class="docs-code-bar"><span>JavaScript</span></div>
   <pre><span class="t-fn">proxy</span>.<span class="t-fn">initProxy</span>();

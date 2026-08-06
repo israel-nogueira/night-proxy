@@ -1,0 +1,2890 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>shadow-proxy — Test Suite</title>
+	<link
+		href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap"
+		rel="stylesheet">
+	<script src="./shadow-proxy.js"></script>
+	<style>
+		*,
+		*::before,
+		*::after {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+
+		:root {
+			--bg: #0a0a0f;
+			--bg2: #111118;
+			--bg3: #1a1a24;
+			--border: #2a2a3a;
+			--accent: #7c3aed;
+			--accent2: #06b6d4;
+			--danger: #ef4444;
+			--success: #22c55e;
+			--warn: #f59e0b;
+			--text: #e2e8f0;
+			--text2: #94a3b8;
+			--text3: #475569;
+			--font-mono: 'JetBrains Mono', monospace;
+			--font-display: 'Syne', sans-serif;
+		}
+
+		body {
+			background: var(--bg);
+			color: var(--text);
+			font-family: var(--font-mono);
+			padding: 24px 16px;
+		}
+
+		h1 {
+			font-family: var(--font-display);
+			font-size: 1.5rem;
+			margin-bottom: 6px;
+		}
+
+		h1 span {
+			color: var(--accent);
+		}
+
+		.subtitle {
+			color: var(--text2);
+			font-size: 0.75rem;
+			margin-bottom: 24px;
+		}
+
+		.controls {
+			display: flex;
+			gap: 12px;
+			margin-bottom: 24px;
+			flex-wrap: wrap;
+		}
+
+		button {
+			background: var(--accent);
+			color: #fff;
+			border: none;
+			padding: 10px 20px;
+			border-radius: 6px;
+			font-family: var(--font-mono);
+			font-size: 0.8rem;
+			font-weight: 600;
+			cursor: pointer;
+			transition: filter 0.15s;
+		}
+
+		button:hover {
+			filter: brightness(1.2);
+		}
+
+		button.secondary {
+			background: var(--bg3);
+			border: 1px solid var(--border);
+			color: var(--text);
+		}
+
+		.summary {
+			display: flex;
+			gap: 16px;
+			flex-wrap: wrap;
+			margin-bottom: 20px;
+			padding: 16px 20px;
+			background: var(--bg2);
+			border: 1px solid var(--border);
+			border-radius: 10px;
+		}
+
+		.summary-item {
+			display: flex;
+			flex-direction: column;
+			gap: 4px;
+		}
+
+		.summary-label {
+			font-size: 0.65rem;
+			color: var(--text3);
+			text-transform: uppercase;
+			letter-spacing: 0.1em;
+		}
+
+		.summary-value {
+			font-size: 1.5rem;
+			font-weight: 700;
+			font-family: var(--font-display);
+		}
+
+		.summary-value.pass {
+			color: var(--success);
+		}
+
+		.summary-value.fail {
+			color: var(--danger);
+		}
+
+		.summary-value.total {
+			color: var(--text);
+		}
+
+		.progress-bar {
+			height: 4px;
+			background: var(--bg3);
+			border-radius: 2px;
+			margin-bottom: 24px;
+			overflow: hidden;
+		}
+
+		.progress-fill {
+			height: 100%;
+			background: var(--success);
+			transition: width 0.3s;
+		}
+
+		/* ── Grid de cards ── */
+		.groups {
+			display: grid;
+			gap: 16px;
+			grid-template-columns: 1fr;
+		}
+
+		@media (min-width: 768px) {
+			.groups {
+				grid-template-columns: repeat(2, 1fr);
+			}
+		}
+
+		@media (min-width: 1200px) {
+			.groups {
+				grid-template-columns: repeat(3, 1fr);
+			}
+		}
+
+		.group {
+			background: var(--bg2);
+			border: 1px solid var(--border);
+			border-radius: 10px;
+			overflow: hidden;
+			display: flex;
+			flex-direction: column;
+		}
+
+		.group-header {
+			padding: 12px 16px;
+			background: var(--bg3);
+			border-bottom: 1px solid var(--border);
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			font-family: var(--font-display);
+			font-size: 0.82rem;
+			font-weight: 600;
+		}
+
+		.group-badge {
+			margin-left: auto;
+			font-size: 0.7rem;
+			font-family: var(--font-mono);
+			color: var(--text2);
+			white-space: nowrap;
+		}
+
+		.group-progress {
+			height: 3px;
+			background: var(--bg3);
+		}
+
+		.group-progress-fill {
+			height: 100%;
+			background: var(--accent);
+			transition: width 0.3s;
+			width: 0%;
+		}
+
+		.test-list {
+			padding: 4px 0;
+			flex: 1;
+		}
+
+		.test-item {
+			display: flex;
+			align-items: flex-start;
+			gap: 10px;
+			padding: 8px 16px;
+			border-bottom: 1px solid var(--border);
+			font-size: 0.75rem;
+		}
+
+		.test-item:last-child {
+			border-bottom: none;
+		}
+
+		.test-icon {
+			font-size: 0.85rem;
+			margin-top: 1px;
+			flex-shrink: 0;
+		}
+
+		.test-name {
+			flex: 1;
+			color: var(--text);
+			line-height: 1.4;
+		}
+
+		.test-detail {
+			font-size: 0.68rem;
+			color: var(--text2);
+			margin-top: 2px;
+		}
+
+		.test-time {
+			font-size: 0.62rem;
+			color: var(--text3);
+			flex-shrink: 0;
+			margin-top: 2px;
+			white-space: nowrap;
+		}
+
+		.test-error {
+			font-size: 0.68rem;
+			color: var(--danger);
+			margin-top: 3px;
+			font-family: var(--font-mono);
+			word-break: break-all;
+		}
+
+		.status-pass .test-icon::before {
+			content: '✓';
+			color: var(--success);
+		}
+
+		.status-fail .test-icon::before {
+			content: '✕';
+			color: var(--danger);
+		}
+
+		.status-pending .test-icon::before {
+			content: '○';
+			color: var(--text3);
+		}
+
+		.status-running .test-icon::before {
+			content: '◌';
+			color: var(--warn);
+		}
+
+		.status-pass {
+			background: rgba(34, 197, 94, .03);
+		}
+
+		.status-fail {
+			background: rgba(239, 68, 68, .05);
+		}
+
+		#test-targets {
+			position: absolute;
+			left: -9999px;
+			top: 0;
+			width: 1px;
+			overflow: hidden;
+		}
+	</style>
+</head>
+
+<body>
+
+	<!-- ═══════════════════════════════════════════════════════════
+     DOM TARGETS — componentes ocultos usados pelos testes
+═══════════════════════════════════════════════════════════ -->
+	<div id="test-targets">
+
+		<!-- x-bind -->
+		<div x-data="t_bind">
+			<span class="titulo" x-bind="titulo"></span>
+			<span class="count" x-bind="count"></span>
+			<span class="bool-true" x-bind="boolTrue"></span>
+			<span class="bool-false" x-bind="boolFalse"></span>
+			<span class="zero" x-bind="zero"></span>
+			<span class="nulo" x-bind="nulo"></span>
+			<span class="undef" x-bind="undef"></span>
+			<a class="href-link" href="{linkHref}">link</a>
+			<div class="cls-div" class="{divClass}"></div>
+			<span class="data-val" data-id="{dataId}"></span>
+			<div class="nested-wrap"><span class="nested-span" x-bind="nested"></span></div>
+		</div>
+
+		<!-- x-for básico -->
+		<div x-data="t_lista">
+			<div x-for="item in lista">
+				<div class="item" x-bind="{item.nome}"></div>
+			</div>
+		</div>
+
+		<!-- x-for — alias de índice -->
+		<div x-data="t_for_idx">
+			<div x-for="item, k in lista">
+				<span class="idx-item" x-bind="{k}:{item.nome}"></span>
+			</div>
+		</div>
+
+		<!-- x-for — alias "as" -->
+		<div x-data="t_for_as">
+			<div x-for="item in lista as k">
+				<span class="as-item" x-bind="{k}:{item.nome}"></span>
+			</div>
+		</div>
+
+		<!-- x-for — $i/$index -->
+		<div x-data="t_for_i">
+			<div x-for="item in lista">
+				<span class="i-item" x-bind="{$i}"></span>
+			</div>
+		</div>
+
+		<!-- x-for — x-key -->
+		<div x-data="t_for_key">
+			<div x-for="item in lista" x-key="item.id">
+				<span class="key-item" x-bind="{item.nome}"></span>
+			</div>
+		</div>
+
+		<!-- x-for — multi-filho -->
+		<div x-data="t_for_multi">
+			<div x-for="item in lista">
+				<span class="mf-a" x-bind="{item.a}"></span>
+				<span class="mf-b" x-bind="{item.b}"></span>
+			</div>
+		</div>
+
+		<!-- x-for aninhado -->
+		<div x-data="t_nested">
+			<div x-for="cat in lista">
+				<div>
+					<span class="cat-nome" x-bind="{cat.nome}"></span>
+					<div x-for="tag in cat.tags">
+						<span class="tag" x-bind="{tag.label}"></span>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- x-if -->
+		<div x-data="t_if">
+			<div x-for="item in lista">
+				<div>
+					<span class="nome" x-bind="{item.nome}"></span>
+					<span class="ativo" x-if="item.ativo">sim</span>
+					<span class="inativo" x-if="!item.ativo">não</span>
+				</div>
+			</div>
+		</div>
+
+		<!-- x-if — valores falsy -->
+		<div x-data="t_if_falsy">
+			<span class="if-zero" x-if="val_zero">zero</span>
+			<span class="if-empty" x-if="val_empty">empty</span>
+			<span class="if-null" x-if="val_null">null</span>
+			<span class="if-and" x-if="val_a && val_b">and</span>
+			<span class="if-or" x-if="val_a || val_b">or</span>
+		</div>
+
+		<!-- x-model -->
+		<div x-data="t_model">
+			<input type="text" x-model="t_model.nome">
+			<input type="checkbox" x-model="t_model.ativo">
+			<input type="radio" x-model="t_model.cor" value="red">
+			<input type="radio" x-model="t_model.cor" value="blue">
+			<select x-model="t_model.opcao">
+				<option value="a">A</option>
+				<option value="b">B</option>
+			</select>
+			<input type="text" x-model="t_model.nome" class="input2">
+		</div>
+
+		<!-- x-model — path profundo -->
+		<div x-data="t_model_deep">
+			<input type="text" x-model="t_model_deep.user.nome">
+		</div>
+
+		<!-- x-on -->
+		<div x-data="t_on" x-ref="root-on">
+			<span x-ref="saida"></span>
+			<button class="btn-click" x-on:click="contador = contador + 1">+</button>
+			<button class="btn-emit" x-on:click="$emit('meu-evento', { val: 42 })">emit</button>
+			<button class="btn-multi-a" x-on:click="multi = 'click'" x-on:mouseenter="multi = 'enter'">multi</button>
+			<span class="out-contador" x-bind="contador"></span>
+			<span class="out-multi" x-bind="multi"></span>
+		</div>
+
+		<!-- x-on — $this dentro de x-for -->
+		<div x-data="t_on_this">
+			<div x-for="item in lista" x-key="item.id">
+				<span class="this-nome" x-bind="{item.nome}"></span>
+				<button class="btn-this" x-on:click="item.nome = 'clicado-' + $this.index">clica</button>
+			</div>
+		</div>
+
+		<!-- x-ref -->
+		<div x-data="t_ref">
+			<span x-ref="meu-ref" class="ref-target">ref</span>
+			<button class="btn-ref" x-on:click="$ref['meu-ref'].textContent = 'tocado'">toca ref</button>
+		</div>
+
+		<!-- stress -->
+		<div x-data="t_stress">
+			<div x-for="item in lista">
+				<div class="stress-item" x-bind="{item.nome}"></div>
+			</div>
+		</div>
+		<div x-data="t_stress1k">
+			<div x-for="item in lista">
+				<div class="stress1k-item" x-bind="{item.nome}"></div>
+			</div>
+		</div>
+		<div x-data="t_stress5k">
+			<div x-for="item in lista">
+				<div class="stress5k-item" x-bind="{item.nome}"></div>
+			</div>
+		</div>
+
+		<!-- listas simultâneas -->
+		<div x-data="t_multi_a">
+			<div x-for="item in lista">
+				<div class="multi-a-item" x-bind="{item.nome}"></div>
+			</div>
+		</div>
+		<div x-data="t_multi_b">
+			<div x-for="item in lista">
+				<div class="multi-b-item" x-bind="{item.nome}"></div>
+			</div>
+		</div>
+		<div x-data="t_multi_c">
+			<div x-for="item in lista">
+				<div class="multi-c-item" x-bind="{item.nome}"></div>
+			</div>
+		</div>
+
+		<!-- destroy -->
+		<div x-data="t_destroy_a">
+			<div x-for="item in lista">
+				<div class="destroy-a-item" x-bind="{item.nome}"></div>
+			</div>
+		</div>
+		<div x-data="t_destroy_b">
+			<span class="destroy-b-titulo" x-bind="titulo"></span>
+		</div>
+		<div x-data="t_destroy_on">
+			<button class="btn-don" x-on:click="val = val + 1">+</button>
+			<span class="out-don" x-bind="val"></span>
+		</div>
+
+		<!-- segurança -->
+		<div x-data="t_security">
+			<span class="sec-out" x-bind="out"></span>
+			<button class="sec-btn-safe" x-on:click="out = 'clicked-safe'">safe</button>
+			<button class="sec-btn-rce" x-on:click="out = constructor.constructor('return (1)')()">rce</button>
+			<button class="sec-btn-eval" x-on:click="eval('1+1')">eval</button>
+			<button class="sec-btn-fetch" x-on:click="fetch('/x')">fetch</button>
+			<button class="sec-btn-window" x-on:click="window.x=1">window</button>
+			<button class="sec-btn-settimeout" x-on:click="setTimeout(function(){},0)">timeout</button>
+			<button class="sec-btn-proto" x-on:click="out.__proto__={}">proto</button>
+			<button class="sec-btn-arrow" x-on:click="(()=>{ out='pwned' })()">arrow</button>
+			<button class="sec-btn-math" x-on:click="out = String(Math.round(1.9))">math</button>
+			<button class="sec-btn-ternary" x-on:click="out = out === 'antes' ? 'ternario-ok' : 'fail'">ternary</button>
+			<button class="sec-btn-logical" x-on:click="out = out || 'logical-ok'">logical</button>
+		</div>
+
+		<!-- segurança — retry de bind -->
+		<div x-data="t_sec_retry">
+			<button class="btn-retry" x-on:click="retryVal = 'ok'">retry</button>
+			<span class="out-retry" x-bind="retryVal"></span>
+		</div>
+
+		<!-- x-model destroy -->
+		<div x-data="t_model_destroy">
+			<input type="text" x-model="t_model_destroy.nome">
+		</div>
+
+		<!-- __nid -->
+		<div x-data="t_nid">
+			<div x-for="item in lista">
+				<div class="nid-item" x-bind="{item.nome}"></div>
+			</div>
+		</div>
+
+		<!-- batch -->
+		<div x-data="t_batch">
+			<span class="batch-a" x-bind="{a} {b} {c}"></span>
+		</div>
+
+		<!-- watcher deep -->
+		<div x-data="t_watch_deep">
+			<span class="wd-out" x-bind="obj.sub.prop"></span>
+		</div>
+
+		<!-- proxy interno -->
+		<div x-data="t_proxy_int">
+			<span class="pi-out" x-bind="obj.level1.level2.val"></span>
+		</div>
+
+		<!-- lifecycle -->
+		<div x-data="t_lifecycle">
+			<span class="lc-out" x-bind="msg"></span>
+		</div>
+
+		<!-- dois componentes isolados -->
+		<div x-data="t_iso_a"><span class="iso-a-out" x-bind="val"></span></div>
+		<div x-data="t_iso_b"><span class="iso-b-out" x-bind="val"></span></div>
+
+		<!-- ═══ NOVOS TARGETS — v2.6.1 ═══ -->
+
+		<!-- x-for aninhado + x-if -->
+		<div x-data="t_nested_if">
+			<div x-for="cat in lista">
+				<div>
+					<span class="ni-cat" x-bind="{cat.nome}"></span>
+					<div x-for="tag in cat.tags">
+						<span class="ni-tag" x-if="tag.ativo" x-bind="{tag.label}"></span>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div x-data="t_if_item">
+			<div x-for="item in lista" x-key="item.id">
+				<span class="ifi-item" x-if="item.show" x-bind="{item.nome}"></span>
+			</div>
+		</div>
+
+		<!-- x-for multi-filho raiz (regressão) -->
+		<div x-data="t_multi_root" x-ref="mr-root">
+			<div x-for="item in lista" x-key="item.id">
+				<span class="mr-nome" x-bind="{item.nome}"></span>
+				<span class="mr-idx" x-bind="{$this.index}"></span>
+				<button class="mr-btn" x-on:click="item.nome = 'click-' + $this.index">clica</button>
+			</div>
+		</div>
+
+		<!-- x-on — objeto/array literal -->
+		<div x-data="t_on_literal" x-ref="ol-root">
+			<button class="ol-btn-emit" x-on:click="$emit('ev-multi', { a: 1, b: 2, c: contador })">emit</button>
+			<button class="ol-btn-push" x-on:click="lista.push({ id: 1 })">push</button>
+			<button class="ol-btn-nested" x-on:click="$emit('ev-nested', { user: { nome: 'x' } })">nested</button>
+			<button class="ol-btn-tern-obj"
+				x-on:click="out = JSON.stringify({ val: flag ? 'a' : 'b' })">ternobj</button>
+			<button class="ol-btn-tern-obj-block"
+				x-on:click="out = JSON.stringify({ val: flag ? window : 'safe' })">ternobjblock</button>
+			<button class="ol-btn-tern" x-on:click="out = flag ? 'sim' : 'nao'">tern</button>
+			<span class="ol-out" x-bind="out"></span>
+			<span class="ol-lista-len" x-bind="{lista.length}"></span>
+		</div>
+
+		<!-- interpolação de atributo — regressão + cobertura -->
+		<div x-data="t_attr_multi">
+			<a class="am-href" href="{ahref}">link</a>
+			<img class="am-src" src="{asrc}">
+			<span class="am-title" title="{atitle}"></span>
+			<span class="am-multi" data-info="{a}-{b}"></span>
+			<div id="am-class" class="{aclass}"></div>
+		</div>
+
+		<!-- destroy / recreate -->
+		<div x-data="t_destroy_recreate">
+			<span class="dr-out" x-bind="valor"></span>
+		</div>
+		<div x-data="t_destroy_pending">
+			<span class="dp-out" x-bind="valor"></span>
+		</div>
+		<div x-data="t_destroy_on2">
+			<button class="d2-btn" x-on:click="val = val + 1">+</button>
+			<span class="d2-out" x-bind="val"></span>
+		</div>
+
+		<!-- x-model — cobertura adicional -->
+		<div x-data="t_model_arr">
+			<input type="text" class="ma-0" x-model="t_model_arr.itens.0">
+			<input type="text" class="ma-1" x-model="t_model_arr.itens.1">
+			<input type="text" class="ma-2" x-model="t_model_arr.itens.2">
+		</div>
+		<div x-data="t_model_for">
+			<div x-for="item in lista">
+				<input type="text" class="mf-input" x-model="item.valor">
+			</div>
+		</div>
+		<div x-data="t_model_checks">
+			<input type="checkbox" class="mc-a" x-model="t_model_checks.optA">
+			<input type="checkbox" class="mc-b" x-model="t_model_checks.optB">
+			<input type="checkbox" class="mc-c" x-model="t_model_checks.optC">
+		</div>
+
+		<!-- x-key — edge cases -->
+		<div x-data="t_key_edge">
+			<div x-for="item in lista" x-key="item.id">
+				<span class="ke-item" x-bind="{item.nome}"></span>
+			</div>
+		</div>
+
+		<!-- race conditions / timing -->
+		<div x-data="t_race">
+			<div x-for="item in lista">
+				<div class="race-item" x-bind="{item.nome}"></div>
+			</div>
+		</div>
+		<div x-data="t_race2">
+			<span class="race2-out" x-bind="val"></span>
+		</div>
+		<div x-data="t_race3">
+			<span class="race3-out" x-bind="val"></span>
+		</div>
+
+		<!-- cache LRU — colisão entre componentes -->
+		<div x-data="t_lru_a"><span class="lru-a-out" x-bind="{compartilhado}"></span></div>
+		<div x-data="t_lru_b"><span class="lru-b-out" x-bind="{compartilhado}"></span></div>
+
+		<!-- error handling / onError -->
+		<div x-data="t_err_for">
+			<div x-for="apenas_uma_palavra" class="ef-list"></div>
+			<span class="ef-sibling" x-bind="outro"></span>
+		</div>
+		<div x-data="t_err_bind">
+			<span class="eb-bad" x-bind="{obj.propInexistente.deepFail}"></span>
+			<span class="eb-good" x-bind="bom"></span>
+		</div>
+
+	</div>
+
+	<!-- ═══════════════ UI ═══════════════ -->
+	<h1>shadow-proxy<span>.js</span> — Test Suite</h1>
+	<p class="subtitle">v2.7.0 · testes automatizados de reatividade, segurança e edge cases</p>
+
+	<div class="controls">
+		<button onclick="runAll()">▶ Rodar todos</button>
+		<button class="secondary" onclick="resetAll()">↺ Resetar</button>
+	</div>
+
+	<div class="summary">
+		<div class="summary-item">
+			<span class="summary-label">Total</span>
+			<span class="summary-value total" id="s-total">0</span>
+		</div>
+		<div class="summary-item">
+			<span class="summary-label">Pass</span>
+			<span class="summary-value pass" id="s-pass">0</span>
+		</div>
+		<div class="summary-item">
+			<span class="summary-label">Fail</span>
+			<span class="summary-value fail" id="s-fail">0</span>
+		</div>
+		<div class="summary-item">
+			<span class="summary-label">Tempo</span>
+			<span class="summary-value total" id="s-time">—</span>
+		</div>
+	</div>
+
+	<div class="progress-bar">
+		<div class="progress-fill" id="progress" style="width:0%"></div>
+	</div>
+
+	<div class="groups" id="groups"></div>
+
+	<script>
+		// ══════════════════════════════════════════════════════════════
+		//  ENGINE
+		// ══════════════════════════════════════════════════════════════
+
+		const _results = { pass: 0, fail: 0, total: 0 };
+		const _groups = [];
+
+		function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+		function assert(cond, msg) { if (!cond) throw new Error(msg || 'assertion failed'); }
+		function getText(sel) { return document.querySelector(sel)?.textContent?.trim() ?? ''; }
+		function getAll(sel) { return [...document.querySelectorAll(sel)]; }
+		function group(name, tests) { _groups.push({ name, tests }); }
+
+		// ══════════════════════════════════════════════════════════════
+		//  UI BUILDER
+		// ══════════════════════════════════════════════════════════════
+
+		function buildUI() {
+			const container = document.getElementById('groups');
+			container.innerHTML = '';
+			_groups.forEach((g, gi) => {
+				const el = document.createElement('div');
+				el.className = 'group';
+				el.innerHTML = `
+			<div class="group-header">
+				${g.name}
+				<span class="group-badge" id="gbadge-${gi}">— / ${g.tests.length}</span>
+			</div>
+			<div class="group-progress"><div class="group-progress-fill" id="gprog-${gi}"></div></div>
+			<div class="test-list" id="glist-${gi}">
+				${g.tests.map((t, ti) => `
+					<div class="test-item status-pending" id="t-${gi}-${ti}">
+						<span class="test-icon"></span>
+						<div style="flex:1">
+							<div class="test-name">${t.name}</div>
+							<div class="test-detail" id="td-${gi}-${ti}"></div>
+						</div>
+						<span class="test-time" id="tt-${gi}-${ti}"></span>
+					</div>
+				`).join('')}
+			</div>
+		`;
+				container.appendChild(el);
+			});
+			updateSummary();
+		}
+
+		function setTestStatus(gi, ti, status, detail, time) {
+			const el = document.getElementById(`t-${gi}-${ti}`);
+			el.className = `test-item status-${status}`;
+			if (detail) document.getElementById(`td-${gi}-${ti}`).innerHTML =
+				`<span class="${status === 'fail' ? 'test-error' : ''}">${detail}</span>`;
+			if (time != null) document.getElementById(`tt-${gi}-${ti}`).textContent = `${time}ms`;
+		}
+
+		function updateGroupProgress(gi, pass, total) {
+			const pct = total > 0 ? (pass / total * 100) : 0;
+			const fill = document.getElementById(`gprog-${gi}`);
+			if (fill) fill.style.width = pct + '%';
+			fill.style.background = pct === 100 ? 'var(--success)' : pct > 0 ? 'var(--warn)' : 'var(--accent)';
+		}
+
+		function updateSummary() {
+			document.getElementById('s-total').textContent = _results.total;
+			document.getElementById('s-pass').textContent = _results.pass;
+			document.getElementById('s-fail').textContent = _results.fail;
+			const pct = _results.total > 0 ? (_results.pass / _results.total * 100) : 0;
+			document.getElementById('progress').style.width = pct + '%';
+		}
+
+		// ══════════════════════════════════════════════════════════════
+		//  RUNNER
+		// ══════════════════════════════════════════════════════════════
+
+		async function runAll() {
+			_results.pass = 0; _results.fail = 0; _results.total = 0;
+			buildUI();
+			const start = performance.now();
+
+			for (let gi = 0; gi < _groups.length; gi++) {
+				const g = _groups[gi];
+				let gPass = 0;
+
+				for (let ti = 0; ti < g.tests.length; ti++) {
+					const t = g.tests[ti];
+					setTestStatus(gi, ti, 'running', '');
+					await wait(30);
+					const t0 = performance.now();
+					try {
+						await t.fn();
+						const ms = Math.round(performance.now() - t0);
+						setTestStatus(gi, ti, 'pass', 'ok', ms);
+						_results.pass++; gPass++;
+					} catch (e) {
+						const ms = Math.round(performance.now() - t0);
+						setTestStatus(gi, ti, 'fail', e.message, ms);
+						_results.fail++;
+					}
+					_results.total++;
+					updateSummary();
+					updateGroupProgress(gi, gPass, ti + 1);
+				}
+
+				document.getElementById(`gbadge-${gi}`).textContent = `${gPass} / ${g.tests.length}`;
+				updateGroupProgress(gi, gPass, g.tests.length);
+			}
+
+			document.getElementById('s-time').textContent = Math.round(performance.now() - start) + 'ms';
+		}
+
+		function resetAll() {
+			_results.pass = 0; _results.fail = 0; _results.total = 0;
+			buildUI();
+			document.getElementById('s-time').textContent = '—';
+		}
+
+		// ══════════════════════════════════════════════════════════════
+		//  INIT
+		// ══════════════════════════════════════════════════════════════
+
+		proxy.initProxy();
+		proxy.initModels();
+
+		// ══════════════════════════════════════════════════════════════
+		//  HELPERS DE ACESSO AO DOM
+		// ══════════════════════════════════════════════════════════════
+
+		const T = (sel) => document.querySelector(`#test-targets ${sel}`);
+		const TA = (sel) => [...document.querySelectorAll(`#test-targets ${sel}`)];
+
+		function listItems() { return TA('[x-data="t_lista"] .item'); }
+		function nestedCats() { return TA('[x-data="t_nested"] .cat-nome'); }
+		function nestedTags() { return TA('[x-data="t_nested"] .tag'); }
+		function ifAtivos() { return TA('[x-data="t_if"] .ativo'); }
+		function ifInativos() { return TA('[x-data="t_if"] .inativo'); }
+		function stressItems() { return TA('[x-data="t_stress"] .stress-item'); }
+		function stress1kItems() { return TA('[x-data="t_stress1k"] .stress1k-item'); }
+		function stress5kItems() { return TA('[x-data="t_stress5k"] .stress5k-item'); }
+		function multiAItems() { return TA('[x-data="t_multi_a"] .multi-a-item'); }
+		function multiBItems() { return TA('[x-data="t_multi_b"] .multi-b-item'); }
+		function multiCItems() { return TA('[x-data="t_multi_c"] .multi-c-item'); }
+		function destroyAItems() { return TA('[x-data="t_destroy_a"] .destroy-a-item'); }
+		function destroyBTitulo() { return T('[x-data="t_destroy_b"] .destroy-b-titulo'); }
+		function secOut() { return T('[x-data="t_security"] .sec-out'); }
+		function secBtn(cls) { return T(`[x-data="t_security"] .${cls}`); }
+		function modelDestroyInput() { return T('[x-data="t_model_destroy"] input'); }
+		function nidItems() { return TA('[x-data="t_nid"] .nid-item'); }
+		function batchOut() { return T('[x-data="t_batch"] .batch-a'); }
+		function wdOut() { return T('[x-data="t_watch_deep"] .wd-out'); }
+		function niCats() { return TA('[x-data="t_nested_if"] .ni-cat'); }
+		function niTags() { return TA('[x-data="t_nested_if"] .ni-tag'); }
+		function ifiItems() { return TA('[x-data="t_if_item"] .ifi-item'); }
+		function mrNomes() { return TA('[x-data="t_multi_root"] .mr-nome'); }
+		function mrIdxs() { return TA('[x-data="t_multi_root"] .mr-idx'); }
+		function mrBtns() { return TA('[x-data="t_multi_root"] .mr-btn'); }
+		function keItems() { return TA('[x-data="t_key_edge"] .ke-item'); }
+		function raceItems() { return TA('[x-data="t_race"] .race-item'); }
+
+		// ══════════════════════════════════════════════════════════════
+		//  GRUPOS DE TESTES
+		// ══════════════════════════════════════════════════════════════
+
+		// ─────────────────────────────────────────────
+		//  📋 x-bind — binding básico
+		// ─────────────────────────────────────────────
+		group('📋 x-bind — binding básico', [
+			{
+				name: 'Texto simples',
+				fn: async () => {
+					proxy.template.t_bind.titulo = 'hello';
+					await wait(20);
+					assert(T('[x-data="t_bind"] .titulo').textContent.trim() === 'hello', 'esperado "hello"');
+				}
+			},
+			{
+				name: 'Número',
+				fn: async () => {
+					proxy.template.t_bind.count = 42;
+					await wait(20);
+					assert(T('[x-data="t_bind"] .count').textContent.trim() === '42', 'esperado "42"');
+				}
+			},
+			{
+				name: 'Atualização reativa',
+				fn: async () => {
+					proxy.template.t_bind.titulo = 'antes';
+					await wait(10);
+					proxy.template.t_bind.titulo = 'depois';
+					await wait(20);
+					assert(T('[x-data="t_bind"] .titulo').textContent.trim() === 'depois', 'esperado "depois"');
+				}
+			},
+			{
+				name: 'Valor null renderiza vazio',
+				fn: async () => {
+					proxy.template.t_bind.nulo = null;
+					await wait(20);
+					assert(T('[x-data="t_bind"] .nulo').textContent.trim() === '', 'esperado vazio');
+				}
+			},
+			{
+				name: 'Valor undefined renderiza vazio',
+				fn: async () => {
+					proxy.template.t_bind.undef = undefined;
+					await wait(20);
+					assert(T('[x-data="t_bind"] .undef').textContent.trim() === '', 'esperado vazio');
+				}
+			},
+			{
+				name: 'Valor 0 renderiza "0" (não vazio)',
+				fn: async () => {
+					proxy.template.t_bind.zero = 0;
+					await wait(20);
+					assert(T('[x-data="t_bind"] .zero').textContent.trim() === '0', 'esperado "0"');
+				}
+			},
+			{
+				name: 'Valor false renderiza "false"',
+				fn: async () => {
+					proxy.template.t_bind.boolFalse = false;
+					await wait(20);
+					assert(T('[x-data="t_bind"] .bool-false').textContent.trim() === 'false', 'esperado "false"');
+				}
+			},
+			{
+				name: 'Valor true renderiza "true"',
+				fn: async () => {
+					proxy.template.t_bind.boolTrue = true;
+					await wait(20);
+					assert(T('[x-data="t_bind"] .bool-true').textContent.trim() === 'true', 'esperado "true"');
+				}
+			},
+			{
+				name: 'Interpolação em atributo href',
+				fn: async () => {
+					proxy.template.t_bind.linkHref = '/pagina/1';
+					await wait(20);
+					assert(T('[x-data="t_bind"] .href-link').getAttribute('href') === '/pagina/1', 'href errado');
+				}
+			},
+			{
+				name: 'Interpolação em atributo data-*',
+				fn: async () => {
+					proxy.template.t_bind.dataId = '99';
+					await wait(20);
+					assert(T('[x-data="t_bind"] .data-val').getAttribute('data-id') === '99', 'data-id errado');
+				}
+			},
+			{
+				name: 'x-bind em elemento aninhado fora de x-for',
+				fn: async () => {
+					proxy.template.t_bind.nested = 'aninhado';
+					await wait(20);
+					assert(T('[x-data="t_bind"] .nested-span').textContent.trim() === 'aninhado', 'nested errado');
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  🔁 x-for — lista básica
+		// ─────────────────────────────────────────────
+		group('🔁 x-for — lista básica', [
+			{
+				name: 'Render inicial',
+				fn: async () => {
+					proxy.template.t_lista.lista = [{ nome: 'Alpha' }, { nome: 'Beta' }, { nome: 'Gamma' }];
+					await wait(20);
+					assert(listItems().length === 3, `esperado 3, got ${listItems().length}`);
+					assert(listItems()[0].textContent.trim() === 'Alpha', 'item[0] errado');
+					assert(listItems()[2].textContent.trim() === 'Gamma', 'item[2] errado');
+				}
+			},
+			{
+				name: 'push — adiciona no fim',
+				fn: async () => {
+					proxy.template.t_lista.lista = [{ nome: 'A' }, { nome: 'B' }];
+					await wait(20);
+					proxy.template.t_lista.lista.push({ nome: 'C' });
+					await wait(20);
+					assert(listItems().length === 3, 'esperado 3');
+					assert(listItems()[2].textContent.trim() === 'C', 'item[2] errado');
+				}
+			},
+			{
+				name: 'unshift — adiciona no início',
+				fn: async () => {
+					proxy.template.t_lista.lista = [{ nome: 'B' }, { nome: 'C' }];
+					await wait(20);
+					proxy.template.t_lista.lista.unshift({ nome: 'A' });
+					await wait(20);
+					assert(listItems().length === 3, 'esperado 3');
+					assert(listItems()[0].textContent.trim() === 'A', 'item[0] deveria ser A');
+				}
+			},
+			{
+				name: 'pop — remove do fim',
+				fn: async () => {
+					proxy.template.t_lista.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }];
+					await wait(20);
+					proxy.template.t_lista.lista.pop();
+					await wait(20);
+					assert(listItems().length === 2, 'esperado 2');
+					assert(listItems()[1].textContent.trim() === 'B', 'último deve ser B');
+				}
+			},
+			{
+				name: 'shift — remove do início',
+				fn: async () => {
+					proxy.template.t_lista.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }];
+					await wait(20);
+					proxy.template.t_lista.lista.shift();
+					await wait(20);
+					assert(listItems().length === 2, 'esperado 2');
+					assert(listItems()[0].textContent.trim() === 'B', 'primeiro deve ser B');
+				}
+			},
+			{
+				name: 'splice — remove do início',
+				fn: async () => {
+					proxy.template.t_lista.lista = [{ nome: 'X' }, { nome: 'Y' }, { nome: 'Z' }];
+					await wait(20);
+					proxy.template.t_lista.lista.splice(0, 1);
+					await wait(20);
+					assert(listItems().length === 2, `esperado 2, got ${listItems().length}`);
+					assert(listItems()[0].textContent.trim() === 'Y', 'item[0] deveria ser Y');
+				}
+			},
+			{
+				name: 'splice — remove do meio',
+				fn: async () => {
+					proxy.template.t_lista.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }];
+					await wait(20);
+					proxy.template.t_lista.lista.splice(1, 1);
+					await wait(20);
+					assert(listItems().length === 2, 'esperado 2');
+					assert(listItems()[1].textContent.trim() === 'C', 'item[1] deveria ser C');
+				}
+			},
+			{
+				name: 'sort — reordena',
+				fn: async () => {
+					proxy.template.t_lista.lista = [{ nome: 'C' }, { nome: 'A' }, { nome: 'B' }];
+					await wait(20);
+					proxy.template.t_lista.lista.sort((a, b) => a.nome.localeCompare(b.nome));
+					await wait(20);
+					assert(listItems()[0].textContent.trim() === 'A', 'item[0] deveria ser A');
+					assert(listItems()[2].textContent.trim() === 'C', 'item[2] deveria ser C');
+				}
+			},
+			{
+				name: 'reverse — inverte',
+				fn: async () => {
+					proxy.template.t_lista.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }];
+					await wait(20);
+					proxy.template.t_lista.lista.reverse();
+					await wait(20);
+					assert(listItems()[0].textContent.trim() === 'C', 'item[0] deveria ser C');
+				}
+			},
+			{
+				name: 'lista = [] — limpa tudo sem nós órfãos',
+				fn: async () => {
+					proxy.template.t_lista.lista = [{ nome: 'A' }, { nome: 'B' }];
+					await wait(20);
+					proxy.template.t_lista.lista = [];
+					await wait(20);
+					assert(listItems().length === 0, `esperado 0, got ${listItems().length}`);
+					const container = T('[x-data="t_lista"] [x-for]');
+					assert(container.children.length === 0, 'nós órfãos no container');
+				}
+			},
+			{
+				name: 'Shuffle — reordena corretamente',
+				fn: async () => {
+					proxy.template.t_lista.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }, { nome: 'D' }];
+					await wait(20);
+					proxy.template.t_lista.lista = [{ nome: 'C' }, { nome: 'A' }, { nome: 'D' }, { nome: 'B' }];
+					await wait(20);
+					assert(listItems()[0].textContent.trim() === 'C', 'item[0] deveria ser C');
+					assert(listItems()[3].textContent.trim() === 'B', 'item[3] deveria ser B');
+				}
+			},
+			{
+				name: 'Atualiza item específico (lista[1].nome)',
+				fn: async () => {
+					proxy.template.t_lista.lista = [{ nome: 'Antes' }, { nome: 'Meio' }, { nome: 'Fim' }];
+					await wait(20);
+					proxy.template.t_lista.lista[1].nome = 'Mudou';
+					await wait(20);
+					assert(listItems()[1].textContent.trim() === 'Mudou', 'item[1] não atualizou');
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  🔢 x-for — alias e índice
+		// ─────────────────────────────────────────────
+		group('🔢 x-for — alias e índice', [
+			{
+				name: 'Alias "item, k in lista" renderiza índice correto',
+				fn: async () => {
+					proxy.template.t_for_idx.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }];
+					await wait(20);
+					const items = TA('[x-data="t_for_idx"] .idx-item');
+					assert(items[0].textContent.trim() === '0:A', `item[0] errado: ${items[0].textContent.trim()}`);
+					assert(items[2].textContent.trim() === '2:C', `item[2] errado: ${items[2].textContent.trim()}`);
+				}
+			},
+			{
+				name: 'Alias "item in lista as k" renderiza índice correto',
+				fn: async () => {
+					proxy.template.t_for_as.lista = [{ nome: 'X' }, { nome: 'Y' }];
+					await wait(20);
+					const items = TA('[x-data="t_for_as"] .as-item');
+					assert(items[0].textContent.trim() === '0:X', `item[0] errado: ${items[0].textContent.trim()}`);
+					assert(items[1].textContent.trim() === '1:Y', `item[1] errado: ${items[1].textContent.trim()}`);
+				}
+			},
+			{
+				name: '$i disponível no escopo sem alias',
+				fn: async () => {
+					proxy.template.t_for_i.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }];
+					await wait(20);
+					const items = TA('[x-data="t_for_i"] .i-item');
+					assert(items[0].textContent.trim() === '0', `$i[0] errado: ${items[0].textContent.trim()}`);
+					assert(items[2].textContent.trim() === '2', `$i[2] errado: ${items[2].textContent.trim()}`);
+				}
+			},
+			{
+				name: 'x-key — reutiliza nó existente (não recria)',
+				fn: async () => {
+					proxy.template.t_for_key.lista = [{ id: 1, nome: 'A' }, { id: 2, nome: 'B' }];
+					await wait(20);
+					const before = TA('[x-data="t_for_key"] .key-item')[0];
+					proxy.template.t_for_key.lista[0].nome = 'A2';
+					await wait(20);
+					const after = TA('[x-data="t_for_key"] .key-item')[0];
+					assert(before === after, 'nó foi recriado em vez de reutilizado');
+					assert(after.textContent.trim() === 'A2', 'conteúdo não atualizou');
+				}
+			},
+			{
+				name: 'x-for com multi-filho renderiza todos os filhos',
+				fn: async () => {
+					proxy.template.t_for_multi.lista = [{ a: 'X1', b: 'Y1' }, { a: 'X2', b: 'Y2' }];
+					await wait(20);
+					const as = TA('[x-data="t_for_multi"] .mf-a');
+					const bs = TA('[x-data="t_for_multi"] .mf-b');
+					assert(as.length === 2, `esperado 2 .mf-a, got ${as.length}`);
+					assert(bs.length === 2, `esperado 2 .mf-b, got ${bs.length}`);
+					assert(as[1].textContent.trim() === 'X2', 'mf-a[1] errado');
+					assert(bs[0].textContent.trim() === 'Y1', 'mf-b[0] errado');
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  🔀 x-for aninhado
+		// ─────────────────────────────────────────────
+		group('🔀 x-for aninhado', [
+			{
+				name: 'Render inicial com subitens',
+				fn: async () => {
+					proxy.template.t_nested.lista = [
+						{ nome: 'Cat A', tags: [{ label: 'tag1' }, { label: 'tag2' }] },
+						{ nome: 'Cat B', tags: [{ label: 'tag3' }] },
+					];
+					await wait(30);
+					assert(nestedCats().length === 2, `esperado 2 cats, got ${nestedCats().length}`);
+					assert(nestedTags().length === 3, `esperado 3 tags, got ${nestedTags().length}`);
+				}
+			},
+			{
+				name: 'Nomes das categorias corretos',
+				fn: async () => {
+					proxy.template.t_nested.lista = [
+						{ nome: 'Frutas', tags: [{ label: 'maçã' }] },
+						{ nome: 'Verduras', tags: [{ label: 'alface' }, { label: 'couve' }] },
+					];
+					await wait(30);
+					assert(nestedCats()[0].textContent.trim() === 'Frutas', 'cat[0] errado');
+					assert(nestedCats()[1].textContent.trim() === 'Verduras', 'cat[1] errado');
+				}
+			},
+			{
+				name: 'Tags corretas por categoria',
+				fn: async () => {
+					proxy.template.t_nested.lista = [
+						{ nome: 'X', tags: [{ label: 'alpha' }, { label: 'beta' }] },
+						{ nome: 'Y', tags: [{ label: 'gamma' }] },
+					];
+					await wait(30);
+					const tags = nestedTags().map(t => t.textContent.trim());
+					assert(tags[0] === 'alpha', `tag[0]: ${tags[0]}`);
+					assert(tags[1] === 'beta', `tag[1]: ${tags[1]}`);
+					assert(tags[2] === 'gamma', `tag[2]: ${tags[2]}`);
+				}
+			},
+			{
+				name: 'Adicionar tag em cat existente',
+				fn: async () => {
+					proxy.template.t_nested.lista = [{ nome: 'Cat', tags: [{ label: 'A' }] }];
+					await wait(30);
+					proxy.template.t_nested.lista[0].tags.push({ label: 'B' });
+					await wait(30);
+					assert(nestedTags().length === 2, `esperado 2, got ${nestedTags().length}`);
+					assert(nestedTags()[1].textContent.trim() === 'B', 'tag[1] errado');
+				}
+			},
+			{
+				name: 'Remover categoria',
+				fn: async () => {
+					proxy.template.t_nested.lista = [
+						{ nome: 'A', tags: [{ label: 'x' }] },
+						{ nome: 'B', tags: [{ label: 'y' }] },
+					];
+					await wait(30);
+					proxy.template.t_nested.lista.splice(0, 1);
+					await wait(30);
+					assert(nestedCats().length === 1, `esperado 1, got ${nestedCats().length}`);
+					assert(nestedCats()[0].textContent.trim() === 'B', 'cat restante errado');
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  👁 x-if — condicional
+		// ─────────────────────────────────────────────
+		group('👁 x-if — condicional', [
+			{
+				name: 'Mostra ativo / oculta inativo',
+				fn: async () => {
+					proxy.template.t_if.lista = [{ nome: 'A', ativo: true }, { nome: 'B', ativo: false }];
+					await wait(20);
+					const ativos = ifAtivos().filter(e => e.style.display !== 'none');
+					const inativos = ifInativos().filter(e => e.style.display !== 'none');
+					assert(ativos.length === 1, `esperado 1 ativo, got ${ativos.length}`);
+					assert(inativos.length === 1, `esperado 1 inativo, got ${inativos.length}`);
+				}
+			},
+			{
+				name: 'Toggle reativo',
+				fn: async () => {
+					proxy.template.t_if.lista = [{ nome: 'X', ativo: true }];
+					await wait(20);
+					proxy.template.t_if.lista[0].ativo = false;
+					await wait(20);
+					assert(ifAtivos()[0].style.display === 'none', 'ativo deveria estar oculto');
+					assert(ifInativos()[0].style.display !== 'none', 'inativo deveria estar visível');
+				}
+			},
+			{
+				name: 'Valor 0 é falsy → oculta',
+				fn: async () => {
+					proxy.template.t_if_falsy.val_zero = 0;
+					await wait(20);
+					assert(T('[x-data="t_if_falsy"] .if-zero').style.display === 'none', 'esperado oculto');
+				}
+			},
+			{
+				name: 'String vazia é falsy → oculta',
+				fn: async () => {
+					proxy.template.t_if_falsy.val_empty = '';
+					await wait(20);
+					assert(T('[x-data="t_if_falsy"] .if-empty').style.display === 'none', 'esperado oculto');
+				}
+			},
+			{
+				name: 'null é falsy → oculta',
+				fn: async () => {
+					proxy.template.t_if_falsy.val_null = null;
+					await wait(20);
+					assert(T('[x-data="t_if_falsy"] .if-null').style.display === 'none', 'esperado oculto');
+				}
+			},
+			{
+				name: 'Expressão && funciona',
+				fn: async () => {
+					proxy.template.t_if_falsy.val_a = true;
+					proxy.template.t_if_falsy.val_b = true;
+					await wait(20);
+					assert(T('[x-data="t_if_falsy"] .if-and').style.display !== 'none', 'esperado visível');
+					proxy.template.t_if_falsy.val_b = false;
+					await wait(20);
+					assert(T('[x-data="t_if_falsy"] .if-and').style.display === 'none', 'esperado oculto');
+				}
+			},
+			{
+				name: 'Expressão || funciona',
+				fn: async () => {
+					proxy.template.t_if_falsy.val_a = false;
+					proxy.template.t_if_falsy.val_b = true;
+					await wait(20);
+					assert(T('[x-data="t_if_falsy"] .if-or').style.display !== 'none', 'esperado visível');
+					proxy.template.t_if_falsy.val_b = false;
+					await wait(20);
+					assert(T('[x-data="t_if_falsy"] .if-or').style.display === 'none', 'esperado oculto');
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  📝 x-model — two-way binding
+		// ─────────────────────────────────────────────
+		group('📝 x-model — two-way binding', [
+			{
+				name: 'Input text → proxy',
+				fn: async () => {
+					proxy.template.t_model.nome = '';
+					await wait(10);
+					const input = T('[x-data="t_model"] input[type="text"]');
+					input.value = 'digitado';
+					input.dispatchEvent(new Event('input'));
+					await wait(10);
+					assert(proxy.template.t_model.nome === 'digitado', `got "${proxy.template.t_model.nome}"`);
+				}
+			},
+			{
+				name: 'Proxy → input text',
+				fn: async () => {
+					proxy.template.t_model.nome = 'do proxy';
+					await wait(10);
+					const input = T('[x-data="t_model"] input[type="text"]');
+					assert(input.value === 'do proxy', `got "${input.value}"`);
+				}
+			},
+			{
+				name: 'Dois inputs na mesma prop ficam em sync',
+				fn: async () => {
+					proxy.template.t_model.nome = 'sync';
+					await wait(10);
+					const i1 = T('[x-data="t_model"] input[type="text"]');
+					const i2 = T('[x-data="t_model"] .input2');
+					assert(i1.value === 'sync', 'input1 fora de sync');
+					assert(i2.value === 'sync', 'input2 fora de sync');
+				}
+			},
+			{
+				name: 'Checkbox → proxy',
+				fn: async () => {
+					proxy.template.t_model.ativo = false;
+					await wait(10);
+					const cb = T('[x-data="t_model"] input[type="checkbox"]');
+					cb.checked = true;
+					cb.dispatchEvent(new Event('change'));
+					await wait(10);
+					assert(proxy.template.t_model.ativo === true, 'esperado true');
+				}
+			},
+			{
+				name: 'Proxy → checkbox',
+				fn: async () => {
+					proxy.template.t_model.ativo = true;
+					await wait(10);
+					assert(T('[x-data="t_model"] input[type="checkbox"]').checked === true, 'esperado checked');
+				}
+			},
+			{
+				name: 'Radio → proxy',
+				fn: async () => {
+					proxy.template.t_model.cor = 'red';
+					await wait(10);
+					const radio = T('[x-data="t_model"] input[value="blue"]');
+					radio.checked = true;
+					radio.dispatchEvent(new Event('change'));
+					await wait(10);
+					assert(proxy.template.t_model.cor === 'blue', `esperado "blue", got "${proxy.template.t_model.cor}"`);
+				}
+			},
+			{
+				name: 'Proxy → radio',
+				fn: async () => {
+					proxy.template.t_model.cor = 'red';
+					await wait(10);
+					assert(T('[x-data="t_model"] input[value="red"]').checked === true, 'radio red deveria estar checked');
+					assert(T('[x-data="t_model"] input[value="blue"]').checked === false, 'radio blue deveria estar unchecked');
+				}
+			},
+			{
+				name: 'Select → proxy',
+				fn: async () => {
+					proxy.template.t_model.opcao = 'a';
+					await wait(10);
+					const sel = T('[x-data="t_model"] select');
+					sel.value = 'b';
+					sel.dispatchEvent(new Event('change'));
+					await wait(10);
+					assert(proxy.template.t_model.opcao === 'b', `esperado "b", got "${proxy.template.t_model.opcao}"`);
+				}
+			},
+			{
+				name: 'Proxy → select',
+				fn: async () => {
+					proxy.template.t_model.opcao = 'b';
+					await wait(10);
+					assert(T('[x-data="t_model"] select').value === 'b', 'select deveria ser "b"');
+				}
+			},
+			{
+				name: 'Path profundo (obj.sub.nome)',
+				fn: async () => {
+					proxy.template.t_model_deep.user = { nome: '' };
+					await wait(10);
+					const input = T('[x-data="t_model_deep"] input');
+					input.value = 'deep';
+					input.dispatchEvent(new Event('input'));
+					await wait(10);
+					assert(proxy.template.t_model_deep.user.nome === 'deep', `esperado "deep", got "${proxy.template.t_model_deep.user.nome}"`);
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  🔗 x-on — eventos e magic vars
+		// ─────────────────────────────────────────────
+		group('🔗 x-on — eventos e magic vars', [
+			{
+				name: 'click atualiza prop reativa',
+				fn: async () => {
+					proxy.template.t_on.contador = 0;
+					await wait(20);
+					T('[x-data="t_on"] .btn-click').click();
+					await wait(20);
+					assert(proxy.template.t_on.contador === 1, `esperado 1, got ${proxy.template.t_on.contador}`);
+				}
+			},
+			{
+				name: 'múltiplos clicks acumulam',
+				fn: async () => {
+					proxy.template.t_on.contador = 0;
+					await wait(20);
+					T('[x-data="t_on"] .btn-click').click();
+					T('[x-data="t_on"] .btn-click').click();
+					T('[x-data="t_on"] .btn-click').click();
+					await wait(20);
+					assert(proxy.template.t_on.contador === 3, `esperado 3, got ${proxy.template.t_on.contador}`);
+				}
+			},
+			{
+				name: 'x-on DOM reflete atualização da prop',
+				fn: async () => {
+					proxy.template.t_on.contador = 0;
+					await wait(20);
+					T('[x-data="t_on"] .btn-click').click();
+					await wait(20);
+					assert(T('[x-data="t_on"] .out-contador').textContent.trim() === '1', 'DOM não refletiu');
+				}
+			},
+			{
+				name: '$emit dispara CustomEvent no $root',
+				fn: async () => {
+					proxy.template.t_on.contador = 0;
+					await wait(20);
+					let fired = false, detail = null;
+					const root = T('[x-data="t_on"]');
+					root.addEventListener('meu-evento', e => { fired = true; detail = e.detail; }, { once: true });
+					T('[x-data="t_on"] .btn-emit').click();
+					await wait(20);
+					assert(fired, '$emit não disparou o evento');
+					assert(detail && detail.val === 42, `detail errado: ${JSON.stringify(detail)}`);
+				}
+			},
+			{
+				name: 'Múltiplos eventos no mesmo elemento (click + mouseenter)',
+				fn: async () => {
+					proxy.template.t_on.multi = '';
+					await wait(20);
+					T('[x-data="t_on"] .btn-multi-a').dispatchEvent(new MouseEvent('mouseenter'));
+					await wait(20);
+					assert(proxy.template.t_on.multi === 'enter', `esperado "enter", got "${proxy.template.t_on.multi}"`);
+					T('[x-data="t_on"] .btn-multi-a').click();
+					await wait(20);
+					assert(proxy.template.t_on.multi === 'click', `esperado "click", got "${proxy.template.t_on.multi}"`);
+				}
+			},
+			{
+				name: '$ref acessa elemento marcado com x-ref',
+				fn: async () => {
+					proxy.template.t_ref.dummy = 1;
+					await wait(20);
+					T('[x-data="t_ref"] .btn-ref').click();
+					await wait(20);
+					assert(T('[x-data="t_ref"] .ref-target').textContent.trim() === 'tocado', '$ref não funcionou');
+				}
+			},
+			{
+				name: '$this.index disponível dentro de x-for',
+				fn: async () => {
+					proxy.template.t_on_this.lista = [{ id: 1, nome: 'A' }, { id: 2, nome: 'B' }, { id: 3, nome: 'C' }];
+					await wait(20);
+					const btns = TA('[x-data="t_on_this"] .btn-this');
+					btns[1].click();
+					await wait(20);
+					const nomes = TA('[x-data="t_on_this"] .this-nome');
+					assert(nomes[1].textContent.trim() === 'clicado-1', `$this.index errado: "${nomes[1].textContent.trim()}"`);
+				}
+			},
+			{
+				name: 'Modificação via x-on dentro de x-for é reativa no DOM',
+				fn: async () => {
+					proxy.template.t_on_this.lista = [{ id: 10, nome: 'Original' }];
+					await wait(20);
+					TA('[x-data="t_on_this"] .btn-this')[0].click();
+					await wait(20);
+					assert(TA('[x-data="t_on_this"] .this-nome')[0].textContent.trim() === 'clicado-0', 'DOM não atualizou');
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  🔒 Segurança — sandbox x-on
+		// ─────────────────────────────────────────────
+		group('🔒 Segurança — sandbox x-on', [
+			{
+				name: 'Bloqueia constructor.constructor (RCE)',
+				fn: async () => {
+					proxy.template.t_security.out = 'intacto';
+					await wait(20);
+					secBtn('sec-btn-rce').click();
+					await wait(20);
+					assert(proxy.template.t_security.out === 'intacto', `RCE vazou! out="${proxy.template.t_security.out}"`);
+				}
+			},
+			{
+				name: 'Bloqueia eval',
+				fn: async () => {
+					proxy.template.t_security.out = 'intacto';
+					await wait(20);
+					secBtn('sec-btn-eval').click();
+					await wait(20);
+					assert(proxy.template.t_security.out === 'intacto', 'eval vazou');
+				}
+			},
+			{
+				name: 'Bloqueia fetch',
+				fn: async () => {
+					proxy.template.t_security.out = 'intacto';
+					await wait(20);
+					secBtn('sec-btn-fetch').click();
+					await wait(20);
+					assert(proxy.template.t_security.out === 'intacto', 'fetch vazou');
+				}
+			},
+			{
+				name: 'Bloqueia window',
+				fn: async () => {
+					proxy.template.t_security.out = 'intacto';
+					await wait(20);
+					secBtn('sec-btn-window').click();
+					await wait(20);
+					assert(proxy.template.t_security.out === 'intacto', 'window vazou');
+				}
+			},
+			{
+				name: 'Bloqueia setTimeout',
+				fn: async () => {
+					proxy.template.t_security.out = 'intacto';
+					await wait(20);
+					secBtn('sec-btn-settimeout').click();
+					await wait(20);
+					assert(proxy.template.t_security.out === 'intacto', 'setTimeout vazou');
+				}
+			},
+			{
+				name: 'Bloqueia __proto__',
+				fn: async () => {
+					proxy.template.t_security.out = 'intacto';
+					await wait(20);
+					secBtn('sec-btn-proto').click();
+					await wait(20);
+					assert(proxy.template.t_security.out === 'intacto', '__proto__ vazou');
+				}
+			},
+			{
+				name: 'Bloqueia arrow function (=>)',
+				fn: async () => {
+					proxy.template.t_security.out = 'intacto';
+					await wait(20);
+					secBtn('sec-btn-arrow').click();
+					await wait(20);
+					assert(proxy.template.t_security.out === 'intacto', 'arrow fn vazou');
+				}
+			},
+			{
+				name: 'Libera expressão segura (simples)',
+				fn: async () => {
+					proxy.template.t_security.out = 'antes';
+					await wait(20);
+					secBtn('sec-btn-safe').click();
+					await wait(20);
+					assert(proxy.template.t_security.out === 'clicked-safe', `esperado "clicked-safe", got "${proxy.template.t_security.out}"`);
+				}
+			},
+			{
+				name: 'Libera Math.round via x-on',
+				fn: async () => {
+					proxy.template.t_security.out = 'antes';
+					await wait(20);
+					secBtn('sec-btn-math').click();
+					await wait(20);
+					assert(proxy.template.t_security.out === '2', `esperado "2", got "${proxy.template.t_security.out}"`);
+				}
+			},
+			{
+				name: 'Libera operador ternário',
+				fn: async () => {
+					proxy.template.t_security.out = 'antes';
+					await wait(20);
+					secBtn('sec-btn-ternary').click();
+					await wait(20);
+					assert(proxy.template.t_security.out === 'ternario-ok', `esperado "ternario-ok", got "${proxy.template.t_security.out}"`);
+				}
+			},
+			{
+				name: 'Libera operador lógico ||',
+				fn: async () => {
+					proxy.template.t_security.out = '';
+					await wait(20);
+					secBtn('sec-btn-logical').click();
+					await wait(20);
+					assert(proxy.template.t_security.out === 'logical-ok', `esperado "logical-ok", got "${proxy.template.t_security.out}"`);
+				}
+			},
+			{
+				name: 'Retry: bind ocorre após store ser populado',
+				fn: async () => {
+					// t_sec_retry não tem retryVal no store ainda
+					await wait(20);
+					proxy.template.t_sec_retry.retryVal = 'pendente';
+					await wait(30); // aguarda retry de bind
+					T('[x-data="t_sec_retry"] .btn-retry').click();
+					await wait(20);
+					assert(proxy.template.t_sec_retry.retryVal === 'ok', `esperado "ok", got "${proxy.template.t_sec_retry.retryVal}"`);
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  👁 Watchers
+		// ─────────────────────────────────────────────
+		group('👁 Watchers', [
+			{
+				name: 'Watcher em prop primitiva dispara',
+				fn: async () => {
+					proxy.template.t_watch_deep.obj = { sub: { prop: 'a' } };
+					await wait(20);
+					let fired = 0, got = null;
+					const unsub = proxy.on('t_watch_deep.obj', v => { fired++; got = v; });
+					proxy.template.t_watch_deep.obj.sub.prop = 'b';
+					await wait(20);
+					unsub();
+					assert(fired >= 1, `esperado >= 1 fire, got ${fired}`);
+				}
+			},
+			{
+				name: 'oldVal correto em watcher de primitivo',
+				fn: async () => {
+					proxy.template.t_batch.a = 'inicial';
+					await wait(20);
+					let oldCap = null;
+					const unsub = proxy.on('t_batch.a', (n, o) => { oldCap = o; });
+					proxy.template.t_batch.a = 'novo';
+					await wait(20);
+					unsub();
+					assert(oldCap === 'inicial', `oldVal errado: "${oldCap}"`);
+				}
+			},
+			{
+				name: 'Watcher deep — borbulha do filho pro pai',
+				fn: async () => {
+					proxy.template.t_watch_deep.obj = { sub: { prop: 'inicial' } };
+					await wait(20);
+					let fired = 0, lastVal = null;
+					const unsub = proxy.on('t_watch_deep.obj', v => { fired++; lastVal = v; });
+					proxy.template.t_watch_deep.obj.sub.prop = 'mudou';
+					await wait(20);
+					unsub();
+					assert(fired === 1, `esperado 1, got ${fired}`);
+					assert(lastVal && lastVal.sub && lastVal.sub.prop === 'mudou', 'valor ancestral incorreto');
+					assert(wdOut().textContent.trim() === 'mudou', 'DOM não refletiu');
+				}
+			},
+			{
+				name: 'Múltiplos watchers no mesmo path disparam todos',
+				fn: async () => {
+					proxy.template.t_batch.b = 'x';
+					await wait(20);
+					let c1 = 0, c2 = 0;
+					const u1 = proxy.on('t_batch.b', () => c1++);
+					const u2 = proxy.on('t_batch.b', () => c2++);
+					proxy.template.t_batch.b = 'y';
+					await wait(20);
+					u1(); u2();
+					assert(c1 === 1, `watcher1: esperado 1, got ${c1}`);
+					assert(c2 === 1, `watcher2: esperado 1, got ${c2}`);
+				}
+			},
+			{
+				name: 'Watcher não dispara se valor não mudou',
+				fn: async () => {
+					proxy.template.t_batch.c = 'igual';
+					await wait(20);
+					let fired = 0;
+					const unsub = proxy.on('t_batch.c', () => fired++);
+					proxy.template.t_batch.c = 'igual'; // mesmo valor
+					await wait(20);
+					unsub();
+					assert(fired === 0, `esperado 0 fires, got ${fired}`);
+				}
+			},
+			{
+				name: 'Unsubscribe para watcher corretamente',
+				fn: async () => {
+					proxy.template.t_batch.a = 'v1';
+					await wait(20);
+					let fired = 0;
+					const unsub = proxy.on('t_batch.a', () => fired++);
+					proxy.template.t_batch.a = 'v2';
+					await wait(20);
+					unsub();
+					proxy.template.t_batch.a = 'v3';
+					await wait(20);
+					assert(fired === 1, `esperado 1, got ${fired} — unsubscribe falhou`);
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  ♻️ Lifecycle hooks
+		// ─────────────────────────────────────────────
+		group('♻️ Lifecycle hooks', [
+			{
+				name: '$beforeRender é chamado com o elemento',
+				fn: async () => {
+					let calledWith = null;
+					proxy.template.t_lifecycle.$beforeRender = el => { calledWith = el; };
+					proxy.template.t_lifecycle.msg = 'br';
+					await wait(20);
+					delete proxy.template.t_lifecycle.$beforeRender;
+					assert(calledWith instanceof Element, '$beforeRender não recebeu Element');
+				}
+			},
+			{
+				name: '$afterRender é chamado com o elemento',
+				fn: async () => {
+					let calledWith = null;
+					proxy.template.t_lifecycle.$afterRender = el => { calledWith = el; };
+					proxy.template.t_lifecycle.msg = 'ar';
+					await wait(20);
+					delete proxy.template.t_lifecycle.$afterRender;
+					assert(calledWith instanceof Element, '$afterRender não recebeu Element');
+				}
+			},
+			{
+				name: 'Erro em $beforeRender não quebra o render',
+				fn: async () => {
+					proxy.template.t_lifecycle.$beforeRender = () => { throw new Error('erro proposital'); };
+					proxy.template.t_lifecycle.msg = 'sobreviveu';
+					await wait(20);
+					delete proxy.template.t_lifecycle.$beforeRender;
+					assert(T('[x-data="t_lifecycle"] .lc-out').textContent.trim() === 'sobreviveu', 'render quebrou');
+				}
+			},
+			{
+				name: 'Erro em $afterRender não quebra o render',
+				fn: async () => {
+					proxy.template.t_lifecycle.$afterRender = () => { throw new Error('erro proposital'); };
+					proxy.template.t_lifecycle.msg = 'sobreviveu2';
+					await wait(20);
+					delete proxy.template.t_lifecycle.$afterRender;
+					assert(T('[x-data="t_lifecycle"] .lc-out').textContent.trim() === 'sobreviveu2', 'render quebrou');
+				}
+			},
+			{
+				name: 'Evento DOM before-render dispara antes do after-render',
+				fn: async () => {
+					const order = [];
+					const el = T('[x-data="t_lifecycle"]');
+					const hb = () => order.push('before');
+					const ha = () => order.push('after');
+					el.addEventListener('before-render', hb);
+					el.addEventListener('after-render', ha);
+					proxy.template.t_lifecycle.msg = 'order-test';
+					await wait(30);
+					el.removeEventListener('before-render', hb);
+					el.removeEventListener('after-render', ha);
+					assert(order[0] === 'before', `primeiro evento foi "${order[0]}"`);
+					const afterIdx = order.lastIndexOf('after');
+					const beforeIdx = order.indexOf('before');
+					assert(beforeIdx < afterIdx, 'before não veio antes de after');
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  💣 destroy — lifecycle
+		// ─────────────────────────────────────────────
+		group('💣 destroy — lifecycle', [
+			{
+				name: 'proxy.destroy(key) — limpa store',
+				fn: async () => {
+					proxy.template.t_destroy_a.lista = [{ nome: 'X' }, { nome: 'Y' }];
+					await wait(20);
+					proxy.destroy('t_destroy_a');
+					await wait(10);
+					assert(!proxy.template.t_destroy_a.lista, 'store deveria estar limpo');
+				}
+			},
+			{
+				name: 'proxy.template.key.destroy() — shortcut funciona',
+				fn: async () => {
+					proxy.template.t_destroy_b.titulo = 'antes';
+					await wait(10);
+					proxy.template.t_destroy_b.destroy();
+					await wait(10);
+					assert(!proxy.template.t_destroy_b.titulo, 'store deveria estar limpo');
+				}
+			},
+			{
+				name: '$beforeDestroy hook é chamado',
+				fn: async () => {
+					proxy.template.t_destroy_a.lista = [{ nome: 'Hook' }];
+					await wait(10);
+					let called = false;
+					proxy.template.t_destroy_a.$beforeDestroy = () => { called = true; };
+					proxy.destroy('t_destroy_a');
+					await wait(10);
+					assert(called, '$beforeDestroy não foi chamado');
+				}
+			},
+			{
+				name: '$afterDestroy hook é chamado',
+				fn: async () => {
+					proxy.template.t_destroy_b.titulo = 'after-test';
+					await wait(10);
+					let called = false;
+					proxy.template.t_destroy_b.$afterDestroy = () => { called = true; };
+					proxy.destroy('t_destroy_b');
+					await wait(10);
+					assert(called, '$afterDestroy não foi chamado');
+				}
+			},
+			{
+				name: 'Evento before-destroy dispara no elemento',
+				fn: async () => {
+					proxy.template.t_destroy_a.lista = [{ nome: 'Ev' }];
+					await wait(10);
+					let fired = false;
+					const el = T('[x-data="t_destroy_a"]');
+					const h = () => { fired = true; };
+					el.addEventListener('before-destroy', h);
+					proxy.destroy('t_destroy_a');
+					await wait(10);
+					el.removeEventListener('before-destroy', h);
+					assert(fired, 'before-destroy não disparou');
+				}
+			},
+			{
+				name: 'Evento after-destroy dispara no elemento',
+				fn: async () => {
+					proxy.template.t_destroy_b.titulo = 'ev2';
+					await wait(10);
+					let fired = false;
+					const el = T('[x-data="t_destroy_b"]');
+					const h = () => { fired = true; };
+					el.addEventListener('after-destroy', h);
+					proxy.destroy('t_destroy_b');
+					await wait(10);
+					el.removeEventListener('after-destroy', h);
+					assert(fired, 'after-destroy não disparou');
+				}
+			},
+			{
+				name: 'Após destroy, x-on não responde mais',
+				fn: async () => {
+					proxy.template.t_destroy_on.val = 0;
+					await wait(20);
+					proxy.destroy('t_destroy_on');
+					await wait(10);
+					T('[x-data="t_destroy_on"] .btn-don').click();
+					await wait(20);
+					// val continua 0 pois o store foi limpo e o listener removido
+					assert(!proxy.template.t_destroy_on.val, 'x-on respondeu após destroy');
+				}
+			},
+			{
+				name: 'Watcher removido após destroy — não dispara mais',
+				fn: async () => {
+					proxy.template.t_destroy_a.lista = [];
+					await wait(10);
+					let watchCount = 0;
+					proxy.on('t_destroy_a.lista', () => { watchCount++; });
+					proxy.destroy('t_destroy_a');
+					await wait(10);
+					proxy.template.t_destroy_a.lista = [{ nome: 'pós-destroy' }];
+					await wait(10);
+					assert(watchCount === 0, `watcher disparou ${watchCount}x após destroy`);
+				}
+			},
+			{
+				name: 'Ciclo destroy → reinit → reativa normalmente',
+				fn: async () => {
+					proxy.template.t_destroy_b.titulo = 'original';
+					await wait(10);
+					proxy.destroy('t_destroy_b');
+					await wait(10);
+					proxy.initProxy();
+					await wait(10);
+					proxy.template.t_destroy_b.titulo = 'reativado';
+					await wait(20);
+					assert(T('[x-data="t_destroy_b"] .destroy-b-titulo').textContent.trim() === 'reativado',
+						`esperado "reativado", got "${T('[x-data="t_destroy_b"] .destroy-b-titulo').textContent.trim()}"`);
+				}
+			},
+			{
+				name: 'destroy() sem key destrói todos os componentes',
+				fn: async () => {
+					proxy.template.t_iso_a.val = 'A';
+					proxy.template.t_iso_b.val = 'B';
+					await wait(20);
+					proxy.destroy();
+					await wait(10);
+					assert(!proxy.template.t_iso_a.val, 't_iso_a não foi destruído');
+					assert(!proxy.template.t_iso_b.val, 't_iso_b não foi destruído');
+					// reinit para não quebrar testes seguintes
+					proxy.initProxy();
+					proxy.initModels();
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  🧹 destroy — leak de x-model
+		// ─────────────────────────────────────────────
+		group('🧹 destroy — leak de x-model', [
+			{
+				name: 'destroy() remove listeners de input/change',
+				fn: async () => {
+					proxy.template.t_model_destroy.nome = 'x';
+					await wait(10);
+					const input = modelDestroyInput();
+					const calls = [];
+					const orig = input.removeEventListener.bind(input);
+					input.removeEventListener = (type, fn) => { calls.push(type); orig(type, fn); };
+					proxy.destroy('t_model_destroy');
+					await wait(10);
+					input.removeEventListener = orig;
+					assert(calls.includes('input'), 'removeEventListener("input") não foi chamado');
+					assert(calls.includes('change'), 'removeEventListener("change") não foi chamado');
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  🏷 __nid — sem render fantasma
+		// ─────────────────────────────────────────────
+		group('🏷 __nid — sem render fantasma', [
+			{
+				name: 'Popular lista dispara watcher só 1x',
+				fn: async () => {
+					let fireCount = 0;
+					const unsub = proxy.on('t_nid.lista', () => { fireCount++; });
+					proxy.template.t_nid.lista = [{ nome: 'A' }, { nome: 'B' }, { nome: 'C' }];
+					await wait(30);
+					unsub();
+					assert(fireCount === 1, `esperado 1, got ${fireCount} — __nid vazando`);
+					assert(nidItems().length === 3, `esperado 3, got ${nidItems().length}`);
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  📦 Batch — consistência de render
+		// ─────────────────────────────────────────────
+		group('📦 Batch — consistência de render', [
+			{
+				name: '3 props no mesmo tick → 1 render',
+				fn: async () => {
+					proxy.template.t_batch.a = '1';
+					proxy.template.t_batch.b = '2';
+					proxy.template.t_batch.c = '3';
+					await wait(20);
+
+					const el = batchOut();
+					let renderCount = 0;
+					Object.defineProperty(el, 'textContent', {
+						set(v) {
+							renderCount++;
+							Object.defineProperty(el, 'textContent', { writable: true, configurable: true, enumerable: true });
+							el.textContent = v;
+						},
+						configurable: true
+					});
+
+					proxy.template.t_batch.a = 'X';
+					proxy.template.t_batch.b = 'Y';
+					proxy.template.t_batch.c = 'Z';
+					await wait(20);
+
+					assert(renderCount === 1, `esperado 1 render, got ${renderCount}`);
+					assert(el.textContent.trim() === 'X Y Z', `conteúdo errado: "${el.textContent.trim()}"`);
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  🧩 Proxy — comportamento interno
+		// ─────────────────────────────────────────────
+		group('🧩 Proxy — comportamento interno', [
+			{
+				name: 'Atribuição com mesmo valor não dispara render',
+				fn: async () => {
+					proxy.template.t_batch.a = 'fixo';
+					await wait(20);
+					const el = T('[x-data="t_batch"] .batch-a');
+					let renders = 0;
+					Object.defineProperty(el, 'textContent', {
+						set(v) {
+							renders++;
+							Object.defineProperty(el, 'textContent', { writable: true, configurable: true });
+							el.textContent = v;
+						},
+						configurable: true
+					});
+					proxy.template.t_batch.a = 'fixo'; // mesmo valor
+					await wait(20);
+					assert(renders === 0, `esperado 0 renders, got ${renders}`);
+				}
+			},
+			{
+				name: 'Deletar prop dispara render',
+				fn: async () => {
+					proxy.template.t_bind.titulo = 'deletar-me';
+					await wait(20);
+					assert(T('[x-data="t_bind"] .titulo').textContent.trim() === 'deletar-me', 'pré-condição falhou');
+					delete proxy.template.t_bind.titulo;
+					await wait(20);
+					assert(T('[x-data="t_bind"] .titulo').textContent.trim() === '', 'DOM não reagiu ao delete');
+				}
+			},
+			{
+				name: 'Substituir objeto inteiro dispara render',
+				fn: async () => {
+					proxy.template.t_watch_deep.obj = { sub: { prop: 'v1' } };
+					await wait(20);
+					proxy.template.t_watch_deep.obj = { sub: { prop: 'v2' } };
+					await wait(20);
+					assert(wdOut().textContent.trim() === 'v2', `esperado "v2", got "${wdOut().textContent.trim()}"`);
+				}
+			},
+			{
+				name: 'Proxy aninhado 3+ níveis é reativo',
+				fn: async () => {
+					proxy.template.t_proxy_int.obj = { level1: { level2: { val: 'deep' } } };
+					await wait(20);
+					assert(T('[x-data="t_proxy_int"] .pi-out').textContent.trim() === 'deep', 'nível 3 não renderizou');
+					proxy.template.t_proxy_int.obj.level1.level2.val = 'mais-deep';
+					await wait(20);
+					assert(T('[x-data="t_proxy_int"] .pi-out').textContent.trim() === 'mais-deep', 'nível 3 não atualizou');
+				}
+			},
+			{
+				name: 'Array dentro de objeto aninhado é reativo',
+				fn: async () => {
+					proxy.template.t_nested.lista = [{ nome: 'X', tags: [{ label: 'inicio' }] }];
+					await wait(30);
+					proxy.template.t_nested.lista[0].tags[0].label = 'fim';
+					await wait(30);
+					assert(nestedTags()[0].textContent.trim() === 'fim', 'array aninhado não atualizou');
+				}
+			},
+			{
+				name: 'Dois componentes isolados não interferem',
+				fn: async () => {
+					proxy.template.t_iso_a.val = 'somente-A';
+					await wait(20);
+					assert(T('[x-data="t_iso_a"] .iso-a-out').textContent.trim() === 'somente-A', 'iso_a errado');
+					assert(T('[x-data="t_iso_b"] .iso-b-out').textContent.trim() !== 'somente-A', 'iso_b foi contaminado');
+				}
+			},
+			{
+				name: 'initProxy() chamado duas vezes é idempotente',
+				fn: async () => {
+					proxy.template.t_bind.titulo = 'idem';
+					await wait(10);
+					proxy.initProxy(); // segunda chamada
+					await wait(10);
+					proxy.template.t_bind.titulo = 'idem2';
+					await wait(20);
+					assert(T('[x-data="t_bind"] .titulo').textContent.trim() === 'idem2', 'idempotência falhou');
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  🔬 Granularidade — render cirúrgico
+		// ─────────────────────────────────────────────
+		group('🔬 Granularidade — render cirúrgico', [
+			{
+				name: 'Update pontual toca apenas 1 nó (de 500)',
+				fn: async () => {
+					proxy.template.t_stress.lista = Array.from({ length: 500 }, (_, i) => ({ nome: `G${i}` }));
+					await wait(50);
+
+					let renderCount = 0;
+					stressItems().forEach(el => {
+						const orig = Object.getOwnPropertyDescriptor(el, 'textContent');
+						Object.defineProperty(el, 'textContent', {
+							set(v) {
+								renderCount++;
+								Object.defineProperty(el, 'textContent', orig || { writable: true, configurable: true, enumerable: true });
+								el.textContent = v;
+							},
+							configurable: true
+						});
+					});
+
+					proxy.template.t_stress.lista[100].nome = 'Cirúrgico';
+					await wait(20);
+
+					assert(renderCount === 1, `esperado 1 nó, got ${renderCount}`);
+					assert(stressItems()[100].textContent.trim() === 'Cirúrgico', 'conteúdo errado');
+				}
+			},
+			{
+				name: '10 updates aleatórios tocam exatamente 10 nós',
+				fn: async () => {
+					proxy.template.t_stress.lista = Array.from({ length: 500 }, (_, i) => ({ nome: `H${i}` }));
+					await wait(50);
+
+					let renderCount = 0;
+					stressItems().forEach(el => {
+						Object.defineProperty(el, 'textContent', {
+							set(v) {
+								renderCount++;
+								Object.defineProperty(el, 'textContent', { writable: true, configurable: true });
+								el.textContent = v;
+							},
+							configurable: true
+						});
+					});
+
+					[10, 50, 100, 150, 200, 250, 300, 350, 400, 450].forEach(i => {
+						proxy.template.t_stress.lista[i].nome = `U${i}`;
+					});
+					await wait(20);
+
+					assert(renderCount === 10, `esperado 10, got ${renderCount}`);
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  ⚡ Stress — 500 itens
+		// ─────────────────────────────────────────────
+		group('⚡ Stress — 500 itens', [
+			{
+				name: 'Render inicial < 300ms',
+				fn: async () => {
+					const t0 = performance.now();
+					proxy.template.t_stress.lista = Array.from({ length: 500 }, (_, i) => ({ nome: `Item ${i}` }));
+					await wait(50);
+					const ms = performance.now() - t0;
+					assert(stressItems().length === 500, `esperado 500, got ${stressItems().length}`);
+					assert(ms < 300, `lento demais: ${Math.round(ms)}ms`);
+				}
+			},
+			{
+				name: 'Update único < 100ms',
+				fn: async () => {
+					const t0 = performance.now();
+					proxy.template.t_stress.lista[250].nome = 'Atualizado';
+					await wait(50);
+					assert(performance.now() - t0 < 100, 'lento demais');
+				}
+			},
+			{
+				name: '10 updates sequenciais < 200ms',
+				fn: async () => {
+					const t0 = performance.now();
+					for (let i = 0; i < 10; i++) proxy.template.t_stress.lista[i].nome = `Up${i}`;
+					await wait(100);
+					assert(performance.now() - t0 < 200, 'lento demais');
+				}
+			},
+			{
+				name: 'Limpa para 0',
+				fn: async () => {
+					proxy.template.t_stress.lista = Array.from({ length: 200 }, (_, i) => ({ nome: `X${i}` }));
+					await wait(50);
+					proxy.template.t_stress.lista = [];
+					await wait(30);
+					assert(stressItems().length === 0, `esperado 0, got ${stressItems().length}`);
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  🚀 Stress — 1k itens
+		// ─────────────────────────────────────────────
+		group('🚀 Stress — 1k itens', [
+			{
+				name: 'Render inicial < 500ms',
+				fn: async () => {
+					const t0 = performance.now();
+					proxy.template.t_stress1k.lista = Array.from({ length: 1000 }, (_, i) => ({ nome: `K${i}` }));
+					await wait(100);
+					const ms = performance.now() - t0;
+					assert(stress1kItems().length === 1000, `esperado 1000, got ${stress1kItems().length}`);
+					assert(ms < 500, `lento demais: ${Math.round(ms)}ms`);
+				}
+			},
+			{
+				name: 'Update pontual < 16ms',
+				fn: async () => {
+					await wait(20);
+					const t0 = performance.now();
+					proxy.template.t_stress1k.lista[500].nome = 'Frame';
+					assert(performance.now() - t0 < 16, 'lento demais');
+				}
+			},
+			{
+				name: 'Rajada 100 updates < 100ms',
+				fn: async () => {
+					const t0 = performance.now();
+					for (let i = 0; i < 100; i++) {
+						proxy.template.t_stress1k.lista[Math.floor(Math.random() * 1000)].nome = `R${i}`;
+					}
+					await wait(50);
+					assert(performance.now() - t0 < 100, 'lento demais');
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  💥 Stress — 5k itens
+		// ─────────────────────────────────────────────
+		group('💥 Stress — 5k itens', [
+			{
+				name: 'Render inicial < 1500ms',
+				fn: async () => {
+					const t0 = performance.now();
+					proxy.template.t_stress5k.lista = Array.from({ length: 5000 }, (_, i) => ({ nome: `Big${i}` }));
+					await wait(300);
+					const ms = performance.now() - t0;
+					assert(stress5kItems().length === 5000, `esperado 5000, got ${stress5kItems().length}`);
+					assert(ms < 1500, `lento demais: ${Math.round(ms)}ms`);
+				}
+			},
+			{
+				name: 'Update pontual < 16ms',
+				fn: async () => {
+					await wait(20);
+					const t0 = performance.now();
+					proxy.template.t_stress5k.lista[2500].nome = 'Ponto';
+					assert(performance.now() - t0 < 16, 'lento demais');
+				}
+			},
+			{
+				name: 'Limpa para 0 < 500ms',
+				fn: async () => {
+					const t0 = performance.now();
+					proxy.template.t_stress5k.lista = [];
+					await wait(200);
+					const ms = performance.now() - t0;
+					assert(stress5kItems().length === 0, `esperado 0, got ${stress5kItems().length}`);
+					assert(ms < 500, `lento demais: ${Math.round(ms)}ms`);
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  🔀 Stress — listas simultâneas
+		// ─────────────────────────────────────────────
+		group('🔀 Stress — listas simultâneas', [
+			{
+				name: '3 × 200 itens — render simultâneo < 300ms',
+				fn: async () => {
+					const make = (p, n) => Array.from({ length: n }, (_, i) => ({ nome: `${p}${i}` }));
+					const t0 = performance.now();
+					proxy.template.t_multi_a.lista = make('A', 200);
+					proxy.template.t_multi_b.lista = make('B', 200);
+					proxy.template.t_multi_c.lista = make('C', 200);
+					await wait(100);
+					const ms = performance.now() - t0;
+					assert(multiAItems().length === 200, `A: ${multiAItems().length}`);
+					assert(multiBItems().length === 200, `B: ${multiBItems().length}`);
+					assert(multiCItems().length === 200, `C: ${multiCItems().length}`);
+					assert(ms < 300, `lento demais: ${Math.round(ms)}ms`);
+				}
+			},
+			{
+				name: '3 listas — updates simultâneos < 50ms',
+				fn: async () => {
+					const t0 = performance.now();
+					proxy.template.t_multi_a.lista[50].nome = 'Xa';
+					proxy.template.t_multi_b.lista[50].nome = 'Xb';
+					proxy.template.t_multi_c.lista[50].nome = 'Xc';
+					await wait(20);
+					const ms = performance.now() - t0;
+					assert(multiAItems()[50].textContent.trim() === 'Xa', 'A[50] errado');
+					assert(multiBItems()[50].textContent.trim() === 'Xb', 'B[50] errado');
+					assert(multiCItems()[50].textContent.trim() === 'Xc', 'C[50] errado');
+					assert(ms < 50, `lento demais: ${Math.round(ms)}ms`);
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  ♻️ Cache LRU — expressões compiladas
+		// ─────────────────────────────────────────────
+		group('♻️ Cache LRU — expressões compiladas', [
+			{
+				name: '600 expressões únicas → cache não quebra avaliação',
+				fn: async () => {
+					let container = T('[x-data="t_lru"]');
+					if (!container) {
+						container = document.createElement('div');
+						container.setAttribute('x-data', 't_lru');
+						document.getElementById('test-targets').appendChild(container);
+					}
+					container.innerHTML = '';
+					for (let i = 0; i < 600; i++) {
+						const span = document.createElement('span');
+						span.className = 'lru-span';
+						span.setAttribute('x-bind', `{${i} + 1000}`);
+						container.appendChild(span);
+					}
+					proxy.initProxy();
+					proxy.template.t_lru.dummy = 1;
+					await wait(300);
+					const spans = TA('[x-data="t_lru"] .lru-span');
+					assert(spans.length === 600, `esperado 600, got ${spans.length}`);
+					assert(spans[0].textContent.trim() === '1000', `spans[0]: "${spans[0].textContent.trim()}"`);
+					assert(spans[599].textContent.trim() === '1599', `spans[599]: "${spans[599].textContent.trim()}"`);
+
+					proxy.template.t_lru.dummy = 2;
+					await wait(150);
+					assert(spans[0].textContent.trim() === '1000', 'spans[0] quebrou após eviction');
+					assert(spans[599].textContent.trim() === '1599', 'spans[599] quebrou após eviction');
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  🔁 x-for aninhado + x-if
+		// ─────────────────────────────────────────────
+		group('🔁 x-for aninhado + x-if', [
+			{
+				name: 'x-if filtra tag dentro do loop interno',
+				fn: async () => {
+					proxy.template.t_nested_if.lista = [
+						{ nome: 'Cat', tags: [{ label: 'visivel', ativo: true }, { label: 'oculta', ativo: false }] },
+					];
+					await wait(30);
+					const visiveis = niTags().filter(e => e.style.display !== 'none');
+					assert(visiveis.length === 1, `esperado 1 tag visível, got ${visiveis.length}`);
+					assert(visiveis[0].textContent.trim() === 'visivel', `tag errada: "${visiveis[0].textContent.trim()}"`);
+				}
+			},
+			{
+				name: 'Mudar item do loop externo não re-renderiza loop interno inteiro',
+				fn: async () => {
+					proxy.template.t_nested_if.lista = [
+						{ nome: 'CatX', tags: [{ label: 'A', ativo: true }, { label: 'B', ativo: true }] },
+					];
+					await wait(30);
+					let renderCount = 0;
+					niTags().forEach(el => {
+						Object.defineProperty(el, 'textContent', {
+							set(v) {
+								renderCount++;
+								Object.defineProperty(el, 'textContent', { writable: true, configurable: true });
+								el.textContent = v;
+							},
+							configurable: true
+						});
+					});
+					proxy.template.t_nested_if.lista[0].nome = 'CatY';
+					await wait(20);
+					assert(niCats()[0].textContent.trim() === 'CatY', 'nome da categoria não atualizou');
+					assert(renderCount === 0, `loop interno foi tocado (${renderCount}x) — deveria ser granular`);
+				}
+			},
+			{
+				name: 'x-if individual em item de x-for não afeta os demais',
+				fn: async () => {
+					proxy.template.t_if_item.lista = [
+						{ id: 1, nome: 'Um', show: true },
+						{ id: 2, nome: 'Dois', show: true },
+						{ id: 3, nome: 'Três', show: true },
+					];
+					await wait(20);
+					proxy.template.t_if_item.lista[1].show = false;
+					await wait(20);
+					const items = ifiItems();
+					assert(items[1].style.display === 'none', 'item[1] deveria estar oculto');
+					assert(items[0].style.display !== 'none', 'item[0] não deveria ser afetado');
+					assert(items[2].style.display !== 'none', 'item[2] não deveria ser afetado');
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  🔘 x-for multi-filho raiz (regressão)
+		// ─────────────────────────────────────────────
+		group('🔘 x-for multi-filho raiz (regressão)', [
+			{
+				name: 'Click no item 0 muta apenas o item 0',
+				fn: async () => {
+					proxy.template.t_multi_root.lista = [
+						{ id: 1, nome: 'A' }, { id: 2, nome: 'B' }, { id: 3, nome: 'C' },
+					];
+					await wait(20);
+					mrBtns()[0].click();
+					await wait(20);
+					const nomes = mrNomes();
+					assert(nomes[0].textContent.trim() === 'click-0', `item[0] errado: "${nomes[0].textContent.trim()}"`);
+					assert(nomes[1].textContent.trim() === 'B', `item[1] não deveria mudar: "${nomes[1].textContent.trim()}"`);
+					assert(nomes[2].textContent.trim() === 'C', `item[2] não deveria mudar: "${nomes[2].textContent.trim()}"`);
+				}
+			},
+			{
+				name: 'Click no item do meio muta apenas o item do meio',
+				fn: async () => {
+					proxy.template.t_multi_root.lista = [
+						{ id: 1, nome: 'A' }, { id: 2, nome: 'B' }, { id: 3, nome: 'C' },
+					];
+					await wait(20);
+					mrBtns()[1].click();
+					await wait(20);
+					const nomes = mrNomes();
+					assert(nomes[1].textContent.trim() === 'click-1', `item[1] errado: "${nomes[1].textContent.trim()}"`);
+					assert(nomes[0].textContent.trim() === 'A', 'item[0] não deveria mudar');
+					assert(nomes[2].textContent.trim() === 'C', 'item[2] não deveria mudar');
+				}
+			},
+			{
+				name: 'Click no último item muta apenas o último',
+				fn: async () => {
+					proxy.template.t_multi_root.lista = [
+						{ id: 1, nome: 'A' }, { id: 2, nome: 'B' }, { id: 3, nome: 'C' },
+					];
+					await wait(20);
+					mrBtns()[2].click();
+					await wait(20);
+					const nomes = mrNomes();
+					assert(nomes[2].textContent.trim() === 'click-2', `item[2] errado: "${nomes[2].textContent.trim()}"`);
+					assert(nomes[0].textContent.trim() === 'A', 'item[0] não deveria mudar');
+					assert(nomes[1].textContent.trim() === 'B', 'item[1] não deveria mudar');
+				}
+			},
+			{
+				name: '$this.index correto em cada nó do grupo multi-filho',
+				fn: async () => {
+					proxy.template.t_multi_root.lista = [
+						{ id: 10, nome: 'X' }, { id: 20, nome: 'Y' }, { id: 30, nome: 'Z' },
+					];
+					await wait(20);
+					const idxs = mrIdxs().map(e => e.textContent.trim());
+					assert(idxs[0] === '0', `idx[0] errado: "${idxs[0]}"`);
+					assert(idxs[1] === '1', `idx[1] errado: "${idxs[1]}"`);
+					assert(idxs[2] === '2', `idx[2] errado: "${idxs[2]}"`);
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  🧩 x-on — expressões com objeto/array literal (regressão)
+		// ─────────────────────────────────────────────
+		group('🧩 x-on — objeto/array literal (regressão)', [
+			{
+				name: '$emit com objeto multi-chave',
+				fn: async () => {
+					proxy.template.t_on_literal.contador = 7;
+					await wait(20);
+					let detail = null;
+					const root = T('[x-data="t_on_literal"]');
+					root.addEventListener('ev-multi', e => { detail = e.detail; }, { once: true });
+					T('[x-data="t_on_literal"] .ol-btn-emit').click();
+					await wait(20);
+					assert(detail && detail.a === 1 && detail.b === 2 && detail.c === 7,
+						`detail errado: ${JSON.stringify(detail)}`);
+				}
+			},
+			{
+				name: 'x-on com array literal — push funciona',
+				fn: async () => {
+					proxy.template.t_on_literal.lista = [];
+					await wait(20);
+					T('[x-data="t_on_literal"] .ol-btn-push').click();
+					await wait(20);
+					assert(T('[x-data="t_on_literal"] .ol-lista-len').textContent.trim() === '1',
+						`esperado length 1, got "${T('[x-data="t_on_literal"] .ol-lista-len').textContent.trim()}"`);
+				}
+			},
+			{
+				name: '$emit com objeto aninhado',
+				fn: async () => {
+					let detail = null;
+					const root = T('[x-data="t_on_literal"]');
+					root.addEventListener('ev-nested', e => { detail = e.detail; }, { once: true });
+					T('[x-data="t_on_literal"] .ol-btn-nested').click();
+					await wait(20);
+					assert(detail && detail.user && detail.user.nome === 'x', `detail errado: ${JSON.stringify(detail)}`);
+				}
+			},
+			{
+				name: 'Ternário dentro de objeto literal funciona',
+				fn: async () => {
+					proxy.template.t_on_literal.flag = true;
+					await wait(20);
+					T('[x-data="t_on_literal"] .ol-btn-tern-obj').click();
+					await wait(20);
+					const out = proxy.template.t_on_literal.out;
+					assert(out === '{"val":"a"}', `esperado {"val":"a"}, got "${out}"`);
+				}
+			},
+			{
+				name: 'Identificador bloqueado escondido como valor de objeto continua bloqueado',
+				fn: async () => {
+					proxy.template.t_on_literal.out = 'intacto';
+					proxy.template.t_on_literal.flag = true;
+					await wait(20);
+					T('[x-data="t_on_literal"] .ol-btn-tern-obj-block').click();
+					await wait(20);
+					assert(proxy.template.t_on_literal.out === 'intacto', `bloqueio vazou: "${proxy.template.t_on_literal.out}"`);
+				}
+			},
+			{
+				name: 'Ternário fora de objeto continua funcionando (braceDepth não quebrou)',
+				fn: async () => {
+					proxy.template.t_on_literal.flag = true;
+					await wait(20);
+					T('[x-data="t_on_literal"] .ol-btn-tern').click();
+					await wait(20);
+					assert(proxy.template.t_on_literal.out === 'sim', `esperado "sim", got "${proxy.template.t_on_literal.out}"`);
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  🏷️ Interpolação de atributo (regressão + cobertura)
+		// ─────────────────────────────────────────────
+		group('🏷️ Interpolação de atributo (regressão)', [
+			{
+				name: 'href muda 2x em sequência',
+				fn: async () => {
+					proxy.template.t_attr_multi.ahref = '/um';
+					await wait(20);
+					assert(T('[x-data="t_attr_multi"] .am-href').getAttribute('href') === '/um', '1ª mudança falhou');
+					proxy.template.t_attr_multi.ahref = '/dois';
+					await wait(20);
+					assert(T('[x-data="t_attr_multi"] .am-href').getAttribute('href') === '/dois', `2ª mudança falhou, got "${T('[x-data="t_attr_multi"] .am-href').getAttribute('href')}"`);
+				}
+			},
+			{
+				name: 'src muda 2x em sequência',
+				fn: async () => {
+					proxy.template.t_attr_multi.asrc = '/img1.png';
+					await wait(20);
+					proxy.template.t_attr_multi.asrc = '/img2.png';
+					await wait(20);
+					assert(T('[x-data="t_attr_multi"] .am-src').getAttribute('src') === '/img2.png', `esperado /img2.png, got "${T('[x-data="t_attr_multi"] .am-src').getAttribute('src')}"`);
+				}
+			},
+			{
+				name: 'title muda 2x em sequência',
+				fn: async () => {
+					proxy.template.t_attr_multi.atitle = 'primeiro';
+					await wait(20);
+					proxy.template.t_attr_multi.atitle = 'segundo';
+					await wait(20);
+					assert(T('[x-data="t_attr_multi"] .am-title').getAttribute('title') === 'segundo', `esperado "segundo", got "${T('[x-data="t_attr_multi"] .am-title').getAttribute('title')}"`);
+				}
+			},
+			{
+				name: 'Atributo com múltiplas interpolações (data-info="{a}-{b}")',
+				fn: async () => {
+					proxy.template.t_attr_multi.a = '1';
+					proxy.template.t_attr_multi.b = '2';
+					await wait(20);
+					assert(T('[x-data="t_attr_multi"] .am-multi').getAttribute('data-info') === '1-2', `esperado "1-2", got "${T('[x-data="t_attr_multi"] .am-multi').getAttribute('data-info')}"`);
+					proxy.template.t_attr_multi.a = '3';
+					proxy.template.t_attr_multi.b = '4';
+					await wait(20);
+					assert(T('[x-data="t_attr_multi"] .am-multi').getAttribute('data-info') === '3-4', `2ª mudança falhou, got "${T('[x-data="t_attr_multi"] .am-multi').getAttribute('data-info')}"`);
+				}
+			},
+			{
+				name: 'class="{expr}" dinâmico (atributo único) atualiza',
+				fn: async () => {
+					proxy.template.t_attr_multi.aclass = 'ativo';
+					await wait(20);
+					assert(document.getElementById('am-class').getAttribute('class') === 'ativo', `esperado "ativo", got "${document.getElementById('am-class').getAttribute('class')}"`);
+				}
+			},
+			{
+				name: '[BUG DE MARKUP CONHECIDO] atributo class= duplicado (t_bind .cls-div) não interpola — HTML mantém só o 1º class',
+				fn: async () => {
+					// O parser HTML descarta o 2º atributo `class` duplicado na mesma tag,
+					// então "{divClass}" nunca chega a virar template interpolável.
+					// Este teste documenta o comportamento real, não corrige o markup.
+					proxy.template.t_bind.divClass = 'nova-classe';
+					await wait(20);
+					const cls = T('[x-data="t_bind"] .cls-div').getAttribute('class');
+					assert(cls === 'cls-div', `comportamento mudou! esperado apenas "cls-div" (bug de markup), got "${cls}"`);
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  🧹 Destroy / recreate
+		// ─────────────────────────────────────────────
+		group('🧹 Destroy / recreate', [
+			{
+				name: 'destroy() + initProxy() — dados antigos não vazam pro novo',
+				fn: async () => {
+					proxy.template.t_destroy_recreate.valor = 'antigo';
+					await wait(10);
+					proxy.destroy('t_destroy_recreate');
+					await wait(10);
+					proxy.initProxy();
+					await wait(10);
+					assert(!proxy.template.t_destroy_recreate.valor, `valor vazou: "${proxy.template.t_destroy_recreate.valor}"`);
+				}
+			},
+			{
+				name: 'destroy() com update pendente na fila não lança erro',
+				fn: async () => {
+					let errCaught = null;
+					const onErr = (e) => { errCaught = e.error || e; };
+					window.addEventListener('error', onErr);
+					proxy.template.t_destroy_pending.valor = 'pendente'; // agenda _scheduleApply, sem await
+					proxy.destroy('t_destroy_pending'); // destrói antes do microtask rodar
+					await wait(30);
+					window.removeEventListener('error', onErr);
+					assert(!errCaught, `erro lançado: ${errCaught && errCaught.message}`);
+					assert(!proxy.template.t_destroy_pending.valor, 'store deveria estar limpo após destroy');
+				}
+			},
+			{
+				name: 'x-on de elemento destruído não dispara mais',
+				fn: async () => {
+					proxy.template.t_destroy_on2.val = 0;
+					await wait(20);
+					const btn = T('[x-data="t_destroy_on2"] .d2-btn');
+					proxy.destroy('t_destroy_on2');
+					await wait(10);
+					btn.click();
+					await wait(20);
+					assert(!proxy.template.t_destroy_on2.val, `x-on ainda respondeu: ${proxy.template.t_destroy_on2.val}`);
+				}
+			},
+			{
+				name: 'watcher registrado antes do destroy para de disparar depois',
+				fn: async () => {
+					proxy.template.t_destroy_recreate.valor = 'a';
+					await wait(10);
+					let fired = 0;
+					proxy.on('t_destroy_recreate.valor', () => { fired++; });
+					proxy.destroy('t_destroy_recreate');
+					await wait(10);
+					proxy.initProxy();
+					proxy.template.t_destroy_recreate.valor = 'b';
+					await wait(10);
+					assert(fired === 0, `watcher disparou ${fired}x após destroy`);
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  📝 x-model — cobertura adicional
+		// ─────────────────────────────────────────────
+		group('📝 x-model — cobertura adicional', [
+			{
+				name: 'Array de primitivos com x-model por índice',
+				fn: async () => {
+					proxy.template.t_model_arr.itens = ['a', 'b', 'c'];
+					await wait(20);
+					const i1 = T('[x-data="t_model_arr"] .ma-1');
+					i1.value = 'editado';
+					i1.dispatchEvent(new Event('input'));
+					await wait(20);
+					assert(proxy.template.t_model_arr.itens[1] === 'editado', `esperado "editado", got "${proxy.template.t_model_arr.itens[1]}"`);
+					assert(proxy.template.t_model_arr.itens[0] === 'a', 'itens[0] não deveria mudar');
+				}
+			},
+			{
+				name: 'Dois inputs no mesmo path — editar um reflete no outro',
+				fn: async () => {
+					proxy.template.t_model.nome = 'inicial';
+					await wait(10);
+					const i1 = T('[x-data="t_model"] input[type="text"]');
+					const i2 = T('[x-data="t_model"] .input2');
+					i2.value = 'via-input2';
+					i2.dispatchEvent(new Event('input'));
+					await wait(20);
+					assert(i1.value === 'via-input2', `input1 não sincronizou: "${i1.value}"`);
+				}
+			},
+			{
+				name: 'x-model dentro de x-for (item.valor) — cobertura de limite conhecido',
+				fn: async () => {
+					proxy.template.t_model_for.lista = [{ valor: 'a' }, { valor: 'b' }];
+					await wait(20);
+					const input = T('[x-data="t_model_for"] .mf-input');
+					input.value = 'editado-loop';
+					input.dispatchEvent(new Event('input'));
+					await wait(20);
+					// x-model só resolve paths a partir do key do container x-data;
+					// "item.valor" (alias do loop) não é resolvido para lista[0].valor.
+					// Este teste documenta se o gap ainda existe.
+					assert(proxy.template.t_model_for.lista[0].valor === 'editado-loop',
+						`x-model dentro de x-for não propagou — valor continua "${proxy.template.t_model_for.lista[0].valor}"`);
+				}
+			},
+			{
+				name: 'Checkboxes independentes no mesmo objeto',
+				fn: async () => {
+					proxy.template.t_model_checks.optA = false;
+					proxy.template.t_model_checks.optB = true;
+					proxy.template.t_model_checks.optC = false;
+					await wait(20);
+					const a = T('[x-data="t_model_checks"] .mc-a');
+					const b = T('[x-data="t_model_checks"] .mc-b');
+					const c = T('[x-data="t_model_checks"] .mc-c');
+					assert(a.checked === false, 'optA deveria ser false');
+					assert(b.checked === true, 'optB deveria ser true');
+					assert(c.checked === false, 'optC deveria ser false');
+					a.checked = true;
+					a.dispatchEvent(new Event('change'));
+					await wait(20);
+					assert(proxy.template.t_model_checks.optA === true, 'optA não propagou pro proxy');
+					assert(proxy.template.t_model_checks.optB === true, 'optB não deveria ter mudado');
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  🔑 x-key — edge cases
+		// ─────────────────────────────────────────────
+		group('🔑 x-key — edge cases', [
+			{
+				name: 'Trocar a key de um item existente recria o nó',
+				fn: async () => {
+					proxy.template.t_key_edge.lista = [{ id: 1, nome: 'A' }];
+					await wait(20);
+					const before = keItems()[0];
+					proxy.template.t_key_edge.lista = [{ id: 2, nome: 'A2' }];
+					await wait(20);
+					const after = keItems()[0];
+					assert(before !== after, 'nó deveria ter sido recriado com a nova key');
+					assert(after.textContent.trim() === 'A2', 'conteúdo do novo nó errado');
+				}
+			},
+			{
+				name: 'Keys duplicadas não lançam exceção não tratada',
+				fn: async () => {
+					let errCaught = null;
+					const onErr = (e) => { errCaught = e.error || e; };
+					window.addEventListener('error', onErr);
+					proxy.template.t_key_edge.lista = [{ id: 9, nome: 'X' }, { id: 9, nome: 'Y' }];
+					await wait(20);
+					proxy.template.t_key_edge.lista = [{ id: 9, nome: 'X2' }, { id: 9, nome: 'Y2' }];
+					await wait(20);
+					window.removeEventListener('error', onErr);
+					assert(!errCaught, `exceção não tratada com keys duplicadas: ${errCaught && errCaught.message}`);
+					assert(keItems().length >= 1, 'deveria sobrar ao menos 1 nó renderizado');
+				}
+			},
+			{
+				name: 'Reordenar lista mantendo keys — nós são movidos, não recriados',
+				fn: async () => {
+					proxy.template.t_key_edge.lista = [{ id: 1, nome: 'A' }, { id: 2, nome: 'B' }, { id: 3, nome: 'C' }];
+					await wait(20);
+					const nodesBefore = keItems();
+					const nodeA = nodesBefore[0], nodeB = nodesBefore[1], nodeC = nodesBefore[2];
+					proxy.template.t_key_edge.lista = [{ id: 3, nome: 'C' }, { id: 1, nome: 'A' }, { id: 2, nome: 'B' }];
+					await wait(20);
+					const nodesAfter = keItems();
+					assert(nodesAfter[0] === nodeC, 'nó C deveria ter sido movido, não recriado');
+					assert(nodesAfter[1] === nodeA, 'nó A deveria ter sido movido, não recriado');
+					assert(nodesAfter[2] === nodeB, 'nó B deveria ter sido movido, não recriado');
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  ⚡ Race conditions / timing
+		// ─────────────────────────────────────────────
+		group('⚡ Race conditions / timing', [
+			{
+				name: 'Trocar lista 2x no mesmo tick — só a 2ª prevalece',
+				fn: async () => {
+					proxy.template.t_race.lista = [{ nome: 'primeira' }];
+					proxy.template.t_race.lista = [{ nome: 'segunda' }, { nome: 'segunda2' }];
+					await wait(30);
+					assert(raceItems().length === 2, `esperado 2 itens, got ${raceItems().length}`);
+					assert(raceItems()[0].textContent.trim() === 'segunda', `conteúdo errado: "${raceItems()[0].textContent.trim()}"`);
+				}
+			},
+			{
+				name: 'Múltiplos sets no mesmo componente no mesmo tick — 1 render',
+				fn: async () => {
+					proxy.template.t_race2.val = 'inicial';
+					await wait(20);
+					const el = T('[x-data="t_race2"] .race2-out');
+					let renders = 0;
+					Object.defineProperty(el, 'textContent', {
+						set(v) {
+							renders++;
+							Object.defineProperty(el, 'textContent', { writable: true, configurable: true });
+							el.textContent = v;
+						},
+						configurable: true
+					});
+					proxy.template.t_race2.val = 'v1';
+					proxy.template.t_race2.val = 'v2';
+					proxy.template.t_race2.val = 'v3';
+					await wait(20);
+					assert(renders === 1, `esperado 1 render, got ${renders}`);
+					assert(el.textContent.trim() === 'v3', `conteúdo final errado: "${el.textContent.trim()}"`);
+				}
+			},
+			{
+				name: 'set → delete → set do mesmo prop no mesmo tick',
+				fn: async () => {
+					proxy.template.t_race3.val = 'x';
+					await wait(20);
+					proxy.template.t_race3.val = 'y';
+					delete proxy.template.t_race3.val;
+					proxy.template.t_race3.val = 'z';
+					await wait(20);
+					assert(T('[x-data="t_race3"] .race3-out').textContent.trim() === 'z',
+						`esperado "z", got "${T('[x-data="t_race3"] .race3-out').textContent.trim()}"`);
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  ♻️ Cache LRU — colisão entre componentes
+		// ─────────────────────────────────────────────
+		group('♻️ Cache LRU — colisão entre componentes', [
+			{
+				name: 'Mesma expressão em 2 componentes não colide',
+				fn: async () => {
+					proxy.template.t_lru_a.compartilhado = 'valor-A';
+					proxy.template.t_lru_b.compartilhado = 'valor-B';
+					await wait(20);
+					assert(T('[x-data="t_lru_a"] .lru-a-out').textContent.trim() === 'valor-A',
+						`t_lru_a errado: "${T('[x-data="t_lru_a"] .lru-a-out').textContent.trim()}"`);
+					assert(T('[x-data="t_lru_b"] .lru-b-out').textContent.trim() === 'valor-B',
+						`t_lru_b errado: "${T('[x-data="t_lru_b"] .lru-b-out').textContent.trim()}"`);
+					proxy.template.t_lru_a.compartilhado = 'valor-A2';
+					await wait(20);
+					assert(T('[x-data="t_lru_b"] .lru-b-out').textContent.trim() === 'valor-B',
+						'mudança em t_lru_a vazou pro t_lru_b');
+				}
+			},
+		]);
+
+		// ─────────────────────────────────────────────
+		//  🩺 Error handling / onError
+		// ─────────────────────────────────────────────
+		group('🩺 Error handling / onError', [
+			{
+				name: 'x-for com expressão inválida dispara onError e não trava o resto',
+				fn: async () => {
+					let captured = null;
+					proxy.onError = (err) => { captured = err; };
+					proxy.template.t_err_for.outro = 'sobrevivi';
+					await wait(20);
+					proxy.onError = null;
+					assert(captured && captured.type === 'x-for-syntax', `onError não disparou com tipo certo: ${JSON.stringify(captured)}`);
+					assert(T('[x-data="t_err_for"] .ef-sibling').textContent.trim() === 'sobrevivi', 'sibling não renderizou');
+				}
+			},
+			{
+				name: 'x-bind com exceção em runtime não quebra render dos irmãos',
+				fn: async () => {
+					let captured = null;
+					proxy.onError = (err) => { captured = err; };
+					proxy.template.t_err_bind.bom = 'ok-irmao';
+					await wait(20);
+					proxy.onError = null;
+					assert(T('[x-data="t_err_bind"] .eb-good').textContent.trim() === 'ok-irmao', 'irmão não renderizou após erro no vizinho');
+					assert(T('[x-data="t_err_bind"] .eb-bad').textContent.trim() === '', 'nó com erro deveria renderizar vazio, não travar');
+				}
+			},
+		]);
+
+		// ══════════════════════════════════════════════════════════════
+		buildUI();
+	</script>
+</body>
+
+</html>

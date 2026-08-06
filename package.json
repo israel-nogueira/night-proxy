@@ -1,0 +1,41 @@
+{
+  "name": "shadow-proxy",
+  "version": "2.7.0",
+  "description": "Reactive DOM binding via Recursive Proxy — zero dependencies, CSP-safe, no eval/new Function",
+  "main": "shadow-proxy.js",
+  "types": "shadow-proxy.d.ts",
+  "files": [
+    "shadow-proxy.js",
+    "shadow-proxy.d.ts",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "reactive",
+    "proxy",
+    "dom",
+    "binding",
+    "x-bind",
+    "x-for",
+    "x-model",
+    "x-if",
+    "x-on",
+    "csp",
+    "no-eval",
+    "vanilla"
+  ],
+  "author": "israelnogueira",
+  "license": "MIT",
+  "homepage": "https://github.com/israel-nogueira/shadow-proxy",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/israel-nogueira/shadow-proxy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/israel-nogueira/shadow-proxy/issues"
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}
