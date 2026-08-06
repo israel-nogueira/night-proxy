@@ -23,7 +23,7 @@ Você não quer aprender React. Não quer configurar webpack. Não quer ler docu
 Um arquivo. Uma tag `<script>`. Sua página passa a ser reativa. Sem npm. Sem build. Sem opinião sobre a sua stack.
 
 ```html
-<script src="https://cdn.jsdelivr.net/gh/israel-nogueira/shadow-proxy@refs/heads/no-reflow/assets/js/shadow-proxy.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/israel-nogueira/shadow-proxy@no-reflow/shadow-proxy.min.js"></script>
 ```
 
 > ✅ Se você já sabe fazer uma página em HTML, você já sabe usar shadow-proxy.js. **15 minutos e você está em produção.**
@@ -188,7 +188,7 @@ npm install shadow-proxy
 
 **Via CDN — copie e cole, pronto:**
 ```html
-<script src="https://cdn.jsdelivr.net/gh/israel-nogueira/shadow-proxy@refs/heads/no-reflow/assets/js/shadow-proxy.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/israel-nogueira/shadow-proxy@no-reflow/shadow-proxy.min.js"></script>
 ```
 
 **Via arquivo local:**
