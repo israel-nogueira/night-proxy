@@ -310,17 +310,25 @@ var shadowProxy = (function () {
     // Também usa microtask — consistência no timing entre os dois paths.
 
     const _pendingKeys = new Set();
+    const _pendingKeysNeedRender = new Set(); // subset de _pendingKeys que precisa do cascade completo
     let _applyQueued = false;
 
-    function _scheduleApply(key) {
+    // needsRender=true (default) → cascade completo (push/splice/substituição de lista,
+    // 1ª atribuição de key). needsRender=false → só dispara lifecycle/sync, o(s) effect(s)
+    // granular(es) já cuidaram do nó certo via _trigger.
+    function _scheduleApply(key, needsRender) {
+        if (needsRender === undefined) needsRender = true;
         _pendingKeys.add(key);
+        if (needsRender) _pendingKeysNeedRender.add(key);
         if (_applyQueued) return;
         _applyQueued = true;
         Promise.resolve().then(function () {
             _applyQueued = false;
             const keys = [..._pendingKeys];
+            const needRender = new Set(_pendingKeysNeedRender);
             _pendingKeys.clear();
-            keys.forEach(_applyTarget);
+            _pendingKeysNeedRender.clear();
+            keys.forEach(function (k) { _applyTarget(k, needRender.has(k)); });
             keys.forEach(_syncModelsForKey);
         });
     }
@@ -1577,7 +1585,8 @@ var shadowProxy = (function () {
 
     // ─── Apply ────────────────────────────────────────────────────────────────
 
-    function _applyTarget(key) {
+    function _applyTarget(key, doRender) {
+        if (doRender === undefined) doRender = true;
         const targets = document.querySelectorAll(
             '[proxy-target="' + key + '"], [x-data="' + key + '"]'
         );
@@ -1607,18 +1616,31 @@ var shadowProxy = (function () {
             ? (_proxies[key] || data)   // ✅ usa o proxy para rastrear dependências
             : { [key]: data };
 
-            // ✅ nunca escreve na proxy reativa (Object.assign(baseScope,...) disparava
-            // o set trap a cada render por causa de $ref/$emit sempre novos -> loop infinito)
-            const scope = Object.assign({}, baseScope, {
-                $root: target,
-                $ref: $ref,
-                $emit: $emit,
-                $i: undefined,
-                $index: undefined,
-                $this: null
+            // ✅ nunca escreve na proxy reativa. Object.create(baseScope) mantém baseScope
+            // na prototype chain — assim scope.nome cai no get trap do Proxy de verdade e
+            // RASTREIA a dependência (_track). Só não dá pra usar Object.assign(scope,{...})
+            // pra adicionar $root/$ref/etc: como scope não tem essas props OWN, o [[Set]]
+            // padrão do JS delega pro [[Set]] do prototype — e como o prototype é um Proxy,
+            // isso disparava o SET TRAP DO STORE a cada render (escrevendo $root/$ref/$emit
+            // dentro do próprio hero.*), causando _scheduleApply -> render -> set -> loop
+            // infinito. Object.defineProperty cria a prop OWN direto, sem consultar/disparar
+            // o prototype — sem esse problema.
+            const scope = Object.create(baseScope);
+            Object.defineProperties(scope, {
+                $root:  { value: target, writable: true, enumerable: true, configurable: true },
+                $ref:   { value: $ref, writable: true, enumerable: true, configurable: true },
+                $emit:  { value: $emit, writable: true, enumerable: true, configurable: true },
+                $i:     { value: undefined, writable: true, enumerable: true, configurable: true },
+                $index: { value: undefined, writable: true, enumerable: true, configurable: true },
+                $this:  { value: null, writable: true, enumerable: true, configurable: true }
             });
 
-            _renderTracked(target, scope, key);
+            // Cascade completo (_renderNodeRaw a partir da raiz) só quando NINGUÉM
+            // tratou a mutação granularmente (_trigger não achou effect). Update pontual
+            // já foi resolvido pelo effect do próprio nó — evita retocar a árvore inteira.
+            if (doRender) {
+                _renderTracked(target, scope, key);
+            }
 
             // removeu o _bindEvents daqui
 
@@ -1694,10 +1716,12 @@ var shadowProxy = (function () {
 
                 _notifyWatchers(basePath + '.' + prop, value, oldVal, ancestorSnapshots);
 
-                const triggered = _trigger(target, prop);
-                if (!triggered) {
-                    _scheduleApply(key);
-                }
+                // Se já existe effect granular tracking esse (target, prop), o _trigger
+                // já agenda exatamente o nó certo — não precisa do _applyTarget completo.
+                // _scheduleApply só entra como fallback quando ninguém tracka essa prop
+                // ainda (ex: novo índice de array via push, prop nova sem effect prévio).
+                const handled = _trigger(target, prop);
+                _scheduleApply(key, !handled);
 
                 return true;
             },
@@ -1706,13 +1730,12 @@ var shadowProxy = (function () {
                 const oldVal = target[prop];
                 delete target[prop];
                 _notifyWatchers(basePath + '.' + prop, undefined, oldVal);
-                _trigger(target, prop);
-                _scheduleApply(key);
+                const handled = _trigger(target, prop);
+                _scheduleApply(key, !handled);
                 return true;
             }
         });
     }
-
     // ─── Destroy helpers ──────────────────────────────────────────────────────
 
     function _destroyNode(node) {

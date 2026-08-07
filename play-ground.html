@@ -8,7 +8,7 @@
 	<link
 		href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;800&display=swap"
 		rel="stylesheet">
-	<script src="./assets/js/shadow-proxy.js"></script>
+	<script src="./shadow-proxy.js"></script>
 
 	<style>
 		*,
@@ -876,20 +876,20 @@
 		}
 
 		// ── Init ─────────────────────────────────────────────────────────────────
-		proxy.initProxy();
+		shadowProxy.initProxy();
 
 		// ── Info ─────────────────────────────────────────────────────────────────
-		proxy.template.info.titulo = "shadow-proxy";
-		proxy.template.info.descricao = "Reatividade declarativa sem frameworks";
-		proxy.template.info.categoria = "frontend";
-		proxy.template.info.prioridade = "alta";
-		proxy.template.info.ativo = true;
+		shadowProxy.template.info.titulo = "shadow-proxy";
+		shadowProxy.template.info.descricao = "Reatividade declarativa sem frameworks";
+		shadowProxy.template.info.categoria = "frontend";
+		shadowProxy.template.info.prioridade = "alta";
+		shadowProxy.template.info.ativo = true;
 
-		log('proxy.initProxy() executado', 'success');
+		log('shadowProxy.initProxy() executado', 'success');
 		log('info inicializado', 'info');
 
 		// ── Produtos ─────────────────────────────────────────────────────────────
-		proxy.template.produtos.lista = [
+		shadowProxy.template.produtos.lista = [
 			{ nome: "shadow-proxy core", categoria: "reactive", ativo: true },
 			{ nome: "morphdom diffing", categoria: "dom", ativo: true },
 			{ nome: "x-for nested", categoria: "template", ativo: false },
@@ -899,7 +899,7 @@
 		log('produtos.lista inicializado com 4 itens', 'info');
 
 		// ── Categorias ────────────────────────────────────────────────────────────
-		proxy.template.categorias.lista = [
+		shadowProxy.template.categorias.lista = [
 			{
 				nome: "Diretivas", tags: [
 					{ label: "x-bind" }, { label: "x-for" }, { label: "x-if" },
@@ -930,7 +930,7 @@
 			const nome = document.getElementById('inp-nome').value.trim();
 			const cat = document.getElementById('inp-cat').value.trim();
 			if (!nome) { log('Nome vazio — nada adicionado', 'warn'); return; }
-			proxy.template.produtos.lista.push({ nome, categoria: cat || 'geral', ativo: true });
+			shadowProxy.template.produtos.lista.push({ nome, categoria: cat || 'geral', ativo: true });
 			log(`adicionado: "${nome}"`, 'success');
 			document.getElementById('inp-nome').value = '';
 			document.getElementById('inp-cat').value = '';
@@ -939,37 +939,37 @@
 		function addRandom() {
 			const nome = nomes[Math.floor(Math.random() * nomes.length)];
 			const cat = cats[Math.floor(Math.random() * cats.length)];
-			proxy.template.produtos.lista.push({ nome, categoria: cat, ativo: Math.random() > 0.4 });
+			shadowProxy.template.produtos.lista.push({ nome, categoria: cat, ativo: Math.random() > 0.4 });
 			log(`random adicionado: "${nome}"`, 'success');
 		}
 
 		function removerItem(idx) {
-			const item = proxy.template.produtos.lista[idx];
+			const item = shadowProxy.template.produtos.lista[idx];
 			log(`removido[${idx}]: "${item.nome}"`, 'error');
-			proxy.template.produtos.lista.splice(idx, 1);
+			shadowProxy.template.produtos.lista.splice(idx, 1);
 		}
 
 		function toggleItem(idx) {
-			const item = proxy.template.produtos.lista[idx];
+			const item = shadowProxy.template.produtos.lista[idx];
 			item.ativo = !item.ativo;
 			log(`toggle[${idx}] "${item.nome}" → ${item.ativo ? 'ativo' : 'inativo'}`, 'warn');
 		}
 
 		function toggleTodos() {
-			const lista = proxy.template.produtos.lista;
+			const lista = shadowProxy.template.produtos.lista;
 			const algumAtivo = lista.some(i => i.ativo);
 			lista.forEach((_, i) => { lista[i].ativo = !algumAtivo; });
 			log(`todos → ${!algumAtivo ? 'ativo' : 'inativo'}`, 'warn');
 		}
 
 		function shuffleLista() {
-			const arr = [...proxy.template.produtos.lista].sort(() => Math.random() - 0.5);
-			proxy.template.produtos.lista = arr;
+			const arr = [...shadowProxy.template.produtos.lista].sort(() => Math.random() - 0.5);
+			shadowProxy.template.produtos.lista = arr;
 			log('lista embaralhada', 'info');
 		}
 
 		function limparLista() {
-			proxy.template.produtos.lista = [];
+			shadowProxy.template.produtos.lista = [];
 			log('lista limpa', 'error');
 		}
 
@@ -978,7 +978,7 @@
 
 		function editarItem(idx) {
 			_editIdx = idx;
-			const item = proxy.template.produtos.lista[idx];
+			const item = shadowProxy.template.produtos.lista[idx];
 			document.getElementById('modal-nome').value = item.nome;
 			document.getElementById('modal-cat').value = item.categoria;
 			document.getElementById('modal').classList.add('open');
@@ -994,16 +994,16 @@
 			if (_editIdx === null) return;
 			const nome = document.getElementById('modal-nome').value.trim();
 			const cat = document.getElementById('modal-cat').value.trim();
-			proxy.template.produtos.lista[_editIdx].nome = nome;
-			proxy.template.produtos.lista[_editIdx].categoria = cat;
+			shadowProxy.template.produtos.lista[_editIdx].nome = nome;
+			shadowProxy.template.produtos.lista[_editIdx].categoria = cat;
 			log(`salvo[${_editIdx}]: "${nome}"`, 'success');
 			closeModal();
 		}
 
 		// registrar funções no escopo do componente produtos
-		proxy.template.produtos.editarItem = editarItem;
-		proxy.template.produtos.toggleItem = toggleItem;
-		proxy.template.produtos.removerItem = removerItem;
+		shadowProxy.template.produtos.editarItem = editarItem;
+		shadowProxy.template.produtos.toggleItem = toggleItem;
+		shadowProxy.template.produtos.removerItem = removerItem;
 
 		document.getElementById('modal').addEventListener('click', function (e) {
 			if (e.target === this) closeModal();

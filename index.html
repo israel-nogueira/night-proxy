@@ -25,7 +25,7 @@
 	<meta name="twitter:description" content="Proxy recursivo com dependency tracking granular que captura mudanças em tempo real. Leve, performático e funciona em qualquer stack JavaScript." />
 	<meta name="description" property="og:description" content="Proxy recursivo com dependency tracking granular que captura mudanças em tempo real. Leve, performático e funciona em qualquer stack JavaScript.">
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,300&display=swap" rel="stylesheet">
-	<script src="https://cdn.jsdelivr.net/gh/israel-nogueira/shadow-proxy@refs/heads/no-reflow/assets/js/shadow-proxy.min.js"></script>
+	<script src="./shadow-proxy.js"></script>
 
 	<style>
 		*,
@@ -1350,6 +1350,224 @@
 			margin-top: 16px;
 		}
 
+		/* ══ EXEMPLO 4: CARRINHO DE COMPRAS ═══════════════════════════════════ */
+		.cart-item {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			background: var(--bg2);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			padding: 10px 14px;
+			margin-bottom: 8px;
+		}
+
+		.cart-item-name {
+			flex: 1;
+			font-size: 0.9rem;
+		}
+
+		.cart-item-price {
+			font-family: var(--mono);
+			font-size: 0.8rem;
+			color: var(--text2);
+			width: 76px;
+			text-align: right;
+		}
+
+		.cart-qty {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			font-family: var(--mono);
+		}
+
+		.cart-qty button {
+			width: 22px;
+			height: 22px;
+			border-radius: 6px;
+			border: 1px solid var(--border2);
+			background: var(--bg3);
+			color: var(--text);
+			cursor: pointer;
+			font-size: 0.9rem;
+			line-height: 1;
+			transition: all .15s;
+		}
+
+		.cart-qty button:hover {
+			border-color: var(--violet);
+			color: var(--violet-lt);
+		}
+
+		.cart-qty span {
+			min-width: 16px;
+			text-align: center;
+			font-size: 0.85rem;
+		}
+
+		.cart-total {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-top: 12px;
+			padding-top: 12px;
+			border-top: 1px solid var(--border2);
+			font-size: 1rem;
+			font-weight: 600;
+		}
+
+		.cart-total span:last-child {
+			font-family: var(--mono);
+			color: var(--green);
+		}
+
+		/* ══ EXEMPLO 5: BUSCA/FILTRO REATIVO ═══════════════════════════════════ */
+		.search-list {
+			display: flex;
+			flex-direction: column;
+			gap: 6px;
+			margin-top: 12px;
+			min-height: 44px;
+		}
+
+		.search-item {
+			background: var(--bg2);
+			border: 1px solid var(--border);
+			border-radius: 6px;
+			padding: 8px 12px;
+			font-size: 0.85rem;
+		}
+
+		.search-count {
+			font-family: var(--mono);
+			font-size: 0.7rem;
+			color: var(--text3);
+			margin-top: 8px;
+		}
+
+		/* ══ EXEMPLO 6: SEGURANÇA EM AÇÃO ══════════════════════════════════════ */
+		.sec-console {
+			background: #000;
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			padding: 12px 14px;
+			min-height: 108px;
+			max-height: 160px;
+			overflow-y: auto;
+			font-family: var(--mono);
+			font-size: 0.75rem;
+			margin-bottom: 14px;
+			display: flex;
+			flex-direction: column-reverse;
+		}
+
+		.sec-console-empty {
+			color: var(--text3);
+		}
+
+		.sec-line {
+			padding: 4px 0;
+			border-bottom: 1px solid var(--border);
+			word-break: break-word;
+		}
+
+		.sec-line:first-child {
+			border-bottom: none;
+		}
+
+		.sec-line.blocked {
+			color: var(--red);
+		}
+
+		.sec-line.ok {
+			color: var(--green);
+		}
+
+		.sec-actions {
+			display: flex;
+			gap: 8px;
+			flex-wrap: wrap;
+		}
+
+		.sec-btn {
+			font-family: var(--mono);
+			font-size: 0.78rem;
+			border-radius: 6px;
+			padding: 8px 12px;
+			cursor: pointer;
+			border: 1px solid var(--border2);
+			background: var(--bg3);
+			color: var(--text);
+			transition: all .15s;
+		}
+
+		.sec-btn.danger:hover {
+			border-color: var(--red);
+			color: var(--red);
+		}
+
+		.sec-btn.safe:hover {
+			border-color: var(--green);
+			color: var(--green);
+		}
+
+		/* ══ EXEMPLO 7: PERFORMANCE ═══════════════════════════════════════════ */
+		.perf-stats {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 10px;
+			margin-bottom: 14px;
+		}
+
+		.perf-stat {
+			background: var(--bg2);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			padding: 10px 12px;
+		}
+
+		.perf-stat-label {
+			font-size: 0.7rem;
+			color: var(--text3);
+			margin-bottom: 4px;
+		}
+
+		.perf-stat-val {
+			font-family: var(--mono);
+			font-size: 1.15rem;
+			color: var(--cyan);
+			font-weight: 600;
+		}
+
+		.perf-actions {
+			display: flex;
+			gap: 8px;
+			margin-bottom: 14px;
+			flex-wrap: wrap;
+		}
+
+		.perf-list {
+			max-height: 160px;
+			overflow-y: auto;
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			background: var(--bg2);
+			padding: 6px;
+		}
+
+		.perf-item {
+			font-family: var(--mono);
+			font-size: 0.72rem;
+			color: var(--text2);
+			padding: 3px 8px;
+			border-bottom: 1px solid var(--border);
+		}
+
+		.perf-item:last-child {
+			border-bottom: none;
+		}
+
 		/* ══ SECTION DIVIDER ══════════════════════════════════════════════════ */
 		.section-divider {
 			border: none;
@@ -1369,11 +1587,12 @@
 		<div class="nav-links">
 			<a href="#" class="active" onclick="showPage('home'); setActive(this)">Início</a>
 			<a href="#" onclick="showPage('docs'); setActive(this)">Docs</a>
+			<a href="./test-suit.html" target="_blank">Testes</a>
 			<a href="https://github.com/israel-nogueira/shadow-proxy" target="_blank">GitHub</a>
 		</div>
 		<div class="nav-right">
 			<span class="nav-badge">v2.7.2</span>
-			<a href="https://cdn.jsdelivr.net/gh/israel-nogueira/shadow-proxy@refs/heads/no-reflow/assets/js/shadow-proxy.min.js"
+			<a href="https://cdn.jsdelivr.net/gh/israel-nogueira/shadow-proxy@no-reflow/shadow-proxy.min.js"
 				class="nav-gh" download>
 				↓ Download
 			</a>
@@ -1390,13 +1609,12 @@
 			<div class="hero-left">
 				<div class="hero-eyebrow">Reatividade declarativa</div>
 				<h1 class="hero-title">
-					Sua página PHP.<br>
-					<em>Agora reativa.</em><br>
-					Sem npm.
+					Sua página PHP<br>
+					<em>Agora reativa!</em>
 				</h1>
 				<p class="hero-sub">
 					Um arquivo, uma tag <strong>&lt;script&gt;</strong>, e sua página passa a ser reativa.
-					Proxy recursivo, dependency tracking granular, <strong>~3.6KB gzip</strong>.
+					Proxy recursivo, dependency tracking granular, <strong>~8.7KB gzip</strong>.
 					Funciona em qualquer stack.
 				</p>
 				<div class="hero-actions">
@@ -1466,7 +1684,7 @@
 		<!-- COMPARE STRIP -->
 		<div class="compare-strip">
 			<div class="compare-item">
-				<div class="compare-val">~3.6KB</div>
+				<div class="compare-val">~8.7KB</div>
 				<div class="compare-label">gzipped</div>
 			</div>
 			<div class="compare-item">
@@ -1557,11 +1775,17 @@
 					<div class="code-block">
 						<pre><span class="t-tag">&lt;div</span> <span class="t-attr">x-data</span>=<span class="t-val">"tarefas"</span><span class="t-tag">&gt;</span>
   <span class="t-tag">&lt;div</span> <span class="t-attr">x-for</span>=<span class="t-val">"item, k in lista"</span><span class="t-tag">&gt;</span>
-    <span class="t-tag">&lt;span</span> <span class="t-attr">x-bind</span>=<span class="t-val">"{item.texto}"</span><span class="t-tag">&gt;&lt;/span&gt;</span>
-    <span class="t-tag">&lt;button</span> <span class="t-attr">x-on:click</span>=<span class="t-val">"toggle(k)"</span><span class="t-tag">&gt;</span>✓<span class="t-tag">&lt;/button&gt;</span>
-    <span class="t-tag">&lt;button</span> <span class="t-attr">x-on:click</span>=<span class="t-val">"remove(k)"</span><span class="t-tag">&gt;</span>✕<span class="t-tag">&lt;/button&gt;</span>
+    <span class="t-tag">&lt;div</span> <span class="t-attr">class</span>=<span class="t-val">"todo-check {item.done ? 'done' : ''}"</span>
+         <span class="t-attr">x-on:click</span>=<span class="t-val">"toggleTodo(k)"</span>
+         <span class="t-attr">x-bind</span>=<span class="t-val">"{item.done ? '✓' : ''}"</span><span class="t-tag">&gt;&lt;/div&gt;</span>
+    <span class="t-tag">&lt;span</span> <span class="t-attr">class</span>=<span class="t-val">"todo-text {item.done ? 'done' : ''}"</span>
+          <span class="t-attr">x-bind</span>=<span class="t-val">"{item.texto}"</span><span class="t-tag">&gt;&lt;/span&gt;</span>
+    <span class="t-tag">&lt;button</span> <span class="t-attr">x-on:click</span>=<span class="t-val">"removeTodo(k)"</span><span class="t-tag">&gt;</span>✕<span class="t-tag">&lt;/button&gt;</span>
   <span class="t-tag">&lt;/div&gt;</span>
 <span class="t-tag">&lt;/div&gt;</span>
+
+<span class="t-tag">&lt;input</span> <span class="t-attr">id</span>=<span class="t-val">"todo-input"</span> <span class="t-attr">type</span>=<span class="t-val">"text"</span><span class="t-tag">&gt;</span>
+<span class="t-tag">&lt;button</span> <span class="t-attr">x-on:click</span>=<span class="t-val">"addTodo()"</span><span class="t-tag">&gt;</span>+ Adicionar<span class="t-tag">&lt;/button&gt;</span>
 
 <span class="t-tag">&lt;script&gt;</span>
   <span class="t-fn">proxy</span>.<span class="t-fn">initProxy</span>();
@@ -1571,9 +1795,21 @@
     { texto: <span class="t-str">"Refatorar o projeto"</span>, done: <span class="t-key">false</span> },
   ];
 
-  <span class="t-fn">proxy</span>.template.tarefas.toggle = <span class="t-key">function</span>(k) {
-    <span class="t-fn">proxy</span>.template.tarefas.lista[k].done
-      = !<span class="t-fn">proxy</span>.template.tarefas.lista[k].done;
+  <span class="t-com">// só muda o dado — classe "done", ✓ e riscado seguem sozinhos</span>
+  <span class="t-fn">proxy</span>.template.tarefas.toggleTodo = <span class="t-key">function</span>(k) {
+    <span class="t-key">var</span> item = <span class="t-fn">proxy</span>.template.tarefas.lista[k];
+    item.done = !item.done;
+  };
+
+  <span class="t-fn">proxy</span>.template.tarefas.removeTodo = <span class="t-key">function</span>(k) {
+    <span class="t-fn">proxy</span>.template.tarefas.lista.<span class="t-fn">splice</span>(k, <span class="t-num">1</span>);
+  };
+
+  <span class="t-fn">proxy</span>.template.tarefas.addTodo = <span class="t-key">function</span>() {
+    <span class="t-key">var</span> inp = document.<span class="t-fn">getElementById</span>(<span class="t-str">'todo-input'</span>);
+    <span class="t-key">if</span> (!inp.value.<span class="t-fn">trim</span>()) <span class="t-key">return</span>;
+    <span class="t-fn">proxy</span>.template.tarefas.lista.<span class="t-fn">push</span>({ texto: inp.value, done: <span class="t-key">false</span> });
+    inp.value = <span class="t-str">''</span>;
   };
 <span class="t-tag">&lt;/script&gt;</span></pre>
 					</div>
@@ -1584,9 +1820,9 @@
 						<div class="todo-list">
 							<div x-for="item, k in lista">
 								<div class="todo-item">
-									<div class="todo-check" x-on:click="toggleTodo(k)" x-bind="{item.done ? '✓' : ''}">
+									<div class="todo-check {item.done ? 'done' : ''}" x-on:click="toggleTodo(k)" x-bind="{item.done ? '✓' : ''}">
 									</div>
-									<span class="todo-text" x-bind="{item.texto}"></span>
+									<span class="todo-text {item.done ? 'done' : ''}" x-bind="{item.texto}"></span>
 									<button class="todo-del" x-on:click="removeTodo(k)">✕</button>
 								</div>
 							</div>
@@ -1633,6 +1869,231 @@
 							<div style="margin-top:12px;font-size:0.7rem;color:var(--text3);margin-bottom:6px">//
 								proxy.on log</div>
 							<div class="watch-log" id="watch-log"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- EXEMPLO 4: carrinho com total calculado -->
+			<div class="split" style="margin-top:32px">
+				<div class="split-code">
+					<div class="split-tab">
+						<div class="split-tab-item active">carrinho.html</div>
+					</div>
+					<div class="code-block">
+						<pre><span class="t-tag">&lt;div</span> <span class="t-attr">x-data</span>=<span class="t-val">"carrinho"</span><span class="t-tag">&gt;</span>
+  <span class="t-tag">&lt;div</span> <span class="t-attr">x-for</span>=<span class="t-val">"item, k in itens"</span><span class="t-tag">&gt;</span>
+    <span class="t-tag">&lt;span</span> <span class="t-attr">x-bind</span>=<span class="t-val">"{item.nome}"</span><span class="t-tag">&gt;&lt;/span&gt;</span>
+    <span class="t-tag">&lt;span</span> <span class="t-attr">x-bind</span>=<span class="t-val">"R$ {item.preco}"</span><span class="t-tag">&gt;&lt;/span&gt;</span>
+    <span class="t-tag">&lt;button</span> <span class="t-attr">x-on:click</span>=<span class="t-val">"decrementar(k)"</span><span class="t-tag">&gt;</span>-<span class="t-tag">&lt;/button&gt;</span>
+    <span class="t-tag">&lt;span</span> <span class="t-attr">x-bind</span>=<span class="t-val">"{item.qty}"</span><span class="t-tag">&gt;&lt;/span&gt;</span>
+    <span class="t-tag">&lt;button</span> <span class="t-attr">x-on:click</span>=<span class="t-val">"incrementar(k)"</span><span class="t-tag">&gt;</span>+<span class="t-tag">&lt;/button&gt;</span>
+  <span class="t-tag">&lt;/div&gt;</span>
+
+  <span class="t-tag">&lt;div&gt;</span>Total: <span class="t-tag">&lt;span</span> <span class="t-attr">x-bind</span>=<span class="t-val">"R$ {total}"</span><span class="t-tag">&gt;&lt;/span&gt;&lt;/div&gt;</span>
+<span class="t-tag">&lt;/div&gt;</span>
+
+<span class="t-tag">&lt;script&gt;</span>
+  <span class="t-fn">proxy</span>.<span class="t-fn">initProxy</span>();
+
+  <span class="t-fn">proxy</span>.template.carrinho.itens = [
+    { nome: <span class="t-str">"Teclado Mecânico"</span>, preco: <span class="t-num">249.90</span>, qty: <span class="t-num">1</span> },
+    { nome: <span class="t-str">"Mouse Gamer"</span>, preco: <span class="t-num">89.90</span>, qty: <span class="t-num">2</span> },
+  ];
+
+  <span class="t-com">// proxy.on ouve o array inteiro — muda quando qualquer item muda</span>
+  <span class="t-key">function</span> recalcularTotal() {
+    <span class="t-key">var</span> itens = <span class="t-fn">proxy</span>.template.carrinho.itens;
+    <span class="t-key">var</span> soma = itens.<span class="t-fn">reduce</span>(<span class="t-key">function</span>(acc, i) {
+      <span class="t-key">return</span> acc + i.preco * i.qty;
+    }, <span class="t-num">0</span>);
+    <span class="t-fn">proxy</span>.template.carrinho.total = soma.<span class="t-fn">toFixed</span>(<span class="t-num">2</span>);
+  }
+  recalcularTotal();
+  <span class="t-fn">proxy</span>.<span class="t-fn">on</span>(<span class="t-str">'carrinho.itens'</span>, recalcularTotal);
+
+  <span class="t-fn">proxy</span>.template.carrinho.incrementar = <span class="t-key">function</span>(k) {
+    <span class="t-fn">proxy</span>.template.carrinho.itens[k].qty++;
+  };
+  <span class="t-fn">proxy</span>.template.carrinho.decrementar = <span class="t-key">function</span>(k) {
+    <span class="t-key">var</span> item = <span class="t-fn">proxy</span>.template.carrinho.itens[k];
+    <span class="t-key">if</span> (item.qty &gt; <span class="t-num">1</span>) item.qty--;
+  };
+<span class="t-tag">&lt;/script&gt;</span></pre>
+					</div>
+				</div>
+				<div class="split-preview">
+					<div class="preview-label">Resultado ao vivo</div>
+					<div x-data="carrinho">
+						<div x-for="item, k in itens">
+							<div class="cart-item">
+								<span class="cart-item-name" x-bind="{item.nome}"></span>
+								<span class="cart-item-price" x-bind="R$ {item.preco}"></span>
+								<div class="cart-qty">
+									<button x-on:click="decrementar(k)">−</button>
+									<span x-bind="{item.qty}"></span>
+									<button x-on:click="incrementar(k)">+</button>
+								</div>
+							</div>
+						</div>
+						<div class="cart-total">
+							<span>Total</span>
+							<span x-bind="R$ {total}"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- EXEMPLO 5: busca/filtro reativo -->
+			<div class="split" style="margin-top:32px">
+				<div class="split-code">
+					<div class="split-tab">
+						<div class="split-tab-item active">busca.html</div>
+					</div>
+					<div class="code-block">
+						<pre><span class="t-tag">&lt;div</span> <span class="t-attr">x-data</span>=<span class="t-val">"busca"</span><span class="t-tag">&gt;</span>
+  <span class="t-tag">&lt;input</span> <span class="t-attr">type</span>=<span class="t-val">"text"</span> <span class="t-attr">x-model</span>=<span class="t-val">"busca.termo"</span>
+         <span class="t-attr">placeholder</span>=<span class="t-val">"Buscar produto..."</span><span class="t-tag">&gt;</span>
+
+  <span class="t-tag">&lt;div</span> <span class="t-attr">x-for</span>=<span class="t-val">"item in resultado"</span><span class="t-tag">&gt;</span>
+    <span class="t-tag">&lt;div</span> <span class="t-attr">x-bind</span>=<span class="t-val">"{item.nome}"</span><span class="t-tag">&gt;&lt;/div&gt;</span>
+  <span class="t-tag">&lt;/div&gt;</span>
+
+  <span class="t-tag">&lt;p</span> <span class="t-attr">x-if</span>=<span class="t-val">"resultado.length === 0"</span><span class="t-tag">&gt;</span>Nada encontrado<span class="t-tag">&lt;/p&gt;</span>
+<span class="t-tag">&lt;/div&gt;</span>
+
+<span class="t-tag">&lt;script&gt;</span>
+  <span class="t-fn">proxy</span>.<span class="t-fn">initProxy</span>();
+
+  <span class="t-fn">proxy</span>.template.busca.produtos = [
+    { nome: <span class="t-str">"Teclado Mecânico"</span> }, { nome: <span class="t-str">"Mouse Gamer"</span> },
+    { nome: <span class="t-str">"Monitor 4K"</span> },      { nome: <span class="t-str">"Headset"</span> },
+  ];
+  <span class="t-fn">proxy</span>.template.busca.termo = <span class="t-str">''</span>;
+
+  <span class="t-key">function</span> filtrar() {
+    <span class="t-key">var</span> termo = <span class="t-fn">proxy</span>.template.busca.termo.<span class="t-fn">toLowerCase</span>();
+    <span class="t-fn">proxy</span>.template.busca.resultado = <span class="t-fn">proxy</span>.template.busca.produtos.<span class="t-fn">filter</span>(<span class="t-key">function</span>(p) {
+      <span class="t-key">return</span> p.nome.<span class="t-fn">toLowerCase</span>().<span class="t-fn">includes</span>(termo);
+    });
+  }
+  filtrar();
+  <span class="t-fn">proxy</span>.<span class="t-fn">on</span>(<span class="t-str">'busca.termo'</span>, filtrar);
+<span class="t-tag">&lt;/script&gt;</span></pre>
+					</div>
+				</div>
+				<div class="split-preview">
+					<div class="preview-label">Resultado ao vivo</div>
+					<div x-data="busca">
+						<input class="live-input" type="text" x-model="busca.termo" placeholder="Buscar produto...">
+						<div class="search-list">
+							<div x-for="item in resultado">
+								<div class="search-item" x-bind="{item.nome}"></div>
+							</div>
+							<p x-if="resultado.length === 0" class="todo-empty" style="padding:12px">Nada encontrado</p>
+						</div>
+						<div class="search-count" x-bind="{resultado.length} de {produtos.length} produtos"></div>
+					</div>
+				</div>
+			</div>
+
+			<!-- EXEMPLO 6: segurança em ação -->
+			<div class="split" style="margin-top:32px">
+				<div class="split-code">
+					<div class="split-tab">
+						<div class="split-tab-item active">seguranca.html</div>
+					</div>
+					<div class="code-block">
+						<pre><span class="t-com">// registra o handler global de erros ANTES de tudo</span>
+<span class="t-fn">shadowProxy</span>.onError = <span class="t-key">function</span>(err) {
+  <span class="t-key">if</span> (err.type === <span class="t-str">'x-on-unsafe'</span>) {
+    <span class="t-fn">logConsole</span>(<span class="t-str">'🚫 Bloqueado: '</span> + err.expr, <span class="t-key">false</span>);
+  }
+};
+
+<span class="t-com">// tenta bindar uma expressão perigosa em runtime</span>
+<span class="t-fn">shadowProxy</span>.template.seguranca.testarPerigoso = <span class="t-key">function</span>() {
+  <span class="t-key">var</span> el = document.<span class="t-fn">createElement</span>(<span class="t-str">'button'</span>);
+  el.<span class="t-fn">setAttribute</span>(<span class="t-str">'x-on:click'</span>, <span class="t-str">"window.location='http://evil.com'"</span>);
+
+  <span class="t-com">// nunca vira listener — bloqueado antes de existir</span>
+  <span class="t-fn">shadowProxy</span>.<span class="t-fn">bindEvents</span>(el, {}, <span class="t-str">'seguranca'</span>);
+};
+
+<span class="t-fn">shadowProxy</span>.template.seguranca.testarSeguro = <span class="t-key">function</span>() {
+  <span class="t-fn">logConsole</span>(<span class="t-str">'✅ Ação permitida — sem acesso a window/document/eval'</span>, <span class="t-key">true</span>);
+};</pre>
+					</div>
+				</div>
+				<div class="split-preview">
+					<div class="preview-label">Resultado ao vivo</div>
+					<div x-data="seguranca">
+						<div class="sec-console" id="sec-console">
+							<div class="sec-console-empty">// clique nos botões abaixo pra ver o sandbox em ação</div>
+						</div>
+						<div class="sec-actions">
+							<button class="sec-btn danger" x-on:click="testarPerigoso()">🚫 Tentar window.location</button>
+							<button class="sec-btn safe" x-on:click="testarSeguro()">✅ Ação segura</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- EXEMPLO 7: performance -->
+			<div class="split" style="margin-top:32px">
+				<div class="split-code">
+					<div class="split-tab">
+						<div class="split-tab-item active">performance.html</div>
+					</div>
+					<div class="code-block">
+						<pre><span class="t-fn">shadowProxy</span>.template.perf.gerarLista = <span class="t-key">function</span>() {
+  <span class="t-key">var</span> arr = [];
+  <span class="t-key">for</span> (<span class="t-key">var</span> i = <span class="t-num">0</span>; i &lt; <span class="t-num">3000</span>; i++) arr.<span class="t-fn">push</span>({ nome: <span class="t-str">'Item #' + i</span> });
+
+  <span class="t-key">var</span> t0 = performance.<span class="t-fn">now</span>();
+  <span class="t-fn">shadowProxy</span>.template.perf.itens = arr; <span class="t-com">// dispara render de 3.000 nós</span>
+
+  requestAnimationFrame(<span class="t-key">function</span>() {
+    <span class="t-key">var</span> t1 = performance.<span class="t-fn">now</span>();
+    <span class="t-fn">shadowProxy</span>.template.perf.tempoRender = (t1 - t0).<span class="t-fn">toFixed</span>(<span class="t-num">1</span>);
+  });
+};
+
+<span class="t-fn">shadowProxy</span>.template.perf.atualizarUm = <span class="t-key">function</span>() {
+  <span class="t-key">var</span> itens = <span class="t-fn">shadowProxy</span>.template.perf.itens;
+  <span class="t-key">var</span> idx = Math.<span class="t-fn">floor</span>(Math.<span class="t-fn">random</span>() * itens.length);
+
+  <span class="t-key">var</span> t0 = performance.<span class="t-fn">now</span>();
+  itens[idx].nome = <span class="t-str">'Atualizado ✓ #' + idx</span>; <span class="t-com">// toca só esse nó</span>
+
+  requestAnimationFrame(<span class="t-key">function</span>() {
+    <span class="t-key">var</span> t1 = performance.<span class="t-fn">now</span>();
+    <span class="t-fn">shadowProxy</span>.template.perf.tempoUpdate = (t1 - t0).<span class="t-fn">toFixed</span>(<span class="t-num">2</span>);
+  });
+};</pre>
+					</div>
+				</div>
+				<div class="split-preview">
+					<div class="preview-label">Resultado ao vivo — medido no seu navegador agora</div>
+					<div x-data="perf">
+						<div class="perf-stats">
+							<div class="perf-stat">
+								<div class="perf-stat-label">Render de <span x-bind="{qtd}"></span> itens</div>
+								<div class="perf-stat-val" x-bind="{tempoRender} ms"></div>
+							</div>
+							<div class="perf-stat">
+								<div class="perf-stat-label">Update cirúrgico (1 item)</div>
+								<div class="perf-stat-val" x-bind="{tempoUpdate} ms"></div>
+							</div>
+						</div>
+						<div class="perf-actions">
+							<button class="sec-btn" x-on:click="gerarLista()">Gerar 3.000 itens</button>
+							<button class="sec-btn" x-on:click="atualizarUm()">Atualizar 1 item aleatório</button>
+						</div>
+						<div class="perf-list">
+							<div x-for="item in itens">
+								<div class="perf-item" x-bind="{item.nome}"></div>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -1710,7 +2171,7 @@
 					<tbody>
 						<tr>
 							<td>Tamanho (min+gzip)</td>
-							<td class="hl">~3.6KB</td>
+							<td class="hl">~8.7KB</td>
 							<td>~13.5KB</td>
 							<td>~34KB</td>
 							<td>~45KB</td>
@@ -1784,7 +2245,7 @@
 					</div>
 					<div class="install-code" id="cdn-code"><span style="color:var(--t-tag, #7dd3fc)">&lt;script</span>
 						<span style="color:var(--a78bfa, #a78bfa)">src</span>=<span
-							style="color:#86efac">"https://cdn.jsdelivr.net/gh/israel-nogueira/shadow-proxy@refs/heads/no-reflow/assets/js/shadow-proxy.min.js"</span><span
+							style="color:#86efac">"https://cdn.jsdelivr.net/gh/israel-nogueira/shadow-proxy@no-reflow/shadow-proxy.min.js"</span><span
 							style="color:#7dd3fc">&gt;&lt;/script&gt;</span></div>
 				</div>
 				<div class="install-card">
@@ -1794,7 +2255,7 @@
 					</div>
 					<div class="install-code" id="local-code"><span style="color:#7dd3fc">&lt;script</span> <span
 							style="color:#a78bfa">src</span>=<span
-							style="color:#86efac">"./assets/js/shadow-proxy.js"</span><span
+							style="color:#86efac">"./shadow-proxy.js"</span><span
 							style="color:#7dd3fc">&gt;&lt;/script&gt;</span></div>
 				</div>
 			</div>
@@ -1802,7 +2263,7 @@
 			<div class="callout green" style="margin-top:24px">
 				<strong>✓ É só isso.</strong> Inclua o script no &lt;head&gt;, adicione <code
 					style="font-family:var(--mono);color:var(--green)">x-data</code> no HTML e chame <code
-					style="font-family:var(--mono);color:var(--green)">proxy.initProxy()</code>. Sua página já é
+					style="font-family:var(--mono);color:var(--green)">shadowProxy.initProxy()</code>. Sua página já é
 				reativa.
 			</div>
 		</section>
@@ -1834,9 +2295,15 @@
 				<a class="docs-nav-link" onclick="showDoc('x-bind')">x-bind</a>
 				<a class="docs-nav-link" onclick="showDoc('x-if')">x-if</a>
 				<a class="docs-nav-link" onclick="showDoc('x-for')">x-for</a>
+				<a class="docs-nav-link" onclick="showDoc('x-key')">x-key</a>
 				<a class="docs-nav-link" onclick="showDoc('x-model')">x-model</a>
 				<a class="docs-nav-link" onclick="showDoc('x-on')">x-on</a>
 				<a class="docs-nav-link" onclick="showDoc('x-ref')">x-ref</a>
+			</div>
+			<div class="docs-nav-group">
+				<div class="docs-nav-group-title">Segurança &amp; Performance</div>
+				<a class="docs-nav-link" onclick="showDoc('seguranca')">Segurança (CSP-safe)</a>
+				<a class="docs-nav-link" onclick="showDoc('performance')">Performance</a>
 			</div>
 			<div class="docs-nav-group">
 				<div class="docs-nav-group-title">API JavaScript</div>
@@ -1847,6 +2314,7 @@
 			</div>
 			<div class="docs-nav-group">
 				<div class="docs-nav-group-title">Avançado</div>
+				<a class="docs-nav-link" onclick="showDoc('valores-calculados')">Valores calculados</a>
 				<a class="docs-nav-link" onclick="showDoc('lifecycle')">Lifecycle Hooks</a>
 				<a class="docs-nav-link" onclick="showDoc('magic-vars')">Magic Variables</a>
 				<a class="docs-nav-link" onclick="showDoc('spa-fetch')">SPA com fetch</a>
@@ -1864,66 +2332,59 @@
 		// ══════════════════════════════════════════════════════════════════════════════
 		// INIT
 		// ══════════════════════════════════════════════════════════════════════════════
-		proxy.initProxy();
+		shadowProxy.initProxy();
+		shadowProxy.initModels();
 
 		// ── HERO demo ────────────────────────────────────────────────────────────────
-		proxy.template.hero.nome = "Coxinha Supreme";
-		proxy.template.hero.preco = "9.90";
-		proxy.template.hero.categoria = "Categoria: Salgados";
-		proxy.template.hero.ativo = true;
+		shadowProxy.template.hero.nome = "Coxinha Supreme";
+		shadowProxy.template.hero.preco = "9.90";
+		shadowProxy.template.hero.categoria = "Categoria: Salgados";
+		shadowProxy.template.hero.ativo = true;
 
-		proxy.template.hero.toggleAtivo = function () {
-			proxy.template.hero.ativo = !proxy.template.hero.ativo;
+		shadowProxy.template.hero.toggleAtivo = function () {
+			shadowProxy.template.hero.ativo = !shadowProxy.template.hero.ativo;
 		};
-		proxy.template.hero.resetDemo = function () {
-			proxy.template.hero.nome = "Coxinha Supreme";
-			proxy.template.hero.preco = "9.90";
-			proxy.template.hero.categoria = "Categoria: Salgados";
-			proxy.template.hero.ativo = true;
+		shadowProxy.template.hero.resetDemo = function () {
+			shadowProxy.template.hero.nome = "Coxinha Supreme";
+			shadowProxy.template.hero.preco = "9.90";
+			shadowProxy.template.hero.categoria = "Categoria: Salgados";
+			shadowProxy.template.hero.ativo = true;
 		};
 
 		// ── EX1 ──────────────────────────────────────────────────────────────────────
-		proxy.template.ex1.nome = "Notebook Pro X";
-		proxy.template.ex1.preco = "4999.90";
-		proxy.template.ex1.ativo = true;
+		shadowProxy.template.ex1.nome = "Notebook Pro X";
+		shadowProxy.template.ex1.preco = "4999.90";
+		shadowProxy.template.ex1.ativo = true;
 
 		// ── TAREFAS ──────────────────────────────────────────────────────────────────
-		proxy.template.tarefas.lista = [
+		shadowProxy.template.tarefas.lista = [
 			{ texto: "Aprender shadow-proxy", done: false },
 			{ texto: "Remover o Vue do projeto", done: false },
 			{ texto: "Fazer café ☕", done: true },
 		];
 
-		proxy.template.tarefas.toggleTodo = function (k) {
-			var item = proxy.template.tarefas.lista[k];
+		// só muda o dado — classe "done", ✓ e riscado seguem sozinhos via x-bind
+		shadowProxy.template.tarefas.toggleTodo = function (k) {
+			var item = shadowProxy.template.tarefas.lista[k];
 			item.done = !item.done;
-			// atualiza classe manualmente via efeito colateral
-			var els = document.querySelectorAll('[x-data="tarefas"] .todo-check');
-			var texts = document.querySelectorAll('[x-data="tarefas"] .todo-text');
-			if (els[k]) {
-				els[k].classList.toggle('done', item.done);
-			}
-			if (texts[k]) {
-				texts[k].classList.toggle('done', item.done);
-			}
 		};
 
-		proxy.template.tarefas.removeTodo = function (k) {
-			proxy.template.tarefas.lista.splice(k, 1);
+		shadowProxy.template.tarefas.removeTodo = function (k) {
+			shadowProxy.template.tarefas.lista.splice(k, 1);
 		};
 
-		proxy.template.tarefas.addTodo = function () {
+		shadowProxy.template.tarefas.addTodo = function () {
 			var inp = document.getElementById('todo-input');
 			var txt = inp.value.trim();
 			if (!txt) return;
-			proxy.template.tarefas.lista.push({ texto: txt, done: false });
+			shadowProxy.template.tarefas.lista.push({ texto: txt, done: false });
 			inp.value = '';
 		};
 
 		// ── WATCHER ──────────────────────────────────────────────────────────────────
-		proxy.template.watcher.valor = 50;
+		shadowProxy.template.watcher.valor = 50;
 
-		proxy.on('watcher.valor', function (novo, velho) {
+		shadowProxy.on('watcher.valor', function (novo, velho) {
 			var log = document.getElementById('watch-log');
 			if (!log) return;
 			var entry = document.createElement('div');
@@ -1932,6 +2393,109 @@
 			log.prepend(entry);
 			if (log.children.length > 8) log.lastChild.remove();
 		});
+
+		// ── CARRINHO ─────────────────────────────────────────────────────────────────
+		shadowProxy.template.carrinho.itens = [
+			{ nome: "Teclado Mecânico", preco: 249.90, qty: 1 },
+			{ nome: "Mouse Gamer", preco: 89.90, qty: 2 },
+		];
+
+		function recalcularTotalCarrinho() {
+			var itens = shadowProxy.template.carrinho.itens;
+			var soma = itens.reduce(function (acc, i) { return acc + i.preco * i.qty; }, 0);
+			shadowProxy.template.carrinho.total = soma.toFixed(2);
+		}
+		recalcularTotalCarrinho();
+		shadowProxy.on('carrinho.itens', recalcularTotalCarrinho);
+
+		shadowProxy.template.carrinho.incrementar = function (k) {
+			shadowProxy.template.carrinho.itens[k].qty++;
+		};
+		shadowProxy.template.carrinho.decrementar = function (k) {
+			var item = shadowProxy.template.carrinho.itens[k];
+			if (item.qty > 1) item.qty--;
+		};
+
+		// ── BUSCA ────────────────────────────────────────────────────────────────────
+		shadowProxy.template.busca.produtos = [
+			{ nome: "Teclado Mecânico" }, { nome: "Mouse Gamer" },
+			{ nome: "Monitor 4K" }, { nome: "Headset" }, { nome: "Webcam Full HD" },
+		];
+		shadowProxy.template.busca.termo = '';
+
+		function filtrarBusca() {
+			var termo = shadowProxy.template.busca.termo.toLowerCase();
+			shadowProxy.template.busca.resultado = shadowProxy.template.busca.produtos.filter(function (p) {
+				return p.nome.toLowerCase().includes(termo);
+			});
+		}
+		filtrarBusca();
+		shadowProxy.on('busca.termo', filtrarBusca);
+
+		// ── SEGURANÇA ────────────────────────────────────────────────────────────────
+		function logConsole(msg, ok) {
+			var box = document.getElementById('sec-console');
+			if (!box) return;
+			var empty = box.querySelector('.sec-console-empty');
+			if (empty) empty.remove();
+			var line = document.createElement('div');
+			line.className = 'sec-line ' + (ok ? 'ok' : 'blocked');
+			line.textContent = msg;
+			box.prepend(line);
+			if (box.children.length > 8) box.lastChild.remove();
+		}
+
+		shadowProxy.onError = function (err) {
+			if (err.type === 'x-on-unsafe') {
+				logConsole('🚫 Bloqueado: ' + err.expr, false);
+			} else {
+				console.error('[shadow-proxy]', err.type, err.message);
+			}
+		};
+
+		shadowProxy.template.seguranca.testarPerigoso = function () {
+			var el = document.createElement('button');
+			el.setAttribute('x-on:click', "window.location='http://evil.com'");
+			// nunca vira listener — bloqueado antes mesmo de existir
+			shadowProxy.bindEvents(el, {}, 'seguranca');
+		};
+		shadowProxy.template.seguranca.testarSeguro = function () {
+			logConsole('✅ Ação permitida — sem acesso a window/document/eval', true);
+		};
+
+		// ── PERFORMANCE ──────────────────────────────────────────────────────────────
+		shadowProxy.template.perf.itens = [];
+		shadowProxy.template.perf.qtd = 0;
+		shadowProxy.template.perf.tempoRender = '–';
+		shadowProxy.template.perf.tempoUpdate = '–';
+
+		shadowProxy.template.perf.gerarLista = function () {
+			var arr = [];
+			for (var i = 0; i < 3000; i++) arr.push({ nome: 'Item #' + i });
+
+			var t0 = performance.now();
+			shadowProxy.template.perf.itens = arr;
+			shadowProxy.template.perf.qtd = 3000;
+
+			requestAnimationFrame(function () {
+				var t1 = performance.now();
+				shadowProxy.template.perf.tempoRender = (t1 - t0).toFixed(1);
+			});
+		};
+
+		shadowProxy.template.perf.atualizarUm = function () {
+			var itens = shadowProxy.template.perf.itens;
+			if (!itens.length) return;
+			var idx = Math.floor(Math.random() * itens.length);
+
+			var t0 = performance.now();
+			itens[idx].nome = 'Atualizado ✓ #' + idx;
+
+			requestAnimationFrame(function () {
+				var t1 = performance.now();
+				shadowProxy.template.perf.tempoUpdate = (t1 - t0).toFixed(2);
+			});
+		};
 
 		// ══════════════════════════════════════════════════════════════════════════════
 		// PAGE SWITCH
@@ -1980,17 +2544,17 @@
 
 			'inicio-rapido': `
 <h1>Início rápido</h1>
-<p>shadow-proxy é uma lib de reatividade declarativa baseada em Proxy Recursivo. Um arquivo. Sem npm. Sem build. Funciona em qualquer projeto PHP, HTML, WordPress, Laravel.</p>
+<p>shadow-shadowProxy é uma lib de reatividade declarativa baseada em Proxy Recursivo. Um arquivo. Sem build. Funciona em qualquer projeto PHP, HTML, WordPress, Laravel.</p>
 
 <h2>Instalação</h2>
 <p>Inclua o script no <code style="font-family:var(--mono);color:var(--cyan)">&lt;head&gt;</code>:</p>
 <div class="docs-code">
   <div class="docs-code-bar"><span>CDN</span></div>
-  <pre><span class="t-tag">&lt;script</span> <span class="t-attr">src</span>=<span class="t-val">"https://cdn.jsdelivr.net/gh/israel-nogueira/shadow-proxy@refs/heads/no-reflow/assets/js/shadow-proxy.min.js"</span><span class="t-tag">&gt;&lt;/script&gt;</span></pre>
+  <pre><span class="t-tag">&lt;script</span> <span class="t-attr">src</span>=<span class="t-val">"https://cdn.jsdelivr.net/gh/israel-nogueira/shadow-proxy@no-reflow/shadow-proxy.min.js"</span><span class="t-tag">&gt;&lt;/script&gt;</span></pre>
 </div>
 
 <h2>Primeiro componente</h2>
-<p>Adicione <code style="font-family:var(--mono);color:var(--cyan)">x-data</code> em um elemento HTML e chame <code style="font-family:var(--mono);color:var(--cyan)">proxy.initProxy()</code>:</p>
+<p>Adicione <code style="font-family:var(--mono);color:var(--cyan)">x-data</code> em um elemento HTML e chame <code style="font-family:var(--mono);color:var(--cyan)">shadowProxy.initProxy()</code>:</p>
 <div class="docs-code">
   <div class="docs-code-bar"><span>index.html</span></div>
   <pre><span class="t-tag">&lt;div</span> <span class="t-attr">x-data</span>=<span class="t-val">"produto"</span><span class="t-tag">&gt;</span>
@@ -1999,14 +2563,14 @@
 <span class="t-tag">&lt;/div&gt;</span>
 
 <span class="t-tag">&lt;script&gt;</span>
-  <span class="t-fn">proxy</span>.<span class="t-fn">initProxy</span>();
-  <span class="t-fn">proxy</span>.template.produto.nome  = <span class="t-str">"Coxinha Supreme"</span>;
-  <span class="t-fn">proxy</span>.template.produto.preco = <span class="t-num">9.90</span>;
+  <span class="t-fn">shadowProxy</span>.<span class="t-fn">initProxy</span>();
+  <span class="t-fn">shadowProxy</span>.template.produto.nome  = <span class="t-str">"Coxinha Supreme"</span>;
+  <span class="t-fn">shadowProxy</span>.template.produto.preco = <span class="t-num">9.90</span>;
 <span class="t-tag">&lt;/script&gt;</span></pre>
 </div>
 
 <div class="callout green">
-  <strong>✓ É só isso.</strong> Qualquer mudança em <code style="font-family:var(--mono)">proxy.template.produto.*</code> atualiza o DOM automaticamente.
+  <strong>✓ É só isso.</strong> Qualquer mudança em <code style="font-family:var(--mono)">shadowProxy.template.produto.*</code> atualiza o DOM automaticamente.
 </div>
 
 <h2>Próximos passos</h2>
@@ -2015,7 +2579,7 @@
 
 			'como-funciona': `
 <h1>Como funciona</h1>
-<p>shadow-proxy implementa <strong>reatividade declarativa baseada em Proxy Recursivo</strong> com dependency tracking granular, sem virtual DOM, sem dirty checking.</p>
+<p>shadow-shadowProxy implementa <strong>reatividade declarativa baseada em Proxy Recursivo</strong> com dependency tracking granular, sem virtual DOM, sem dirty checking.</p>
 
 <h2>Dependency Tracking</h2>
 <p>Durante o render de cada nó, qualquer leitura de propriedade registra automaticamente uma dependência via <code style="font-family:var(--mono);color:var(--cyan)">WeakMap</code>. Quando um valor muda, apenas os nós que dependem daquela propriedade específica são atualizados — cirurgicamente.</p>
@@ -2037,7 +2601,7 @@
 </div>
 
 <h2>Sem Virtual DOM</h2>
-<p>Ao contrário do React e Vue, shadow-proxy não usa Virtual DOM nem dirty checking. Cada nó tem seu próprio Effect que se desregistra e re-registra nas dependências a cada run, evitando memory leaks e renders obsoletos.</p>
+<p>Ao contrário do React e Vue, shadow-shadowProxy não usa Virtual DOM nem dirty checking. Cada nó tem seu próprio Effect que se desregistra e re-registra nas dependências a cada run, evitando memory leaks e renders obsoletos.</p>
 `,
 
 			'x-data': `
@@ -2081,8 +2645,8 @@
 <span class="t-tag">&lt;p</span> <span class="t-attr">x-if</span>=<span class="t-val">"!ativo"</span><span class="t-tag">&gt;</span>Fora de estoque<span class="t-tag">&lt;/p&gt;</span>
 
 <span class="t-tag">&lt;script&gt;</span>
-  <span class="t-fn">proxy</span>.template.produto.ativo = <span class="t-key">true</span>;
-  <span class="t-fn">proxy</span>.template.produto.ativo = <span class="t-key">false</span>; <span class="t-com">// DOM atualiza sozinho</span>
+  <span class="t-fn">shadowProxy</span>.template.produto.ativo = <span class="t-key">true</span>;
+  <span class="t-fn">shadowProxy</span>.template.produto.ativo = <span class="t-key">false</span>; <span class="t-com">// DOM atualiza sozinho</span>
 <span class="t-tag">&lt;/script&gt;</span></pre>
 </div>
 `,
@@ -2118,11 +2682,62 @@
   <span class="t-tag">&lt;/div&gt;</span>
 <span class="t-tag">&lt;/div&gt;</span></pre>
 </div>
+
+<h2>Mão na massa: total calculado a partir da lista</h2>
+<p>x-for não tem "computed" — mas dá pra simular com <code style="font-family:var(--mono);color:var(--cyan)">shadowProxy.on</code> observando o array inteiro. Qualquer mudança em qualquer item (inclusive campos aninhados) borbulha até o watcher do array.</p>
+<div class="docs-code">
+  <div class="docs-code-bar"><span>JavaScript</span></div>
+  <pre><span class="t-fn">shadowProxy</span>.template.carrinho.itens = [
+  { nome: <span class="t-str">"Teclado"</span>, preco: <span class="t-num">249.90</span>, qty: <span class="t-num">1</span> },
+];
+
+<span class="t-key">function</span> recalcularTotal() {
+  <span class="t-key">var</span> soma = <span class="t-fn">shadowProxy</span>.template.carrinho.itens.<span class="t-fn">reduce</span>(<span class="t-key">function</span>(acc, i) {
+    <span class="t-key">return</span> acc + i.preco * i.qty;
+  }, <span class="t-num">0</span>);
+  <span class="t-fn">shadowProxy</span>.template.carrinho.total = soma.<span class="t-fn">toFixed</span>(<span class="t-num">2</span>);
+}
+recalcularTotal();
+<span class="t-fn">shadowProxy</span>.<span class="t-fn">on</span>(<span class="t-str">'carrinho.itens'</span>, recalcularTotal); <span class="t-com">// dispara em qty++ de qualquer item</span></pre>
+</div>
+<p>Veja funcionando na seção <a href="#" onclick="showPage('home')" style="color:var(--violet-lt)">Exemplos interativos</a> (exemplo "carrinho.html").</p>
+`,
+
+			'x-key': `
+<h1>x-key</h1>
+<p>Chave única e estável pra cada item de <code style="font-family:var(--mono);color:var(--cyan)">x-for</code>. Sem ela, a lib usa um id interno auto-gerado (<code style="font-family:var(--mono)">__nid</code>) baseado na <strong>ordem</strong> do array — o que causa bugs sutis quando a lista é reordenada, filtrada ou tem itens removidos do meio.</p>
+
+<div class="docs-code">
+  <div class="docs-code-bar"><span>HTML</span></div>
+  <pre><span class="t-tag">&lt;div</span> <span class="t-attr">x-for</span>=<span class="t-val">"item in lista"</span> <span class="t-attr">x-key</span>=<span class="t-val">"item.id"</span><span class="t-tag">&gt;</span>
+  <span class="t-tag">&lt;input</span> <span class="t-attr">type</span>=<span class="t-val">"text"</span> <span class="t-attr">x-model</span>=<span class="t-val">"item.nome"</span><span class="t-tag">&gt;</span>
+<span class="t-tag">&lt;/div&gt;</span></pre>
+</div>
+
+<h2>Por que importa</h2>
+<p>Sem <code style="font-family:var(--mono);color:var(--cyan)">x-key</code>, a reconciliação do <code style="font-family:var(--mono);color:var(--cyan)">x-for</code> reaproveita nós de DOM por <strong>posição no array</strong>. Se você reordena, insere no meio ou remove um item que não seja o último, o shadow-proxy pode reaproveitar o nó errado — inputs com foco "pulam" de item, estado local do DOM (como um <code style="font-family:var(--mono)">scroll</code> interno) vaza pro item vizinho.</p>
+
+<div class="callout">
+  <strong>Regra prática:</strong> sempre que a lista tem <code style="font-family:var(--mono)">splice</code>, reordenação, ou filtro reativo (como o exemplo de busca), use <code style="font-family:var(--mono);color:var(--cyan)">x-key</code> apontando pra um campo realmente único (id do banco, uuid). Listas só com <code style="font-family:var(--mono)">push</code>/append no final são mais tolerantes, mas ainda é boa prática.
+</div>
+
+<h2>Sem id no dado</h2>
+<p>Se o item não tem um campo único natural, gere um antes de colocar no array — não deixe pra depois:</p>
+<div class="docs-code">
+  <div class="docs-code-bar"><span>JavaScript</span></div>
+  <pre><span class="t-fn">shadowProxy</span>.template.tarefas.addTodo = <span class="t-key">function</span>() {
+  <span class="t-fn">shadowProxy</span>.template.tarefas.lista.<span class="t-fn">push</span>({
+    id: Date.<span class="t-fn">now</span>() + <span class="t-str">'-'</span> + Math.<span class="t-fn">random</span>(),
+    texto: <span class="t-str">'Nova tarefa'</span>,
+    done: <span class="t-key">false</span>
+  });
+};</pre>
+</div>
 `,
 
 			'x-model': `
 <h1>x-model</h1>
-<p>Two-way binding com inputs. Mudanças no input refletem no proxy e vice-versa.</p>
+<p>Two-way binding com inputs. Mudanças no input refletem no shadowProxy e vice-versa.</p>
 <div class="docs-code">
   <div class="docs-code-bar"><span>HTML</span></div>
   <pre><span class="t-com">&lt;!-- text input --&gt;</span>
@@ -2140,6 +2755,42 @@
 <span class="t-tag">&lt;input</span> <span class="t-attr">x-model</span>=<span class="t-val">"produto.lista[0].titulo"</span><span class="t-tag">&gt;</span></pre>
 </div>
 <p>Note que x-model usa o <strong>caminho completo</strong> (com prefixo), diferente das diretivas dentro de x-data.</p>
+
+<h2>x-model dentro de x-for</h2>
+<p>Funciona, mas é um caso especial: em vez de resolver contra o container, o bind é feito direto no <strong>proxy do item do loop</strong> — assim a edição propaga pro array real sem precisar do índice no caminho.</p>
+<div class="docs-code">
+  <div class="docs-code-bar"><span>HTML</span></div>
+  <pre><span class="t-tag">&lt;div</span> <span class="t-attr">x-data</span>=<span class="t-val">"carrinho"</span><span class="t-tag">&gt;</span>
+  <span class="t-tag">&lt;div</span> <span class="t-attr">x-for</span>=<span class="t-val">"item, k in itens"</span> <span class="t-attr">x-key</span>=<span class="t-val">"item.id"</span><span class="t-tag">&gt;</span>
+    <span class="t-tag">&lt;span</span> <span class="t-attr">x-bind</span>=<span class="t-val">"{item.nome}"</span><span class="t-tag">&gt;&lt;/span&gt;</span>
+
+    <span class="t-com">&lt;!-- caminho relativo ao item, SEM prefixo "carrinho." --&gt;</span>
+    <span class="t-tag">&lt;input</span> <span class="t-attr">type</span>=<span class="t-val">"number"</span> <span class="t-attr">x-model</span>=<span class="t-val">"item.qty"</span><span class="t-tag">&gt;</span>
+  <span class="t-tag">&lt;/div&gt;</span>
+<span class="t-tag">&lt;/div&gt;</span></pre>
+</div>
+<div class="callout">
+  <strong>Atenção:</strong> dentro do loop o caminho é <code style="font-family:var(--mono)">item.campo</code> (relativo ao alias do <code style="font-family:var(--mono)">x-for</code>). Fora do loop, no mesmo componente, seria <code style="font-family:var(--mono)">carrinho.itens[0].campo</code>. São dois modos de resolução diferentes — não misture.
+</div>
+`,
+
+			'x-on': `
+<p>Combine <code style="font-family:var(--mono);color:var(--cyan)">x-model</code> com <code style="font-family:var(--mono);color:var(--cyan)">shadowProxy.on</code> pra filtrar uma lista enquanto o usuário digita — sem debounce, sem lib extra.</p>
+<div class="docs-code">
+  <div class="docs-code-bar"><span>JavaScript</span></div>
+  <pre><span class="t-fn">shadowProxy</span>.template.busca.produtos = [{ nome: <span class="t-str">"Teclado"</span> }, { nome: <span class="t-str">"Mouse"</span> }];
+<span class="t-fn">shadowProxy</span>.template.busca.termo = <span class="t-str">''</span>;
+
+<span class="t-key">function</span> filtrar() {
+  <span class="t-key">var</span> termo = <span class="t-fn">shadowProxy</span>.template.busca.termo.<span class="t-fn">toLowerCase</span>();
+  <span class="t-fn">shadowProxy</span>.template.busca.resultado = <span class="t-fn">shadowProxy</span>.template.busca.produtos.<span class="t-fn">filter</span>(<span class="t-key">function</span>(p) {
+    <span class="t-key">return</span> p.nome.<span class="t-fn">toLowerCase</span>().<span class="t-fn">includes</span>(termo);
+  });
+}
+filtrar();
+<span class="t-fn">shadowProxy</span>.<span class="t-fn">on</span>(<span class="t-str">'busca.termo'</span>, filtrar); <span class="t-com">// refiltra a cada tecla</span></pre>
+</div>
+<p>Veja funcionando na seção <a href="#" onclick="showPage('home')" style="color:var(--violet-lt)">Exemplos interativos</a> (exemplo "busca.html").</p>
 `,
 
 			'x-on': `
@@ -2158,8 +2809,8 @@
 <span class="t-tag">&lt;/div&gt;</span>
 
 <span class="t-tag">&lt;script&gt;</span>
-  <span class="t-fn">proxy</span>.template.lista.remover = <span class="t-key">function</span>(k) {
-    <span class="t-fn">proxy</span>.template.lista.itens.<span class="t-fn">splice</span>(k, <span class="t-num">1</span>);
+  <span class="t-fn">shadowProxy</span>.template.lista.remover = <span class="t-key">function</span>(k) {
+    <span class="t-fn">shadowProxy</span>.template.lista.itens.<span class="t-fn">splice</span>(k, <span class="t-num">1</span>);
   };
 <span class="t-tag">&lt;/script&gt;</span></pre>
 </div>
@@ -2179,17 +2830,105 @@
 </div>
 `,
 
+			'seguranca': `
+<h1>Segurança (CSP-safe)</h1>
+<p>Toda expressão de <code style="font-family:var(--mono);color:var(--cyan)">x-on</code>, <code style="font-family:var(--mono);color:var(--cyan)">x-bind</code> e <code style="font-family:var(--mono);color:var(--cyan)">x-if</code> passa por um <strong>parser AST próprio</strong> — sem <code style="font-family:var(--mono);color:var(--cyan)">eval</code>, sem <code style="font-family:var(--mono);color:var(--cyan)">new Function</code>. Nenhuma string vira código executável.</p>
+
+<h2>Como funciona</h2>
+<p>A expressão é tokenizada e transformada em AST uma única vez (cacheada por texto). Um interpreter próprio anda pela árvore e resolve cada acesso a propriedade — dot ou bracket, literal ou dinâmico — contra uma blocklist, <strong>em runtime</strong>, antes do get/set/call acontecer.</p>
+
+<div class="callout">
+  <strong>Por que bracket notation não escapa:</strong> <code style="font-family:var(--mono)">a['constructor']</code> tenta passar a chave como string, mas o interpreter checa o <em>valor final</em> resolvido da propriedade, não o texto da expressão — então é bloqueado igual a <code style="font-family:var(--mono)">a.constructor</code>.
+</div>
+
+<h2>Bloqueado sempre</h2>
+<div class="docs-table-wrap">
+  <table class="docs-table">
+    <thead><tr><th>Categoria</th><th>Identificadores</th></tr></thead>
+    <tbody>
+      <tr><td>Escape de sandbox / prototype</td><td><code style="font-family:var(--mono)">constructor</code>, <code style="font-family:var(--mono)">prototype</code>, <code style="font-family:var(--mono)">__proto__</code>, <code style="font-family:var(--mono)">getPrototypeOf</code>, <code style="font-family:var(--mono)">defineProperty</code></td></tr>
+      <tr><td>Execução de código</td><td><code style="font-family:var(--mono)">eval</code>, <code style="font-family:var(--mono)">Function</code></td></tr>
+      <tr><td>Rede / storage</td><td><code style="font-family:var(--mono)">fetch</code>, <code style="font-family:var(--mono)">XMLHttpRequest</code>, <code style="font-family:var(--mono)">WebSocket</code></td></tr>
+      <tr><td>Globais do browser</td><td><code style="font-family:var(--mono)">window</code>, <code style="font-family:var(--mono)">document</code>, <code style="font-family:var(--mono)">location</code>, <code style="font-family:var(--mono)">navigator</code></td></tr>
+      <tr><td>Timers</td><td><code style="font-family:var(--mono)">setTimeout</code>, <code style="font-family:var(--mono)">setInterval</code>, <code style="font-family:var(--mono)">requestAnimationFrame</code></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>Permitido por padrão</h2>
+<p><code style="font-family:var(--mono);color:var(--cyan)">Math</code>, <code style="font-family:var(--mono);color:var(--cyan)">JSON</code>, <code style="font-family:var(--mono);color:var(--cyan)">Date</code>, <code style="font-family:var(--mono);color:var(--cyan)">Number</code>, <code style="font-family:var(--mono);color:var(--cyan)">String</code>, <code style="font-family:var(--mono);color:var(--cyan)">Boolean</code>, <code style="font-family:var(--mono);color:var(--cyan)">Array</code>, <code style="font-family:var(--mono);color:var(--cyan)">Object</code> e as variáveis mágicas (<code style="font-family:var(--mono)">$root</code>, <code style="font-family:var(--mono)">$ref</code>, <code style="font-family:var(--mono)">$emit</code>, <code style="font-family:var(--mono)">$this</code>, <code style="font-family:var(--mono)">event</code>).</p>
+
+<h2>Capturando tentativas bloqueadas</h2>
+<div class="docs-code">
+  <div class="docs-code-bar"><span>JavaScript</span></div>
+  <pre><span class="t-fn">shadowProxy</span>.onError = <span class="t-key">function</span>(err) {
+  <span class="t-key">if</span> (err.type === <span class="t-str">'x-on-unsafe'</span>) {
+    console.<span class="t-fn">warn</span>(<span class="t-str">'Expressão bloqueada:'</span>, err.expr);
+  }
+};
+
+<span class="t-com">// tenta bindar uma expressão perigosa em runtime</span>
+<span class="t-key">var</span> el = document.<span class="t-fn">createElement</span>(<span class="t-str">'button'</span>);
+el.<span class="t-fn">setAttribute</span>(<span class="t-str">'x-on:click'</span>, <span class="t-str">"window.location='http://evil.com'"</span>);
+
+<span class="t-com">// nunca vira listener — bloqueado antes de existir</span>
+<span class="t-fn">shadowProxy</span>.<span class="t-fn">bindEvents</span>(el, {}, <span class="t-str">'algumaKey'</span>);</pre>
+</div>
+
+<p>Veja funcionando na seção <a href="#" onclick="showPage('home')" style="color:var(--violet-lt)">Exemplos interativos</a> (exemplo "seguranca.html").</p>
+`,
+
+			'performance': `
+<h1>Performance</h1>
+<p>Cada nó com diretiva reativa tem seu <strong>próprio Effect</strong>. Mudar um valor dispara só os Effects que leram aquele valor — o resto da árvore nem é visitado.</p>
+
+<h2>Dependency tracking granular</h2>
+<p>Durante o render, todo <code style="font-family:var(--mono);color:var(--cyan)">get</code> de propriedade registra a dependência num <code style="font-family:var(--mono);color:var(--cyan)">WeakMap</code> (objeto → prop → Effects). No <code style="font-family:var(--mono);color:var(--cyan)">set</code>, só os Effects daquela combinação exata (objeto, prop) são reagendados.</p>
+
+<div class="callout">
+  <strong>Exemplo:</strong> numa lista de 500 itens, <code style="font-family:var(--mono)">lista[100].nome = 'x'</code> toca <strong>exatamente 1 nó</strong> — os outros 499 Effects nem entram na fila.
+</div>
+
+<h2>Batching via microtask</h2>
+<p>Vários <code style="font-family:var(--mono);color:var(--cyan)">set</code>s no mesmo tick — mesmo em keys diferentes — são agrupados num único flush via <code style="font-family:var(--mono);color:var(--cyan)">Promise.resolve()</code>. Isso evita renders duplicados quando 2+ props do mesmo componente mudam em sequência.</p>
+
+<div class="docs-table-wrap">
+  <table class="docs-table">
+    <thead><tr><th>Cenário</th><th>Comportamento medido</th></tr></thead>
+    <tbody>
+      <tr><td>Render inicial — 500 itens</td><td>&lt; 300ms</td></tr>
+      <tr><td>Render inicial — 1.000 itens</td><td>&lt; 500ms</td></tr>
+      <tr><td>Render inicial — 5.000 itens</td><td>&lt; 1.500ms</td></tr>
+      <tr><td>Update pontual (1 item, lista de 1k+)</td><td>&lt; 16ms — cabe em 1 frame</td></tr>
+      <tr><td>10 updates aleatórios</td><td>tocam exatamente 10 nós, nunca a lista inteira</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>Reconciliação por x-key</h2>
+<p>Com <code style="font-family:var(--mono);color:var(--cyan)">x-key</code>, reordenar uma lista <strong>move</strong> os nós DOM existentes em vez de recriar — inserções/remoções usam um único <code style="font-family:var(--mono);color:var(--cyan)">DocumentFragment</code> por render, um reflow só.</p>
+
+<h2>Cache de AST</h2>
+<p>Expressões compiladas (x-bind, x-if, x-on) ficam num cache LRU de 500 entradas, chaveado pelo texto da expressão. A mesma expressão usada em centenas de nós é parseada <strong>uma vez só</strong>.</p>
+
+<div class="callout green">
+  <strong>Sem Virtual DOM:</strong> não existe diff de árvore. Cada Effect sabe exatamente qual nó atualizar — o custo de um update não cresce com o tamanho da lista.
+</div>
+
+<p>Veja rodando ao vivo — com o cronômetro do seu próprio navegador — na seção <a href="#" onclick="showPage('home')" style="color:var(--violet-lt)">Exemplos interativos</a> (exemplo "performance.html").</p>
+`,
+
 			'api-init': `
-<h1>proxy.initProxy()</h1>
+<h1>shadowProxy.initProxy()</h1>
 <p>Inicializa o sistema de reatividade. Deve ser chamado após o DOM estar pronto, antes de popular os dados.</p>
 <div class="docs-code">
   <div class="docs-code-bar"><span>JavaScript</span></div>
-  <pre><span class="t-fn">proxy</span>.<span class="t-fn">initProxy</span>();
+  <pre><span class="t-fn">shadowProxy</span>.<span class="t-fn">initProxy</span>();
 
 <span class="t-com">// Agora pode popular os dados</span>
-<span class="t-fn">proxy</span>.template.produto.nome  = <span class="t-str">"Coxinha Supreme"</span>;
-<span class="t-fn">proxy</span>.template.produto.ativo = <span class="t-key">true</span>;
-<span class="t-fn">proxy</span>.template.produto.lista = [];</pre>
+<span class="t-fn">shadowProxy</span>.template.produto.nome  = <span class="t-str">"Coxinha Supreme"</span>;
+<span class="t-fn">shadowProxy</span>.template.produto.ativo = <span class="t-key">true</span>;
+<span class="t-fn">shadowProxy</span>.template.produto.lista = [];</pre>
 </div>
 <div class="callout">
   <strong>Nota:</strong> initProxy também cacheia os templates x-for antes do primeiro render, o que permite iniciar com arrays vazios e popular depois.
@@ -2197,12 +2936,12 @@
 `,
 
 			'api-on': `
-<h1>proxy.on()</h1>
+<h1>shadowProxy.on()</h1>
 <p>Observa qualquer caminho profundo do store. Dispara com <code style="font-family:var(--mono);color:var(--cyan)">(newVal, oldVal)</code> a cada mudança.</p>
 <div class="docs-code">
   <div class="docs-code-bar"><span>JavaScript</span></div>
   <pre><span class="t-com">// Observar uma propriedade</span>
-<span class="t-key">const</span> unsubscribe = <span class="t-fn">proxy</span>.<span class="t-fn">on</span>(<span class="t-str">'pedido.cliente'</span>, (novo, velho) => {
+<span class="t-key">const</span> unsubscribe = <span class="t-fn">shadowProxy</span>.<span class="t-fn">on</span>(<span class="t-str">'pedido.cliente'</span>, (novo, velho) => {
   console.<span class="t-fn">log</span>(<span class="t-str">\`cliente: \${velho} → \${novo}\`</span>);
 });
 
@@ -2212,29 +2951,29 @@
 `,
 
 			'api-destroy': `
-<h1>proxy.destroy()</h1>
+<h1>shadowProxy.destroy()</h1>
 <p>Destrói um componente específico ou todos. Limpa effects, event listeners, watchers e store em cascata.</p>
 <div class="docs-code">
   <div class="docs-code-bar"><span>JavaScript</span></div>
   <pre><span class="t-com">// Destrói apenas o componente "produto"</span>
-<span class="t-fn">proxy</span>.<span class="t-fn">destroy</span>(<span class="t-str">'produto'</span>);
+<span class="t-fn">shadowProxy</span>.<span class="t-fn">destroy</span>(<span class="t-str">'produto'</span>);
 
 <span class="t-com">// Ou via shortcut no próprio template</span>
-<span class="t-fn">proxy</span>.template.produto.<span class="t-fn">destroy</span>();
+<span class="t-fn">shadowProxy</span>.template.produto.<span class="t-fn">destroy</span>();
 
 <span class="t-com">// Destrói tudo</span>
-<span class="t-fn">proxy</span>.<span class="t-fn">destroy</span>();</pre>
+<span class="t-fn">shadowProxy</span>.<span class="t-fn">destroy</span>();</pre>
 </div>
 <p>Essencial para SPAs que trocam conteúdo via fetch, evitando memory leaks.</p>
 `,
 
 			'api-error': `
-<h1>proxy.onError</h1>
+<h1>shadowProxy.onError</h1>
 <p>Handler global de erros. Todos os erros da lib passam por aqui.</p>
 <div class="docs-code">
   <div class="docs-code-bar"><span>JavaScript</span></div>
-  <pre><span class="t-fn">proxy</span>.onError = <span class="t-key">function</span>(err) {
-  console.<span class="t-fn">error</span>(<span class="t-str">'[shadow-proxy]'</span>, err.type, err.message);
+  <pre><span class="t-fn">shadowProxy</span>.onError = <span class="t-key">function</span>(err) {
+  console.<span class="t-fn">error</span>(<span class="t-str">'[shadow-shadowProxy]'</span>, err.type, err.message);
 };
 
 <span class="t-com">// Tipos de erro possíveis:</span>
@@ -2245,11 +2984,51 @@
 <h2>Integração com Sentry</h2>
 <div class="docs-code">
   <div class="docs-code-bar"><span>JavaScript</span></div>
-  <pre><span class="t-fn">proxy</span>.onError = <span class="t-key">function</span>(err) {
+  <pre><span class="t-fn">shadowProxy</span>.onError = <span class="t-key">function</span>(err) {
   Sentry.<span class="t-fn">captureException</span>(<span class="t-key">new</span> <span class="t-fn">Error</span>(err.message), {
     extra: err
   });
 };</pre>
+</div>
+`,
+
+			'valores-calculados': `
+<h1>Valores calculados</h1>
+<p>shadow-shadowProxy não tem <code style="font-family:var(--mono);color:var(--cyan)">computed</code> como Vue. Mas o mesmo resultado sai fácil combinando <code style="font-family:var(--mono);color:var(--cyan)">shadowProxy.on</code> com uma função comum de JS — sem magia, sem API nova pra aprender.</p>
+
+<h2>O padrão</h2>
+<div class="docs-code">
+  <div class="docs-code-bar"><span>JavaScript</span></div>
+  <pre><span class="t-com">// 1. escreve uma função normal que recalcula e escreve no shadowProxy</span>
+<span class="t-key">function</span> recalcular() {
+  <span class="t-fn">shadowProxy</span>.template.chave.saida = <span class="t-com">/* deriva de outro dado */</span>;
+}
+
+<span class="t-com">// 2. roda uma vez pro estado inicial</span>
+recalcular();
+
+<span class="t-com">// 3. observa o(s) campo(s) fonte — dispara de novo a cada mudança</span>
+<span class="t-fn">shadowProxy</span>.<span class="t-fn">on</span>(<span class="t-str">'chave.fonte'</span>, recalcular);</pre>
+</div>
+
+<div class="callout">
+  <strong>Por que funciona em arrays:</strong> mudanças em qualquer índice ou campo aninhado (ex: <code style="font-family:var(--mono)">itens[2].qty</code>) borbulham pro watcher do array pai. Observar <code style="font-family:var(--mono)">'chave.itens'</code> já cobre qualquer item que mudar.
+</div>
+
+<h2>Exemplos práticos</h2>
+<p>Os dois exemplos abaixo usam exatamente esse padrão — veja rodando na <a href="#" onclick="showPage('home')" style="color:var(--violet-lt)">página inicial</a>:</p>
+<div class="docs-table-wrap">
+  <table class="docs-table">
+    <thead><tr><th>Exemplo</th><th>Observa</th><th>Recalcula</th></tr></thead>
+    <tbody>
+      <tr><td>Carrinho (total)</td><td><code style="font-family:var(--mono)">carrinho.itens</code></td><td>soma de preço × qtd via <code style="font-family:var(--mono)">reduce</code></td></tr>
+      <tr><td>Busca (filtro)</td><td><code style="font-family:var(--mono)">busca.termo</code></td><td>lista filtrada via <code style="font-family:var(--mono)">filter</code></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="callout green">
+  <strong>Dica:</strong> se dois campos alimentam o mesmo cálculo (ex: preço e quantidade), registre um <code style="font-family:var(--mono)">shadowProxy.on</code> pra cada um apontando pra mesma função — ou observe o pai comum quando fizer sentido.
 </div>
 `,
 
@@ -2262,14 +3041,14 @@
     <tbody>
       <tr><td>$beforeRender</td><td>Antes de cada render do componente</td></tr>
       <tr><td>$afterRender</td><td>Após cada render do componente</td></tr>
-      <tr><td>$beforeDestroy</td><td>Antes de proxy.destroy()</td></tr>
-      <tr><td>$afterDestroy</td><td>Após proxy.destroy()</td></tr>
+      <tr><td>$beforeDestroy</td><td>Antes de shadowProxy.destroy()</td></tr>
+      <tr><td>$afterDestroy</td><td>Após shadowProxy.destroy()</td></tr>
     </tbody>
   </table>
 </div>
 <div class="docs-code">
   <div class="docs-code-bar"><span>JavaScript</span></div>
-  <pre><span class="t-fn">proxy</span>.template.pedido.<span class="t-fn">$afterRender</span> = <span class="t-key">function</span>() {
+  <pre><span class="t-fn">shadowProxy</span>.template.pedido.<span class="t-fn">$afterRender</span> = <span class="t-key">function</span>() {
   console.<span class="t-fn">log</span>(<span class="t-str">'pedido renderizado'</span>);
 };
 
@@ -2302,25 +3081,25 @@ document.<span class="t-fn">querySelector</span>(<span class="t-str">'[x-data="p
 
 			'spa-fetch': `
 <h1>SPA com fetch</h1>
-<p>shadow-proxy tem destroy real — essencial para SPAs que trocam conteúdo via fetch.</p>
+<p>shadow-shadowProxy tem destroy real — essencial para SPAs que trocam conteúdo via fetch.</p>
 <div class="docs-code">
   <div class="docs-code-bar"><span>JavaScript</span></div>
-  <pre><span class="t-fn">proxy</span>.<span class="t-fn">initProxy</span>();
+  <pre><span class="t-fn">shadowProxy</span>.<span class="t-fn">initProxy</span>();
 
 <span class="t-com">// Começa com array vazio</span>
-<span class="t-fn">proxy</span>.template.pedido.itens    = [];
-<span class="t-fn">proxy</span>.template.pedido.carregado = <span class="t-key">false</span>;
+<span class="t-fn">shadowProxy</span>.template.pedido.itens    = [];
+<span class="t-fn">shadowProxy</span>.template.pedido.carregado = <span class="t-key">false</span>;
 
 <span class="t-com">// Popula via fetch</span>
 <span class="t-fn">fetch</span>(<span class="t-str">'/api/itens'</span>)
   .<span class="t-fn">then</span>(r => r.<span class="t-fn">json</span>())
   .<span class="t-fn">then</span>(data => {
-    <span class="t-fn">proxy</span>.template.pedido.itens    = data;
-    <span class="t-fn">proxy</span>.template.pedido.carregado = <span class="t-key">true</span>;
+    <span class="t-fn">shadowProxy</span>.template.pedido.itens    = data;
+    <span class="t-fn">shadowProxy</span>.template.pedido.carregado = <span class="t-key">true</span>;
   });
 
 <span class="t-com">// Ao trocar de página, destroi o componente</span>
-<span class="t-fn">proxy</span>.<span class="t-fn">destroy</span>(<span class="t-str">'pedido'</span>);</pre>
+<span class="t-fn">shadowProxy</span>.<span class="t-fn">destroy</span>(<span class="t-str">'pedido'</span>);</pre>
 </div>
 
 <div class="callout">
