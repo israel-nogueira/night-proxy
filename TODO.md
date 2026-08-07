@@ -1,6 +1,6 @@
 # TODO — shadow-proxy.js
 
-Lista de pendências levantadas em análise técnica da v2.7.2. Nada aqui é bloqueante — a lib funciona e passa nos 152 testes — mas são pontos a corrigir/endurecer nas próximas versões.
+Lista de pendências levantadas em análise técnica da v2.7.3. Nada aqui é bloqueante — a lib funciona e passa nos 152 testes — mas são pontos a corrigir/endurecer nas próximas versões.
 
 ## 🔴 Bugs confirmados
 

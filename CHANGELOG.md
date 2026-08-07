@@ -4,7 +4,7 @@ All notable changes to shadow-proxy are documented here.
 
 ---
 
-## [2.7.2] — 2024
+## [2.7.3] — 2024
 
 ### 🔒 Security — Breaking-adjacent
 

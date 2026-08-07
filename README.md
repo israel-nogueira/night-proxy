@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-    <img src="https://img.shields.io/badge/version-2.7.2-7c3aed?style=flat-square" />
+    <img src="https://img.shields.io/badge/version-2.7.3-7c3aed?style=flat-square" />
     <img src="https://img.shields.io/badge/zero%20dependencies-✓-22c55e?style=flat-square" />
     <img src="https://img.shields.io/badge/no%20build%20tools-✓-06b6d4?style=flat-square" />
     <img src="https://img.shields.io/badge/CSP%20safe-✓-22c55e?style=flat-square" />
@@ -361,7 +361,7 @@ Chrome 49+, Firefox 44+, Safari 10+, Opera 36+. Sem polyfills. Sem transpilaçã
 
 ## 🛡️ Segurança — CSP-safe, zero eval
 
-> **v2.7.2** — Motor de avaliação completamente reescrito. Zero `eval` / `new Function`.
+> **v2.7.3** — Motor de avaliação completamente reescrito. Zero `eval` / `new Function`.
 
 A maioria das libs reativas avalia expressões com `eval()` ou `new Function()` — o que exige `unsafe-eval` no CSP e abre brechas de segurança.
 

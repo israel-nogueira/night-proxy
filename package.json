@@ -1,6 +1,6 @@
 {
   "name": "shadow-proxy",
-  "version": "2.7.2",
+  "version": "2.7.3",
   "description": "Reactive DOM binding via Recursive Proxy — zero dependencies, CSP-safe, no eval/new Function",
   "main": "shadow-proxy.js",
   "types": "shadow-proxy.d.ts",
