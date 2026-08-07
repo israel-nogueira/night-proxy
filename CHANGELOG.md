@@ -4,6 +4,20 @@ All notable changes to shadow-proxy are documented here.
 
 ---
 
+## [2.7.5] - Correção de path relativo em x-model
+
+### 🐛 Corrigido
+- **`x-model` com path relativo (padrão documentado) nunca funcionava.** `_resolveModel()` resolvia corretamente o `key` do componente via `closest('[x-data],[proxy-target]')`, mas devolvia `parts` cru, direto do atributo `x-model` (ex: `x-model="form.nome"` → `parts = ['form', 'nome']`), sem prefixar o `key`.
+  - Todo o resto da lib (`_initModels`, `_onInput`/`_setDeep`, `_syncModelsForKey`, `_getDeep`) assume `parts[0] === key` — é assim que ela navega a partir de `_store`.
+  - Resultado: com `parts[0] = 'form'`, a lib procurava um componente chamado `form` no `_store` raiz (que não existe) em vez de `_store.detalhesFranquia.form`. O `el.value` nunca era populado no load, e digitar no input não escrevia em lugar nenhum — o `x-bind` correspondente nunca reagia.
+  - Fix: `_resolveModel()` agora devolve `parts` com o `key` prefixado (`[key, ...parts]`) quando o path é relativo. Se o path já vier absoluto (`parts[0] === key`, uso legado), não duplica.
+
+### 📝 Notas
+- **Sem breaking changes.** Módulos que já usavam path absoluto (`x-model="meuModulo.form.nome"`) continuam funcionando igual.
+- Módulos que seguiam a documentação (`x-model="form.nome"`, path relativo) e pareciam "sem reatividade" ou com inputs sempre vazios devem funcionar corretamente após essa atualização, sem precisar mudar nada no `.tpl.html`.
+
+---
+
 ## [2.7.4] - Auto-init de x-model
 
 ### ✨ Adicionado

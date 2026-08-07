@@ -966,10 +966,15 @@ var shadowProxy = (function () {
             parts
         };
         const key = container.getAttribute('x-data') || container.getAttribute('proxy-target');
-        // x-model já vem com o path completo (ex: "t_model.nome"), parts[0] já é o key
+        // x-model é relativo ao container (ex: "form.nome", sem prefixo do key).
+        // Todo o resto da lib (effects, _setDeep, _syncModelsForKey, _getDeep)
+        // espera parts[0] === key (path absoluto a partir de _store). Prefixa
+        // aqui, uma única vez, pra manter esse contrato em todos os callers.
+        // Se o path já vier absoluto (parts[0] === key), não duplica.
+        const fullParts = parts[0] === key ? parts : [key].concat(parts);
         return {
             key,
-            parts
+            parts: fullParts
         };
     }
 
