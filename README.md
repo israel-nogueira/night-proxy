@@ -43,10 +43,10 @@ Você coloca atributos no HTML e popula os dados via JavaScript. O DOM se atuali
 </div>
 
 <script>
-    proxy.initProxy();
-    proxy.template.produto.nome  = "Coxinha Supreme";
-    proxy.template.produto.preco = 9.90;
-    proxy.template.produto.ativo = true;
+    shadowProxy.initProxy();
+    shadowProxy.template.produto.nome  = "Coxinha Supreme";
+    shadowProxy.template.produto.preco = 9.90;
+    shadowProxy.template.produto.ativo = true;
 </script>
 ```
 
@@ -66,17 +66,17 @@ Você coloca atributos no HTML e popula os dados via JavaScript. O DOM se atuali
 </div>
 
 <script>
-    proxy.initProxy();
+    shadowProxy.initProxy();
 
     // Carrega de uma API — lista começa vazia, sem problema
     fetch('/api/itens')
         .then(r => r.json())
         .then(data => {
-            proxy.template.pedido.itens = data; // atualiza sozinho
+            shadowProxy.template.pedido.itens = data; // atualiza sozinho
         });
 
-    proxy.template.pedido.remover = function(idx) {
-        proxy.template.pedido.itens.splice(idx, 1); // remove e re-renderiza
+    shadowProxy.template.pedido.remover = function(idx) {
+        shadowProxy.template.pedido.itens.splice(idx, 1); // remove e re-renderiza
     };
 </script>
 ```
@@ -101,16 +101,16 @@ Adicionar item? `lista.push(...)`. Remover? `lista.splice(...)`. Atualizar um it
 </div>
 
 <script>
-    proxy.initProxy();
-    proxy.initModels();
+    shadowProxy.initProxy();
+    shadowProxy.initModels();
 
-    proxy.template.produto.nome      = "Coxinha";
-    proxy.template.produto.ativo     = true;
-    proxy.template.produto.categoria = "a";
+    shadowProxy.template.produto.nome      = "Coxinha";
+    shadowProxy.template.produto.ativo     = true;
+    shadowProxy.template.produto.categoria = "a";
 </script>
 ```
 
-O input atualiza o proxy. O proxy atualiza o DOM. Funciona nos dois sentidos, sem código extra.
+O input atualiza o shadowProxy. O shadowProxy atualiza o DOM. Funciona nos dois sentidos, sem código extra.
 
 ---
 
@@ -141,6 +141,18 @@ npm install shadow-proxy
 | Two-way binding | ✅ | ✅ | ✅ | ❌ |
 | CSP `unsafe-eval` | ❌ Não precisa | ✅ Precisa | ✅ Precisa | ✅ Precisa |
 
+### Mas onde o shadow-proxy se encaixa?
+
+**Alpine.js** te dá diretivas simples, mas reavalia expressões de forma grosseira e depende de `eval`-like sob o capô — rápido de aprender, limitado quando o app cresce.
+
+**Vue e Angular** te dão reatividade de verdade, mas cobram o preço: build step, compilador de template, curva de aprendizado de dias, e uma arquitetura de componentes que você não pediu pra sua página PHP.
+
+shadow-proxy fica na **zona cinzenta entre os dois**: sintaxe declarativa tão simples quanto o Alpine, mas com reatividade granular por propriedade (dependency tracking via `WeakMap`, não reavaliação bruta), watchers profundos, lifecycle hooks e um interpreter de expressões próprio — sem exigir `unsafe-eval` no CSP, sem build, sem virar uma "aplicação Vue" disfarçada.
+
+> **Alpine.js syntax, Vue-level reactivity, zero build step.**
+
+ShadowProxy não impõe componentização, roteamento ou ciclo de vida de aplicação. Ele é um **reactive micro-framework**: reatividade séria, pegada de biblioteca.
+
 ---
 
 ## Exemplo completo — do zero ao reativo
@@ -161,23 +173,23 @@ npm install shadow-proxy
 </div>
 
 <script>
-    proxy.initProxy();
-    proxy.initModels();
+    shadowProxy.initProxy();
+    shadowProxy.initModels();
 
-    proxy.template.pedido.cliente    = "João Silva";
-    proxy.template.pedido.confirmado = true;
-    proxy.template.pedido.carregado  = false;
-    proxy.template.pedido.itens      = [];
+    shadowProxy.template.pedido.cliente    = "João Silva";
+    shadowProxy.template.pedido.confirmado = true;
+    shadowProxy.template.pedido.carregado  = false;
+    shadowProxy.template.pedido.itens      = [];
 
     fetch('/api/itens-pedido')
         .then(r => r.json())
         .then(data => {
-            proxy.template.pedido.itens    = data;
-            proxy.template.pedido.carregado = true;
+            shadowProxy.template.pedido.itens    = data;
+            shadowProxy.template.pedido.carregado = true;
         });
 
-    proxy.template.pedido.remover = function(idx) {
-        proxy.template.pedido.itens.splice(idx, 1);
+    shadowProxy.template.pedido.remover = function(idx) {
+        shadowProxy.template.pedido.itens.splice(idx, 1);
     };
 </script>
 ```
@@ -201,7 +213,7 @@ npm install shadow-proxy
 npm install shadow-proxy
 ```
 ```ts
-import { proxy } from 'shadow-proxy.js';
+import shadowProxy from 'shadow-proxy.js';
 ```
 
 ---
@@ -225,18 +237,18 @@ import { proxy } from 'shadow-proxy.js';
 ## API JavaScript
 
 ```javascript
-proxy.initProxy();          // inicializa — chame após o DOM carregar
-proxy.initModels();         // ativa two-way binding nos x-model
+shadowProxy.initProxy();          // inicializa — chame após o DOM carregar
+shadowProxy.initModels();         // ativa two-way binding nos x-model
 
-proxy.template.key.prop = valor;   // atualiza e re-renderiza sozinho
-proxy.template.key.lista.push({}); // push/splice/sort — tudo reativo
+shadowProxy.template.key.prop = valor;   // atualiza e re-renderiza sozinho
+shadowProxy.template.key.lista.push({}); // push/splice/sort — tudo reativo
 
-proxy.destroy('key');       // limpa um componente (útil com fetch)
-proxy.destroy();            // limpa tudo (troca de página em SPA)
+shadowProxy.destroy('key');       // limpa um componente (útil com fetch)
+shadowProxy.destroy();            // limpa tudo (troca de página em SPA)
 
-proxy.on('key.prop', (novo, velho) => {}); // observa qualquer mudança
+shadowProxy.on('key.prop', (novo, velho) => {}); // observa qualquer mudança
 
-proxy.onError = function(err) { console.error(err); }; // captura erros
+shadowProxy.onError = function(err) { console.error(err); }; // captura erros
 ```
 
 ---
@@ -246,6 +258,7 @@ proxy.onError = function(err) { console.error(err); }; // captura erros
 | Variável | O que é |
 |---|---|
 | `$root` | O elemento `x-data` do componente |
+| `$this.data` | Objeto de dados do item atual |
 | `$ref.nome` | Elemento marcado com `x-ref` |
 | `$emit('evento', dados)` | Dispara um CustomEvent no `$root` |
 | `$i` / `$index` | Índice do item no loop |
@@ -259,10 +272,10 @@ proxy.onError = function(err) { console.error(err); }; // captura erros
 ## Lifecycle Hooks
 
 ```javascript
-proxy.template.produto.$beforeRender = function(el) { /* antes de renderizar */ };
-proxy.template.produto.$afterRender  = function(el) { /* após renderizar */ };
-proxy.template.produto.$beforeDestroy = function(el) { /* antes de destruir */ };
-proxy.template.produto.$afterDestroy  = function(el) { /* após destruir */ };
+shadowProxy.template.produto.$beforeRender = function(el) { /* antes de renderizar */ };
+shadowProxy.template.produto.$afterRender  = function(el) { /* após renderizar */ };
+shadowProxy.template.produto.$beforeDestroy = function(el) { /* antes de destruir */ };
+shadowProxy.template.produto.$afterDestroy  = function(el) { /* após destruir */ };
 ```
 
 ---
@@ -270,7 +283,7 @@ proxy.template.produto.$afterDestroy  = function(el) { /* após destruir */ };
 ## Watchers
 
 ```javascript
-const unsub = proxy.on('produto.preco', (novo, velho) => {
+const unsub = shadowProxy.on('produto.preco', (novo, velho) => {
     console.log(`preço: ${velho} → ${novo}`);
 });
 
@@ -279,18 +292,49 @@ unsub(); // para de observar
 
 ---
 
-## Destroy — para quem usa fetch ou SPA
+## Destroy — objeto limpo, sem vazamentos
 
 ```javascript
-async function carregarProduto(id) {
-    proxy.destroy('produto');                         // mata o atual
 
-    const html = await fetch(`/produto/${id}`).then(r => r.text());
-    document.querySelector('#container').innerHTML = html;
+    // PÁGINA A — detalhe de PRODUTO
+    shadowProxy.template.detalhe.nome    = "Coxinha";
+    shadowProxy.template.detalhe.ativo   = true;
+    shadowProxy.template.detalhe.remover = function() { apagarProduto(id); };
 
-    proxy.initProxy();                                // reinicializa
-    proxy.template.produto.nome = "Novo produto";
-}
+    // usuário navega (fetch troca o #app inteiro)
+    shadowProxy.destroy('detalhe');   // ← aqui: zera _store['detalhe'] antes da página B usar a key
+
+    // PÁGINA B — detalhe de USUÁRIO (mesma key "detalhe")
+    document.querySelector('#app').innerHTML = htmlPaginaB;
+    shadowProxy.initProxy();
+    shadowProxy.template.detalhe.nome = "João Silva";
+    // agora "ativo" e "remover" não existem mais — objeto limpo, sem vazamento
+
+```
+---
+
+## Para quem usa fetch ou SPA
+
+```javascript
+
+     //carrega todos os produtos de uma lista
+    const dataAll = await fetch(`/api/products/all`).then(r => r.json());
+    shadowProxy.template.products = dataAll;
+
+
+    async function atualizarProduto(id) {
+        // criamos o listner
+        shadowProxy.on(`products.${id}.preco`, (novo, velho) => {
+            console.log(`preço mudou: ${velho} → ${novo}`);
+        });
+
+        // importamos os dados do produto
+        const dataProd = await fetch(`/api/produto/${id}`).then(r => r.json());
+        shadowProxy.template.products[id] = dataProd;
+    }
+    atualizarProduto(34); // 1º watcher em products.34.preco
+    atualizarProduto(34); // usuário reabre o mesmo produto → 2º watcher empilhado no MESMO path
+
 ```
 
 ---
@@ -298,8 +342,8 @@ async function carregarProduto(id) {
 ## Funções no escopo
 
 ```javascript
-proxy.template.lista.remover = function(idx) {
-    proxy.template.lista.itens.splice(idx, 1);
+shadowProxy.template.lista.remover = function(idx) {
+    shadowProxy.template.lista.itens.splice(idx, 1);
 };
 ```
 
@@ -382,7 +426,7 @@ Cache LRU de 500 entradas garante que expressões repetidas não são re-parsead
 ### Pipeline de reatividade
 
 ```
-proxy.template.produto.nome = 'x'
+shadowProxy.template.produto.nome = 'x'
       ↓
   set trap       → detecta mudança
       ↓
@@ -395,7 +439,7 @@ proxy.template.produto.nome = 'x'
 
 ---
 
-## Tipos de erro (`proxy.onError`)
+## Tipos de erro (`shadowProxy.onError`)
 
 | Tipo | Origem |
 |---|---|
@@ -406,7 +450,7 @@ proxy.template.produto.nome = 'x'
 | `render-error` | Loop de reatividade detectado |
 | `model-path` | Caminho inválido em `x-model` |
 | `lifecycle-error` | Exceção em hook de lifecycle |
-| `watcher-error` | Exceção em `proxy.on()` |
+| `watcher-error` | Exceção em `shadowProxy.on()` |
 | `proxy-target` | Elemento `[x-data]` não encontrado |
 | `security-blocked` | Acesso a propriedade bloqueada em runtime |
 

@@ -1730,11 +1730,11 @@
 <span class="t-tag">&lt;input</span> <span class="t-attr">x-model</span>=<span class="t-val">"produto.nome"</span><span class="t-tag">&gt;</span>
 
 <span class="t-tag">&lt;script&gt;</span>
-  <span class="t-fn">proxy</span>.<span class="t-fn">initProxy</span>();
+  <span class="t-fn">shadowProxy</span>.<span class="t-fn">initProxy</span>();
 
-  <span class="t-fn">proxy</span>.template.produto.nome  = <span class="t-str">"Coxinha Supreme"</span>;
-  <span class="t-fn">proxy</span>.template.produto.preco = <span class="t-num">9.90</span>;
-  <span class="t-fn">proxy</span>.template.produto.ativo = <span class="t-key">true</span>;
+  <span class="t-fn">shadowProxy</span>.template.produto.nome  = <span class="t-str">"Coxinha Supreme"</span>;
+  <span class="t-fn">shadowProxy</span>.template.produto.preco = <span class="t-num">9.90</span>;
+  <span class="t-fn">shadowProxy</span>.template.produto.ativo = <span class="t-key">true</span>;
 <span class="t-tag">&lt;/script&gt;</span></pre>
 					</div>
 				</div>
@@ -1788,27 +1788,27 @@
 <span class="t-tag">&lt;button</span> <span class="t-attr">x-on:click</span>=<span class="t-val">"addTodo()"</span><span class="t-tag">&gt;</span>+ Adicionar<span class="t-tag">&lt;/button&gt;</span>
 
 <span class="t-tag">&lt;script&gt;</span>
-  <span class="t-fn">proxy</span>.<span class="t-fn">initProxy</span>();
+  <span class="t-fn">shadowProxy</span>.<span class="t-fn">initProxy</span>();
 
-  <span class="t-fn">proxy</span>.template.tarefas.lista = [
+  <span class="t-fn">shadowProxy</span>.template.tarefas.lista = [
     { texto: <span class="t-str">"Aprender shadow-proxy"</span>, done: <span class="t-key">false</span> },
     { texto: <span class="t-str">"Refatorar o projeto"</span>, done: <span class="t-key">false</span> },
   ];
 
   <span class="t-com">// só muda o dado — classe "done", ✓ e riscado seguem sozinhos</span>
-  <span class="t-fn">proxy</span>.template.tarefas.toggleTodo = <span class="t-key">function</span>(k) {
-    <span class="t-key">var</span> item = <span class="t-fn">proxy</span>.template.tarefas.lista[k];
+  <span class="t-fn">shadowProxy</span>.template.tarefas.toggleTodo = <span class="t-key">function</span>(k) {
+    <span class="t-key">var</span> item = <span class="t-fn">shadowProxy</span>.template.tarefas.lista[k];
     item.done = !item.done;
   };
 
-  <span class="t-fn">proxy</span>.template.tarefas.removeTodo = <span class="t-key">function</span>(k) {
-    <span class="t-fn">proxy</span>.template.tarefas.lista.<span class="t-fn">splice</span>(k, <span class="t-num">1</span>);
+  <span class="t-fn">shadowProxy</span>.template.tarefas.removeTodo = <span class="t-key">function</span>(k) {
+    <span class="t-fn">shadowProxy</span>.template.tarefas.lista.<span class="t-fn">splice</span>(k, <span class="t-num">1</span>);
   };
 
-  <span class="t-fn">proxy</span>.template.tarefas.addTodo = <span class="t-key">function</span>() {
+  <span class="t-fn">shadowProxy</span>.template.tarefas.addTodo = <span class="t-key">function</span>() {
     <span class="t-key">var</span> inp = document.<span class="t-fn">getElementById</span>(<span class="t-str">'todo-input'</span>);
     <span class="t-key">if</span> (!inp.value.<span class="t-fn">trim</span>()) <span class="t-key">return</span>;
-    <span class="t-fn">proxy</span>.template.tarefas.lista.<span class="t-fn">push</span>({ texto: inp.value, done: <span class="t-key">false</span> });
+    <span class="t-fn">shadowProxy</span>.template.tarefas.lista.<span class="t-fn">push</span>({ texto: inp.value, done: <span class="t-key">false</span> });
     inp.value = <span class="t-str">''</span>;
   };
 <span class="t-tag">&lt;/script&gt;</span></pre>
@@ -1849,11 +1849,11 @@
 <span class="t-tag">&lt;input</span> <span class="t-attr">type</span>=<span class="t-val">"range"</span> <span class="t-attr">x-model</span>=<span class="t-val">"contador.valor"</span><span class="t-tag">&gt;</span>
 
 <span class="t-tag">&lt;script&gt;</span>
-  <span class="t-fn">proxy</span>.<span class="t-fn">initProxy</span>();
-  <span class="t-fn">proxy</span>.template.contador.valor = <span class="t-num">50</span>;
+  <span class="t-fn">shadowProxy</span>.<span class="t-fn">initProxy</span>();
+  <span class="t-fn">shadowProxy</span>.template.contador.valor = <span class="t-num">50</span>;
 
   <span class="t-com">// Observa qualquer mudança no valor</span>
-  <span class="t-fn">proxy</span>.<span class="t-fn">on</span>(<span class="t-str">'contador.valor'</span>, (novo, velho) =&gt; {
+  <span class="t-fn">shadowProxy</span>.<span class="t-fn">on</span>(<span class="t-str">'contador.valor'</span>, (novo, velho) =&gt; {
     console.<span class="t-fn">log</span>(<span class="t-str">`${velho} → ${novo}`</span>);
   });
 <span class="t-tag">&lt;/script&gt;</span></pre>
@@ -1867,7 +1867,7 @@
 							<div class="watch-value" x-bind="{valor}"></div>
 							<input class="watch-slider" type="range" min="0" max="100" x-model="watcher.valor">
 							<div style="margin-top:12px;font-size:0.7rem;color:var(--text3);margin-bottom:6px">//
-								proxy.on log</div>
+								shadowProxy.on log</div>
 							<div class="watch-log" id="watch-log"></div>
 						</div>
 					</div>
@@ -1894,29 +1894,29 @@
 <span class="t-tag">&lt;/div&gt;</span>
 
 <span class="t-tag">&lt;script&gt;</span>
-  <span class="t-fn">proxy</span>.<span class="t-fn">initProxy</span>();
+  <span class="t-fn">shadowProxy</span>.<span class="t-fn">initProxy</span>();
 
-  <span class="t-fn">proxy</span>.template.carrinho.itens = [
+  <span class="t-fn">shadowProxy</span>.template.carrinho.itens = [
     { nome: <span class="t-str">"Teclado Mecânico"</span>, preco: <span class="t-num">249.90</span>, qty: <span class="t-num">1</span> },
     { nome: <span class="t-str">"Mouse Gamer"</span>, preco: <span class="t-num">89.90</span>, qty: <span class="t-num">2</span> },
   ];
 
-  <span class="t-com">// proxy.on ouve o array inteiro — muda quando qualquer item muda</span>
+  <span class="t-com">// shadowProxy.on ouve o array inteiro — muda quando qualquer item muda</span>
   <span class="t-key">function</span> recalcularTotal() {
-    <span class="t-key">var</span> itens = <span class="t-fn">proxy</span>.template.carrinho.itens;
+    <span class="t-key">var</span> itens = <span class="t-fn">shadowProxy</span>.template.carrinho.itens;
     <span class="t-key">var</span> soma = itens.<span class="t-fn">reduce</span>(<span class="t-key">function</span>(acc, i) {
       <span class="t-key">return</span> acc + i.preco * i.qty;
     }, <span class="t-num">0</span>);
-    <span class="t-fn">proxy</span>.template.carrinho.total = soma.<span class="t-fn">toFixed</span>(<span class="t-num">2</span>);
+    <span class="t-fn">shadowProxy</span>.template.carrinho.total = soma.<span class="t-fn">toFixed</span>(<span class="t-num">2</span>);
   }
   recalcularTotal();
-  <span class="t-fn">proxy</span>.<span class="t-fn">on</span>(<span class="t-str">'carrinho.itens'</span>, recalcularTotal);
+  <span class="t-fn">shadowProxy</span>.<span class="t-fn">on</span>(<span class="t-str">'carrinho.itens'</span>, recalcularTotal);
 
-  <span class="t-fn">proxy</span>.template.carrinho.incrementar = <span class="t-key">function</span>(k) {
-    <span class="t-fn">proxy</span>.template.carrinho.itens[k].qty++;
+  <span class="t-fn">shadowProxy</span>.template.carrinho.incrementar = <span class="t-key">function</span>(k) {
+    <span class="t-fn">shadowProxy</span>.template.carrinho.itens[k].qty++;
   };
-  <span class="t-fn">proxy</span>.template.carrinho.decrementar = <span class="t-key">function</span>(k) {
-    <span class="t-key">var</span> item = <span class="t-fn">proxy</span>.template.carrinho.itens[k];
+  <span class="t-fn">shadowProxy</span>.template.carrinho.decrementar = <span class="t-key">function</span>(k) {
+    <span class="t-key">var</span> item = <span class="t-fn">shadowProxy</span>.template.carrinho.itens[k];
     <span class="t-key">if</span> (item.qty &gt; <span class="t-num">1</span>) item.qty--;
   };
 <span class="t-tag">&lt;/script&gt;</span></pre>
@@ -1963,22 +1963,22 @@
 <span class="t-tag">&lt;/div&gt;</span>
 
 <span class="t-tag">&lt;script&gt;</span>
-  <span class="t-fn">proxy</span>.<span class="t-fn">initProxy</span>();
+  <span class="t-fn">shadowProxy</span>.<span class="t-fn">initProxy</span>();
 
-  <span class="t-fn">proxy</span>.template.busca.produtos = [
+  <span class="t-fn">shadowProxy</span>.template.busca.produtos = [
     { nome: <span class="t-str">"Teclado Mecânico"</span> }, { nome: <span class="t-str">"Mouse Gamer"</span> },
     { nome: <span class="t-str">"Monitor 4K"</span> },      { nome: <span class="t-str">"Headset"</span> },
   ];
-  <span class="t-fn">proxy</span>.template.busca.termo = <span class="t-str">''</span>;
+  <span class="t-fn">shadowProxy</span>.template.busca.termo = <span class="t-str">''</span>;
 
   <span class="t-key">function</span> filtrar() {
-    <span class="t-key">var</span> termo = <span class="t-fn">proxy</span>.template.busca.termo.<span class="t-fn">toLowerCase</span>();
-    <span class="t-fn">proxy</span>.template.busca.resultado = <span class="t-fn">proxy</span>.template.busca.produtos.<span class="t-fn">filter</span>(<span class="t-key">function</span>(p) {
+    <span class="t-key">var</span> termo = <span class="t-fn">shadowProxy</span>.template.busca.termo.<span class="t-fn">toLowerCase</span>();
+    <span class="t-fn">shadowProxy</span>.template.busca.resultado = <span class="t-fn">shadowProxy</span>.template.busca.produtos.<span class="t-fn">filter</span>(<span class="t-key">function</span>(p) {
       <span class="t-key">return</span> p.nome.<span class="t-fn">toLowerCase</span>().<span class="t-fn">includes</span>(termo);
     });
   }
   filtrar();
-  <span class="t-fn">proxy</span>.<span class="t-fn">on</span>(<span class="t-str">'busca.termo'</span>, filtrar);
+  <span class="t-fn">shadowProxy</span>.<span class="t-fn">on</span>(<span class="t-str">'busca.termo'</span>, filtrar);
 <span class="t-tag">&lt;/script&gt;</span></pre>
 					</div>
 				</div>
@@ -2307,10 +2307,10 @@
 			</div>
 			<div class="docs-nav-group">
 				<div class="docs-nav-group-title">API JavaScript</div>
-				<a class="docs-nav-link" onclick="showDoc('api-init')">proxy.initProxy()</a>
-				<a class="docs-nav-link" onclick="showDoc('api-on')">proxy.on()</a>
-				<a class="docs-nav-link" onclick="showDoc('api-destroy')">proxy.destroy()</a>
-				<a class="docs-nav-link" onclick="showDoc('api-error')">proxy.onError</a>
+				<a class="docs-nav-link" onclick="showDoc('api-init')">shadowProxy.initProxy()</a>
+				<a class="docs-nav-link" onclick="showDoc('api-on')">shadowProxy.on()</a>
+				<a class="docs-nav-link" onclick="showDoc('api-destroy')">shadowProxy.destroy()</a>
+				<a class="docs-nav-link" onclick="showDoc('api-error')">shadowProxy.onError</a>
 			</div>
 			<div class="docs-nav-group">
 				<div class="docs-nav-group-title">Avançado</div>
