@@ -1,5 +1,5 @@
 /*!
- * shadow-proxy v2.7.3
+ * shadow-proxy v2.7.4
  * Reactive DOM binding via Recursive Proxy
  * https://github.com/israel-nogueira/shadow-proxy
  *
@@ -34,7 +34,7 @@
  * Watchers:
  *   shadowProxy.on('key.prop', (newVal, oldVal) => {})   → watch any deep path
  *
- * v2.7.3 — structuredClone in _snapshotAncestors (deep watcher oldVal fix)
+ * v2.7.4 — structuredClone in _snapshotAncestors (deep watcher oldVal fix)
  *           textarea support in x-model
  *           Renamed global export proxy → shadowProxy (collision-safe)
  * v2.7.1 —  Early template cache in initProxy (x-for with empty arrays)
@@ -1883,7 +1883,7 @@ var shadowProxy = (function () {
         name: 'shadow-proxy',
 
         /** @type {string} Versão semântica atual. */
-        version: '2.7.3',
+        version: '2.7.4',
 
         /**
          * Proxy raiz que expõe os stores de cada componente.
@@ -2081,6 +2081,9 @@ var shadowProxy = (function () {
                 }
             });
 
+            // Auto-inicializa x-model — _initModels já faz querySelectorAll('[x-model]')
+            // e sai cedo se não encontrar nada, então é seguro chamar sempre.
+            _initModels();
         }
     };
 

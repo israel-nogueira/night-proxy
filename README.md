@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-    <img src="https://img.shields.io/badge/version-2.7.3-7c3aed?style=flat-square" />
+    <img src="https://img.shields.io/badge/version-2.7.4-7c3aed?style=flat-square" />
     <img src="https://img.shields.io/badge/zero%20dependencies-✓-22c55e?style=flat-square" />
     <img src="https://img.shields.io/badge/no%20build%20tools-✓-06b6d4?style=flat-square" />
     <img src="https://img.shields.io/badge/CSP%20safe-✓-22c55e?style=flat-square" />
@@ -101,8 +101,7 @@ Adicionar item? `lista.push(...)`. Remover? `lista.splice(...)`. Atualizar um it
 </div>
 
 <script>
-    shadowProxy.initProxy();
-    shadowProxy.initModels();
+    shadowProxy.initProxy(); // x-model já é inicializado automaticamente, nenhuma chamada extra
 
     shadowProxy.template.produto.nome      = "Coxinha";
     shadowProxy.template.produto.ativo     = true;
@@ -134,7 +133,7 @@ npm install shadow-proxy
 
 | | shadow-proxy | Alpine.js | Vue.js | React |
 |---|---|---|---|---|
-| Tamanho (gzip) | **~8.4KB** | ~13.5KB | ~34KB | ~45KB |
+| Tamanho (gzip) | **~8.7KB** | ~13.5KB | ~34KB | ~45KB |
 | Curva de aprendizado | **15 min** | 1 hora | 2 dias | 1 semana |
 | Build tools necessário | ❌ | ❌ | ❌ | ✅ |
 | Funciona em PHP puro | ✅ | ✅ | ⚠️ | ❌ |
@@ -174,7 +173,6 @@ ShadowProxy não impõe componentização, roteamento ou ciclo de vida de aplica
 
 <script>
     shadowProxy.initProxy();
-    shadowProxy.initModels();
 
     shadowProxy.template.pedido.cliente    = "João Silva";
     shadowProxy.template.pedido.confirmado = true;
@@ -238,7 +236,7 @@ import shadowProxy from 'shadow-proxy.js';
 
 ```javascript
 shadowProxy.initProxy();          // inicializa — chame após o DOM carregar
-shadowProxy.initModels();         // ativa two-way binding nos x-model
+                                   // já ativa x-model automaticamente, sem chamada extra
 
 shadowProxy.template.key.prop = valor;   // atualiza e re-renderiza sozinho
 shadowProxy.template.key.lista.push({}); // push/splice/sort — tudo reativo
@@ -250,6 +248,8 @@ shadowProxy.on('key.prop', (novo, velho) => {}); // observa qualquer mudança
 
 shadowProxy.onError = function(err) { console.error(err); }; // captura erros
 ```
+
+> ℹ️ `shadowProxy.initModels()` continua disponível e só precisa ser chamado manualmente para **reprocessar** `x-model` após injetar novo HTML dinâmico no DOM (ex: fetch trocando parte da página). No boot inicial, `initProxy()` já cuida disso sozinho.
 
 ---
 
@@ -361,7 +361,7 @@ Chrome 49+, Firefox 44+, Safari 10+, Opera 36+. Sem polyfills. Sem transpilaçã
 
 ## 🛡️ Segurança — CSP-safe, zero eval
 
-> **v2.7.3** — Motor de avaliação completamente reescrito. Zero `eval` / `new Function`.
+> Desde a **v2.7.2** — Motor de avaliação reescrito com parser AST + interpreter próprio. Zero `eval` / `new Function`.
 
 A maioria das libs reativas avalia expressões com `eval()` ou `new Function()` — o que exige `unsafe-eval` no CSP e abre brechas de segurança.
 
@@ -430,7 +430,8 @@ shadowProxy.template.produto.nome = 'x'
       ↓
   set trap       → detecta mudança
       ↓
-  _trigger       → agenda effects dependentes via microtask
+  _trigger       → agenda effects dependentes via microtask (fallback: _scheduleApply
+                    dispara o cascade completo só se ninguém tratou granularmente)
       ↓
   _scheduleFlush → batching: agrupa todos os effects do tick
       ↓

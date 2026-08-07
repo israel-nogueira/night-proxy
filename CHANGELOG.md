@@ -4,7 +4,47 @@ All notable changes to shadow-proxy are documented here.
 
 ---
 
-## [2.7.3] — 2024
+## [2.7.4] - Auto-init de x-model
+
+### ✨ Adicionado
+- **`initProxy()` agora chama `initModels()` automaticamente** ao final da inicialização.
+  - Antes era preciso chamar os dois manualmente:
+    ```js
+    shadowProxy.initProxy();
+    shadowProxy.initModels(); // obrigatório se usasse x-model
+    ```
+  - Agora basta:
+    ```js
+    shadowProxy.initProxy();
+    ```
+  - Seguro por padrão: `_initModels` faz `querySelectorAll('[x-model]')` e simplesmente não executa nada se não encontrar elementos — custo zero em projetos sem `x-model`.
+
+### 📝 Notas
+- **Sem breaking changes.** Quem já chamava `initModels()` manualmente pode continuar chamando — a função é idempotente (`el.__shadowModel` evita rebind duplicado).
+- Chamadas manuais de `initModels()` continuam necessárias apenas para reinicializar `x-model` após injetar novo HTML dinâmico no DOM (ex: fetch de nova página).
+
+---
+
+## [2.7.3] - Correção de loop infinito + apply granular
+
+### 🐛 Corrigido
+- **Loop infinito de reatividade em `_applyTarget`**: o scope era montado com `Object.assign(baseScope, {$root, $ref, $emit, ...})`, e como `baseScope` podia ser o proxy reativo (`_proxies[key]`), o `Object.assign` dependia do `[[Set]]` que caía no *set trap* do Proxy — cada render escrevia `$root`/`$ref`/`$emit` dentro do próprio `store`, disparando `_scheduleApply` de novo → render de novo → loop infinito.
+  - Fix: `scope` agora é criado via `Object.create(baseScope)` (mantém o proxy na prototype chain, preservando o tracking de dependências) + `Object.defineProperties` para `$root/$ref/$emit/$i/$index/$this` como props **own**, sem tocar no `[[Set]]` do prototype.
+
+### ⚡ Melhorado
+- **`_scheduleApply(key, needsRender)`**: novo segundo parâmetro distingue "precisa de cascade completo (`_renderTracked` a partir da raiz)" de "só precisa rodar lifecycle hooks + sync de models".
+  - `_pendingKeysNeedRender` (novo Set) rastreia quais keys pendentes realmente precisam do cascade.
+- **`_applyTarget(key, doRender)`**: novo parâmetro `doRender` (default `true`). Quando `false`, pula `_renderTracked` — usado quando um effect granular já tratou a mutação específica (via `_trigger`), evitando re-render da árvore inteira.
+- **`set`/`deleteProperty` do proxy**: agora capturam o retorno de `_trigger(target, prop)` em `handled` e chamam `_scheduleApply(key, !handled)`:
+  - Antes: se `_trigger` retornava `true`, `_scheduleApply` **não era chamado** (lifecycle hooks e sync de models ficavam sem rodar quando havia effect granular).
+  - Agora: `_scheduleApply` é sempre chamado, mas com `needsRender=false` quando já houve tratamento granular — lifecycle/sync continuam rodando, só o cascade completo é evitado.
+
+### 📝 Notas
+- Recomenda-se atualizar de 2.7.2 → 2.7.3 caso use `x-data` combinado com `x-ref`, `x-on`, `$this` ou lifecycle hooks (`$beforeRender`/`$afterRender`), onde o bug do loop infinito era mais provável de aparecer.
+
+---
+
+## [2.7.2] — 2024
 
 ### 🔒 Security — Breaking-adjacent
 
