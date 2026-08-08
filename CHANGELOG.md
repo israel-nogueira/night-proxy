@@ -21,6 +21,18 @@ All notable changes to shadow-proxy are documented here.
   - Fix: `_initModels()` agora guarda o effect em `el.__shadowModelEffect`, uma propriedade própria e independente de `__shadowEffect`. O destroy do nó (`_destroy`) foi atualizado para limpar (`cleanup()`) também esse novo effect, evitando vazamento.
   - **Sem breaking changes.** Nenhum outro trecho da lib lia `__shadowEffect` esperando que fosse o effect de model — todos os demais usos pertencem ao motor de render.
 
+### ♻️ Refatorado — Shadow State Store
+
+- **Todas as propriedades soltas `el.__shadowX` foram substituídas por um registro dinâmico via `WeakMap`** (`_shadowState`), acessado através de `_sGet(el, key)` / `_sSet(el, key, val)` / `_sHas` / `_sDelete` / `_sClear`.
+  - Motivo raiz: o bug acima (`x-for` + `x-model` colidindo em `__shadowEffect`) não era um caso isolado — existia uma segunda ocorrência idêntica em `_bindModelsInLoop` (x-model dentro de item de `x-for` também sobrescrevia o effect de render do próprio item). O padrão de props soltas no DOM tornava esse tipo de colisão fácil de reintroduzir a cada diretiva nova.
+  - Migradas: `__shadowEffect` → `'effect'`, `__shadowModelEffect` → `'modelEffect'`, `__shadowModel` → `'model'`, `__shadowModelHandler` → `'modelHandler'`, `__shadowLoopModel` → `'loopModel'`, `__shadowLoopAlias` → `'loopAlias'`, `__shadowLoopModelHandler` → `'loopModelHandler'` (effect correspondente agora em `'loopModelEffect'`, key nova — não existia isolada antes), `__shadowAttrTpl` → `'attrTpl'`, `__shadowTemplate` → `'template'`, `__shadowGroups` → `'groups'`, `__shadowKeys` → `'keys'`, e o padrão dinâmico de handlers de `x-on:evento` (antes `el['__shadow_' + evento]`) → `_sGet/_sSet(el, 'on_' + evento, handler)`.
+  - **Benefícios:**
+    - Cada diretiva usa sua própria key — impossível uma sobrescrever a outra por engano, mesmo combinando várias no mesmo nó.
+    - `WeakMap` libera o estado sozinho via GC quando o elemento sai do DOM, mesmo que uma feature futura esqueça de limpar sua key no destroy — sem vazamento de memória por omissão.
+    - Elemento DOM fica limpo (sem dezenas de props `__shadow*` visíveis em `console.log(el)`); `_sDebug(el)` disponível internamente para inspeção.
+  - **Sem breaking changes de API pública** — `shadowProxy.template`, `initProxy()`, `destroy()`, diretivas no HTML: tudo inalterado. A mudança é 100% interna.
+  - Validado com testes funcionais: render inicial de `x-for` + `x-model` combinados, sincronização two-way do model, `destroy()` sem exceções, e reinicialização completa (`destroy()` → `initProxy()`) após destroy.
+
 ---
 
 ## [2.7.4] - Auto-init de x-model

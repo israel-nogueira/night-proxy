@@ -58,6 +58,47 @@ var shadowProxy = (function () {
     // Symbol privado ao módulo — substitui a string '__isProxy' (spoofável)
     const _PROXY_SYM = Symbol('shadowProxy');
 
+    // ─── Shadow State Store ─────────────────────────────────────────────────
+    // Substitui o padrão antigo de props soltas no elemento (`el.__shadowX`)
+    // por um registro dinâmico via WeakMap, chaveado por elemento DOM.
+    //
+    // Motivo: props soltas no mesmo namespace (`__shadowEffect`) colidiam
+    // quando duas diretivas diferentes precisavam de estado próprio no
+    // mesmo nó (ex: x-for + x-model no mesmo <select> — ver CHANGELOG 2.7.5).
+    // Com o state store, cada diretiva usa sua própria key sem risco de
+    // sobrescrever a de outra, e o WeakMap libera o estado sozinho via GC
+    // quando o elemento sai do DOM e não sobra outra referência.
+
+    const _shadowState = new WeakMap();
+
+    function _sGet(el, key) {
+        return _shadowState.get(el)?.[key];
+    }
+
+    function _sSet(el, key, value) {
+        if (!_shadowState.has(el)) _shadowState.set(el, {});
+        _shadowState.get(el)[key] = value;
+        return value;
+    }
+
+    function _sHas(el, key) {
+        return !!_shadowState.get(el) && key in _shadowState.get(el);
+    }
+
+    function _sDelete(el, key) {
+        const bucket = _shadowState.get(el);
+        if (bucket) delete bucket[key];
+    }
+
+    function _sClear(el) {
+        _shadowState.delete(el);
+    }
+
+    // Debug helper — WeakMap não aparece ao inspecionar o elemento no devtools.
+    function _sDebug(el) {
+        return Object.assign({}, _shadowState.get(el));
+    }
+
     // ─── Error reporting ──────────────────────────────────────────────────────
     // Centraliza todos os erros da lib. Use _reportError() em vez de console.*
     // O dev pode sobrescrever shadowProxy.onError para capturar/rotear os erros.
@@ -1003,8 +1044,8 @@ var shadowProxy = (function () {
     function _initModels(root) {
         var _root = (root && root.nodeType === Node.ELEMENT_NODE) ? root : document;
         _root.querySelectorAll('[x-model]').forEach(function (el) {
-            if (el.__shadowModel) return;
-            el.__shadowModel = true;
+            if (_sGet(el, 'model')) return;
+            _sSet(el, 'model', true);
 
             const {
                 key,
@@ -1035,7 +1076,7 @@ var shadowProxy = (function () {
                 }
             });
             effect.key = key;
-            el.__shadowModelEffect = effect;
+            _sSet(el, 'modelEffect', effect);
             effect.run();
 
             _modelRegistryAdd(key, el);
@@ -1045,7 +1086,7 @@ var shadowProxy = (function () {
                 _setDeep(parts, v);
             }
 
-            el.__shadowModelHandler = _onInput;
+            _sSet(el, 'modelHandler', _onInput);
             el.addEventListener('input', _onInput);
             el.addEventListener('change', _onInput);
         });
@@ -1072,18 +1113,19 @@ var shadowProxy = (function () {
             const subParts = parts.slice(1);
             if (!subParts.length) return;
 
-            if (el.__shadowLoopModel) {
+            if (_sGet(el, 'loopModel')) {
                 // Reuso do nó: pode ser um item diferente agora — atualiza a
                 // referência do proxy e força re-sync do valor exibido.
-                el.__shadowLoopAlias = aliasVal;
-                if (el.__shadowEffect) el.__shadowEffect.run();
+                _sSet(el, 'loopAlias', aliasVal);
+                const existingEffect = _sGet(el, 'loopModelEffect');
+                if (existingEffect) existingEffect.run();
                 return;
             }
-            el.__shadowLoopModel = true;
-            el.__shadowLoopAlias = aliasVal;
+            _sSet(el, 'loopModel', true);
+            _sSet(el, 'loopAlias', aliasVal);
 
             function _getVal() {
-                let obj = el.__shadowLoopAlias;
+                let obj = _sGet(el, 'loopAlias');
                 for (let i = 0; i < subParts.length - 1; i++) {
                     if (obj == null) return undefined;
                     obj = obj[subParts[i]];
@@ -1091,7 +1133,7 @@ var shadowProxy = (function () {
                 return obj == null ? undefined : obj[subParts[subParts.length - 1]];
             }
             function _setVal(v) {
-                let obj = el.__shadowLoopAlias;
+                let obj = _sGet(el, 'loopAlias');
                 for (let i = 0; i < subParts.length - 1; i++) {
                     if (obj == null) return;
                     obj = obj[subParts[i]];
@@ -1114,14 +1156,19 @@ var shadowProxy = (function () {
                 }
             });
             effect.key = rootKey;
-            el.__shadowEffect = effect;
+            // Nota: usa uma key própria ('loopModelEffect'), separada do effect
+            // de render do nó ('effect') — a mesma classe de colisão corrigida
+            // no _initModels (CHANGELOG 2.7.5) também existia aqui, já que
+            // x-model dentro de um item que também carrega x-for/x-if no
+            // mesmo elemento sobrescrevia o effect de render.
+            _sSet(el, 'loopModelEffect', effect);
             effect.run();
 
             function _onInput() {
                 const v = el.type === 'checkbox' ? el.checked : el.value;
                 _setVal(v);
             }
-            el.__shadowLoopModelHandler = _onInput;
+            _sSet(el, 'loopModelHandler', _onInput);
             el.addEventListener('input', _onInput);
             el.addEventListener('change', _onInput);
         });
@@ -1154,10 +1201,10 @@ var shadowProxy = (function () {
                 if (!attr.name.startsWith('x-on:')) continue;
                 const event = attr.name.slice(5);
                 const expr = attr.value;
-                const flag = '__shadow_' + event;
+                const sKey = 'on_' + event;
 
                 // Já bindado com sucesso — não rebinda
-                if (el[flag]) continue;
+                if (_sGet(el, sKey)) continue;
 
                 // Monta scope de validação enriquecido com chaves do store vivo
                 // para que propriedades ainda não existentes no snapshot sejam aceitas
@@ -1180,7 +1227,7 @@ var shadowProxy = (function () {
                     continue;
                 }
 
-                el[flag] = function (e) {
+                const handler = function (e) {
                     try {
                         // Monta $s: objeto com getters/setters que delegam ao proxy vivo.
                         // O interpreter resolve Identifier/MemberExpression contra $s
@@ -1255,7 +1302,8 @@ var shadowProxy = (function () {
                         });
                     }
                 };
-                el.addEventListener(event, el[flag]);
+                _sSet(el, sKey, handler);
+                el.addEventListener(event, handler);
             }
         });
     }
@@ -1267,10 +1315,11 @@ var shadowProxy = (function () {
     // Updates pontuais chegam direto ao Effect do nó — sem percorrer a lista.
 
     function _renderTracked(node, scope, key) {
-        if (node.__shadowEffect) {
-            node.__shadowEffect.scope = scope;
-            if (key) node.__shadowEffect.key = key;
-            node.__shadowEffect.run();
+        const existing = _sGet(node, 'effect');
+        if (existing) {
+            existing.scope = scope;
+            if (key) existing.key = key;
+            existing.run();
             return;
         }
 
@@ -1279,7 +1328,7 @@ var shadowProxy = (function () {
         });
         effect.scope = scope;
         effect.key = key || null;
-        node.__shadowEffect = effect;
+        _sSet(node, 'effect', effect);
         effect.run();
     }
 
@@ -1288,7 +1337,8 @@ var shadowProxy = (function () {
         if (node.nodeType === Node.TEXT_NODE) return;
 
         // Herda componentKey do effect do próprio nó, se disponível
-        const ck = componentKey || (node.__shadowEffect && node.__shadowEffect.key) || null;
+        const _nodeEffect = _sGet(node, 'effect');
+        const ck = componentKey || (_nodeEffect && _nodeEffect.key) || null;
 
         const xFor = node.getAttribute && node.getAttribute('x-for');
         const xIf = node.getAttribute && node.getAttribute('x-if');
@@ -1311,7 +1361,8 @@ var shadowProxy = (function () {
 
         if (node.attributes) {
             const _SKIP_ATTRS = /^(x-bind|x-if|x-for|x-model|x-on:|x-ref|x-key)/;
-            if (!node.__shadowAttrTpl) node.__shadowAttrTpl = {};
+            let attrTpl = _sGet(node, 'attrTpl');
+            if (!attrTpl) attrTpl = _sSet(node, 'attrTpl', {});
             for (let i = 0; i < node.attributes.length; i++) {
                 const attr = node.attributes[i];
                 if (_SKIP_ATTRS.test(attr.name)) continue;
@@ -1319,12 +1370,12 @@ var shadowProxy = (function () {
                 // Guarda o template ORIGINAL na primeira vez que o atributo é visto —
                 // sem isso, setAttribute() abaixo sobrescreve "{expr}" pelo valor já
                 // interpolado, e a próxima render não encontra mais o '{' pra reinterpolar.
-                if (!(attr.name in node.__shadowAttrTpl)) {
+                if (!(attr.name in attrTpl)) {
                     if (!attr.value.includes('{')) continue;
-                    node.__shadowAttrTpl[attr.name] = attr.value;
+                    attrTpl[attr.name] = attr.value;
                 }
 
-                node.setAttribute(attr.name, _interpolate(node.__shadowAttrTpl[attr.name], scope, ck));
+                node.setAttribute(attr.name, _interpolate(attrTpl[attr.name], scope, ck));
             }
         }
 
@@ -1344,8 +1395,9 @@ var shadowProxy = (function () {
                 if (!rootKey) {
                     let ancestor = node;
                     while (ancestor) {
-                        if (ancestor.__shadowEffect && ancestor.__shadowEffect.key) {
-                            rootKey = ancestor.__shadowEffect.key;
+                        const ancestorEffect = _sGet(ancestor, 'effect');
+                        if (ancestorEffect && ancestorEffect.key) {
+                            rootKey = ancestorEffect.key;
                             break;
                         }
                         ancestor = ancestor.parentElement;
@@ -1390,17 +1442,17 @@ var shadowProxy = (function () {
             _reportError(ERROR_TYPES.X_FOR_SYNTAX, 'Expressão inválida no x-for', {
                 expr    : expr,
                 element : _elementId(node),
-                path    : node.__shadowEffect?.key || 'unknown',
+                path    : _sGet(node, 'effect')?.key || 'unknown',
             });
             return;
         }
 
         const list = _evalExpr(listExp, parentScope);
         const xKeyExpr = node.getAttribute('x-key') || null;
-        const template = node.__shadowTemplate;
+        const template = _sGet(node, 'template');
         const templateHasModel = !!template && template.indexOf('x-model') !== -1;
 
-        const parentEffect = node.__shadowEffect;
+        const parentEffect = _sGet(node, 'effect');
         const rootKey = parentEffect ? parentEffect.key : null;
 
         const rootEl = rootKey
@@ -1408,19 +1460,20 @@ var shadowProxy = (function () {
             : null;
 
         if (!Array.isArray(list) || list.length === 0) {
-            (node.__shadowGroups || []).forEach(function (g) {
+            (_sGet(node, 'groups') || []).forEach(function (g) {
                 g.nodes.forEach(function (el) {
-                    if (el.__shadowEffect) el.__shadowEffect.cleanup();
+                    const elEffect = _sGet(el, 'effect');
+                    if (elEffect) elEffect.cleanup();
                 });
             });
             node.innerHTML = '';
-            node.__shadowKeys = [];
-            node.__shadowGroups = [];
+            _sSet(node, 'keys', []);
+            _sSet(node, 'groups', []);
             return;
         }
 
         const existingByKey = {};
-        const prevGroups = node.__shadowGroups || [];
+        const prevGroups = _sGet(node, 'groups') || [];
         const currentKeys = prevGroups.map(function (g) { return g.key; });
 
         prevGroups.forEach(function (g) {
@@ -1473,10 +1526,12 @@ var shadowProxy = (function () {
                         if (!el.attributes) return;
                         for (let attr of el.attributes) {
                             if (!attr.name.startsWith('x-on:')) continue;
-                            const flag = '__shadow_' + attr.name.slice(5);
-                            if (el[flag]) {
-                                el.removeEventListener(attr.name.slice(5), el[flag]);
-                                delete el[flag];
+                            const event = attr.name.slice(5);
+                            const sKey = 'on_' + event;
+                            const handler = _sGet(el, sKey);
+                            if (handler) {
+                                el.removeEventListener(event, handler);
+                                _sDelete(el, sKey);
                             }
                         }
                     });
@@ -1517,7 +1572,8 @@ var shadowProxy = (function () {
         currentKeys.forEach(function (key) {
             if (!newKeySet.has(key) && existingByKey[key]) {
                 existingByKey[key].forEach(function (el) {
-                    if (el.__shadowEffect) el.__shadowEffect.cleanup();
+                    const elEffect = _sGet(el, 'effect');
+                    if (elEffect) elEffect.cleanup();
                     el.remove();
                 });
             }
@@ -1540,10 +1596,10 @@ var shadowProxy = (function () {
             node.appendChild(frag);
         }
 
-        node.__shadowKeys = newKeys;
-        node.__shadowGroups = newKeys.map(function (key, i) {
+        _sSet(node, 'keys', newKeys);
+        _sSet(node, 'groups', newKeys.map(function (key, i) {
             return { key: key, nodes: newNodeGroups[i] };
-        });
+        }));
 
         // ── Preenche $this.dom e bind eventos ─────────────────────────────────
         const $ref = {};
@@ -1584,7 +1640,7 @@ var shadowProxy = (function () {
 
     function _cacheTemplates(root) {
         root.querySelectorAll('[x-for]').forEach(function (el) {
-            if (!el.__shadowTemplate) el.__shadowTemplate = el.innerHTML;
+            if (!_sGet(el, 'template')) _sSet(el, 'template', el.innerHTML);
         });
     }
 
@@ -1751,43 +1807,53 @@ var shadowProxy = (function () {
             for (let attr of node.attributes) {
                 if (!attr.name.startsWith('x-on:')) continue;
                 const event = attr.name.slice(5);
-                const flag = '__shadow_' + event;
-                if (node[flag]) {
-                    node.removeEventListener(event, node[flag]);
-                    delete node[flag];
+                const key = 'on_' + event;
+                const handler = _sGet(node, key);
+                if (handler) {
+                    node.removeEventListener(event, handler);
+                    _sDelete(node, key);
                 }
             }
         }
 
         // Cleanup effect granular
-        if (node.__shadowEffect) {
-            node.__shadowEffect.cleanup();
-            delete node.__shadowEffect;
+        const nodeEffect = _sGet(node, 'effect');
+        if (nodeEffect) {
+            nodeEffect.cleanup();
+            _sDelete(node, 'effect');
         }
 
         // Remove x-model listeners (input/change)
-        if (node.__shadowModel) {
-            if (node.__shadowModelHandler) {
-                node.removeEventListener('input', node.__shadowModelHandler);
-                node.removeEventListener('change', node.__shadowModelHandler);
-                delete node.__shadowModelHandler;
+        if (_sGet(node, 'model')) {
+            const modelHandler = _sGet(node, 'modelHandler');
+            if (modelHandler) {
+                node.removeEventListener('input', modelHandler);
+                node.removeEventListener('change', modelHandler);
+                _sDelete(node, 'modelHandler');
             }
-            if (node.__shadowModelEffect) {
-                node.__shadowModelEffect.cleanup();
-                delete node.__shadowModelEffect;
+            const modelEffect = _sGet(node, 'modelEffect');
+            if (modelEffect) {
+                modelEffect.cleanup();
+                _sDelete(node, 'modelEffect');
             }
-            delete node.__shadowModel;
+            _sDelete(node, 'model');
         }
 
         // Remove x-model listeners de dentro de x-for
-        if (node.__shadowLoopModel) {
-            if (node.__shadowLoopModelHandler) {
-                node.removeEventListener('input', node.__shadowLoopModelHandler);
-                node.removeEventListener('change', node.__shadowLoopModelHandler);
-                delete node.__shadowLoopModelHandler;
+        if (_sGet(node, 'loopModel')) {
+            const loopModelHandler = _sGet(node, 'loopModelHandler');
+            if (loopModelHandler) {
+                node.removeEventListener('input', loopModelHandler);
+                node.removeEventListener('change', loopModelHandler);
+                _sDelete(node, 'loopModelHandler');
             }
-            delete node.__shadowLoopModel;
-            delete node.__shadowLoopAlias;
+            const loopModelEffect = _sGet(node, 'loopModelEffect');
+            if (loopModelEffect) {
+                loopModelEffect.cleanup();
+                _sDelete(node, 'loopModelEffect');
+            }
+            _sDelete(node, 'loopModel');
+            _sDelete(node, 'loopAlias');
         }
 
         // Recursivo nos filhos
@@ -1824,11 +1890,12 @@ var shadowProxy = (function () {
             Array.from(target.children).forEach(_destroyNode);
 
             // ── Limpa o próprio target ────────────────────────────────────────
-            if (target.__shadowEffect) {
-                target.__shadowEffect.cleanup();
-                delete target.__shadowEffect;
+            const targetEffect = _sGet(target, 'effect');
+            if (targetEffect) {
+                targetEffect.cleanup();
+                _sDelete(target, 'effect');
             }
-            delete target.__shadowKeys;
+            _sDelete(target, 'keys');
 
             // ── $afterDestroy ─────────────────────────────────────────────────
             if (typeof data.$afterDestroy === 'function') {
