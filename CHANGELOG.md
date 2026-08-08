@@ -16,6 +16,11 @@ All notable changes to shadow-proxy are documented here.
 - **Sem breaking changes.** Módulos que já usavam path absoluto (`x-model="meuModulo.form.nome"`) continuam funcionando igual.
 - Módulos que seguiam a documentação (`x-model="form.nome"`, path relativo) e pareciam "sem reatividade" ou com inputs sempre vazios devem funcionar corretamente após essa atualização, sem precisar mudar nada no `.tpl.html`.
 
+### 🐛 Corrigido (adicional)
+- **`x-for` e `x-model` no mesmo elemento quebrava a renderização do loop.** `_initModels()` armazenava o effect de sync do model em `el.__shadowEffect` — a mesma propriedade usada pelo motor de render (`_renderTracked`/`_renderFor`) para controlar o effect do próprio nó. Quando os dois ficavam no mesmo elemento (ex: `<select x-for="op in opcoes" x-model="filtros.tipo">`), o effect do model sobrescrevia o effect de render, e o `x-for` nunca mais era reavaliado — o elemento ficava travado com o template cru (`{op.value}`, `{op.label}`) sem interpolar.
+  - Fix: `_initModels()` agora guarda o effect em `el.__shadowModelEffect`, uma propriedade própria e independente de `__shadowEffect`. O destroy do nó (`_destroy`) foi atualizado para limpar (`cleanup()`) também esse novo effect, evitando vazamento.
+  - **Sem breaking changes.** Nenhum outro trecho da lib lia `__shadowEffect` esperando que fosse o effect de model — todos os demais usos pertencem ao motor de render.
+
 ---
 
 ## [2.7.4] - Auto-init de x-model

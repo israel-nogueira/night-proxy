@@ -1035,7 +1035,7 @@ var shadowProxy = (function () {
                 }
             });
             effect.key = key;
-            el.__shadowEffect = effect;
+            el.__shadowModelEffect = effect;
             effect.run();
 
             _modelRegistryAdd(key, el);
@@ -1771,6 +1771,10 @@ var shadowProxy = (function () {
                 node.removeEventListener('input', node.__shadowModelHandler);
                 node.removeEventListener('change', node.__shadowModelHandler);
                 delete node.__shadowModelHandler;
+            }
+            if (node.__shadowModelEffect) {
+                node.__shadowModelEffect.cleanup();
+                delete node.__shadowModelEffect;
             }
             delete node.__shadowModel;
         }
